@@ -1,0 +1,57 @@
+<launch>
+
+  <arg name="fcu_url" default="udp://:14540@127.0.0.1:14557"/>
+  <arg name="gcs_url" default="" />
+  <arg name="tgt_system" default="1" />
+  <arg name="tgt_component" default="1" />
+  <arg name="command_input" default="2" />
+  <arg name="gazebo_simulation" default="true" />
+  <arg name="visualization" default="true"/>
+  <arg name="log_output" default="screen" />
+  <arg name="fcu_protocol" default="v1.0" />
+  <arg name="respawn_mavros" default="false" />
+  <arg name="world" default="$(find gazebo_simulation)/worlds/simple_world.world"/>
+  <arg name="x_pos" default="0.0"/>
+  <arg name="y_pos" default="0.0"/>
+  <arg name="z_pos" default="0.0"/>
+  <arg name="tf_period" default="20"/>
+
+  <rosparam param="/x_pos_init" subst_value="True">$(arg x_pos)</rosparam>
+  <rosparam param="/y_pos_init" subst_value="True">$(arg y_pos)</rosparam>
+  <rosparam param="/z_pos_init" subst_value="True">$(arg z_pos)</rosparam>
+
+  <!--
+  <node pkg="tf" type="static_transform_publisher" name="tf_broadcaster1" args="0 0 0 0 0 0 1 map odom 100" />
+  <node pkg="tf" type="static_transform_publisher" name="tf_broadcaster2" args="0.1 0 0 0 0 0 1 base_link camera_link $(arg tf_period)" />
+  <node pkg="tf" type="static_transform_publisher" name="tf_broadcaster3" args="0 0 0.068 0 0 0 1 base_link imu_link $(arg tf_period)" />
+  <node pkg="tf" type="static_transform_publisher" name="tf_broadcaster4" args="-0.064 0 0.122 0 0 0 1 base_link base_scan $(arg tf_period)" />
+  <node pkg="tf" type="static_transform_publisher" name="tf_broadcaster5" args="0.005 0.018 0.013 0 0 0 1 camera_link camera_rgb_frame $(arg tf_period)" />
+  <node pkg="tf" type="static_transform_publisher" name="tf_broadcaster6" args="0 0 0 -0.5 0.5 -0.5 0.5 camera_rgb_frame camera_rgb_optical_frame $(arg tf_period)" />
+  <node pkg="tf" type="static_transform_publisher" name="tf_broadcaster7" args="0.005 0.028 0.013 0 0 0 1 camera_link camera_depth_frame $(arg tf_period)" />
+  <node pkg="tf" type="static_transform_publisher" name="tf_broadcaster8" args="0 0 0 -0.5 0.5 -0.5 0.5 camera_depth_frame camera_depth_optical_frame $(arg tf_period)" />
+  -->
+
+  <include file="$(find mavros)/launch/node.launch">
+      <arg name="pluginlists_yaml" value="$(find mavros)/launch/px4_pluginlists.yaml" />
+      <arg name="config_yaml" value="$(find mavros)/launch/px4_config.yaml" />
+
+      <arg name="fcu_url" value="$(arg fcu_url)" />
+      <arg name="gcs_url" value="$(arg gcs_url)" />
+      <arg name="tgt_system" value="$(arg tgt_system)" />
+      <arg name="tgt_component" value="$(arg tgt_component)" />
+      <arg name="log_output" value="$(arg log_output)" />
+      <arg name="fcu_protocol" value="$(arg fcu_protocol)" />
+      <arg name="respawn_mavros" default="$(arg respawn_mavros)" />
+  </include>
+
+  <include file="$(find px4)/launch/posix_sitl.launch">
+      <!-- <arg name="sdf" default="$(find mavlink_sitl_gazebo)/models/iris_depth_camera/iris_depth_camera.sdf"/> -->
+      <arg name="sdf" default="$(find gazebo_simulation)/models/iris_depth_camera_modified/iris_depth_camera_modified.sdf"/>
+      <arg name="x" value="$(arg x_pos)"/>
+      <arg name="y" value="$(arg y_pos)"/>
+      <arg name="z" value="$(arg z_pos)"/>
+      <arg name="world" value="$(arg world)"/>
+  </include>
+
+
+</launch>

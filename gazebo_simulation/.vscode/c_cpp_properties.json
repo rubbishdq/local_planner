@@ -1,0 +1,31 @@
+{
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "",
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "includePath": [
+                "/home/nics/work/ROS_CARTO_WS/devel_isolated/cartographer_ros_msgs/include/**",
+                "/home/nics/work/ROS_yujctest/devel/include/**",
+                "/opt/ros/melodic/include/**",
+                "/home/nics/work/ROS_CARTO_WS/devel_isolated/cartographer/include/**",
+                "/home/nics/work/ROS_CARTO_WS/devel_isolated/ceres-solver/include/**",
+                "/home/nics/work/ROS_yujctest/src/m-explore/explore/include/**",
+                "/home/nics/work/ROS_yujctest/src/graythree/include/**",
+                "/home/nics/Package/ros_support_single_ws/src/kobuki_desktop-melodic/kobuki_gazebo_plugins/include/**",
+                "/home/nics/work/ROS_yujctest/src/m-explore/map_merge/include/**",
+                "/home/nics/work/ROS_yujctest/src/robot_pose_ekf/include/**",
+                "/home/nics/work/ROS_yujctest/src/RRT_Simulation/rrt_exploration/include/**",
+                "/home/nics/work/ROS_yujctest/src/RRT_Real_Car/rrt_exploration_real_two_cars/include/**",
+                "/usr/include/**"
+            ],
+            "name": "ROS",
+            "intelliSenseMode": "gcc-x64",
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "gnu11",
+            "cppStandard": "gnu++14"
+        }
+    ],
+    "version": 4
+}

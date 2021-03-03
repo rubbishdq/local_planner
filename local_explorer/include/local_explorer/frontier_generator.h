@@ -33,7 +33,7 @@ public:
     void preprocessPCL();
 
     std::vector<Eigen::Vector3d> pcl_original;
-    std::vector<PointVoxelized> pcl_preprocessed;
+    //std::vector<PointVoxelized> pcl_preprocessed;
 
 };
 
