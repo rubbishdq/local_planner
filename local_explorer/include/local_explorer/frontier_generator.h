@@ -24,18 +24,6 @@
 namespace localExplorer
 {
 
-class ViewPoint
-{
-public:
-    ViewPoint() {}
-    ViewPoint(std::vector<Eigen::Vector3d> pcl_data) : pcl_original(pcl_data) { }
-    
-    void preprocessPCL();
-
-    std::vector<Eigen::Vector3d> pcl_original;
-    //std::vector<PointVoxelized> pcl_preprocessed;
-
-};
-
+    ;
 
 }

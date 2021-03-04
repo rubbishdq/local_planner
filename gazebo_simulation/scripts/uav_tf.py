@@ -25,7 +25,6 @@ class UAV_tf_node:
             while not rospy.is_shutdown():
                 if self.is_pose_init_:
                     self.tfBroadcaster_.sendTransform(self.mavpos_, self.mavrot_, rospy.Time.now(), end_frame, start_frame)
-                    print((start_frame, end_frame))
                 rate.sleep()
             pass
 
