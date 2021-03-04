@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <iostream>
 
 #include <ros/ros.h>
 #include <tf2_ros/transform_listener.h>

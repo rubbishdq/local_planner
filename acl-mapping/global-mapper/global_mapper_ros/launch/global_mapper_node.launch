@@ -1,7 +1,7 @@
 <launch>
 
   <!-- name of the quad -->
-  <!-- <arg name="quad" default="iris"/> -->
+  <arg name="quad" default="iris"/>
 
   <arg name="load_params" default="true" />
   <arg name="param_file" default="global_mapper.yaml" />
@@ -10,7 +10,7 @@
   <!--NORMAL:  camera/depth/image_rect_raw -->
   <!--FILTERED:  depthmap_filter/depth_filt -->
   <arg name="depth_image_topic" default="camera/depth/image_raw" />   
-  <arg name="pose_topic" default="state" /> <!--/pose-->
+  <arg name="pose_topic" default="/mavros/local_position/pose" /> <!--/pose-->
   <arg name="goal_topic" default="/move_base_simple/goal" />
 
   <!-- used for the Jackal -->
@@ -27,7 +27,7 @@
   <arg name="sparse_path_topic" default="~sparse_path" />
 
   <!-- node -->
-  <node pkg="global_mapper_ros" type="global_mapper_node" name="global_mapper_ros" output="screen">
+  <node ns="$(arg quad)" pkg="global_mapper_ros" type="global_mapper_node" name="global_mapper_ros" output="screen">
       <!-- params -->
       <rosparam command="load" if="$(arg load_params)" file="$(find global_mapper_ros)/cfg/$(arg param_file)"/>
 

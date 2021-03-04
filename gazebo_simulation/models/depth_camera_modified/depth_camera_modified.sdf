@@ -43,8 +43,9 @@
           <baseline>0.2</baseline>
           <alwaysOn>1</alwaysOn>
           <updateRate>30.0</updateRate>
+          <robotNamespace></robotNamespace>
           <cameraName>camera</cameraName>
-          <frameName>camera_rgb_optical_frame</frameName>
+          <frameName>camera</frameName>
           <imageTopicName>rgb/image_raw</imageTopicName>
           <depthImageTopicName>depth/image_raw</depthImageTopicName>
           <pointCloudTopicName>depth/points</pointCloudTopicName>
