@@ -1,5 +1,6 @@
 <launch>
 
+  <arg name="robot_name" default="iris"/>
   <arg name="fcu_url" default="udp://:14540@127.0.0.1:14557"/>
   <arg name="gcs_url" default="" />
   <arg name="tgt_system" default="1" />
@@ -44,7 +45,7 @@
       <arg name="respawn_mavros" default="$(arg respawn_mavros)" />
   </include>
 
-  <include file="$(find px4)/launch/posix_sitl.launch">
+  <include  file="$(find px4)/launch/posix_sitl.launch">
       <!-- <arg name="sdf" default="$(find mavlink_sitl_gazebo)/models/iris_depth_camera/iris_depth_camera.sdf"/> -->
       <arg name="sdf" default="$(find gazebo_simulation)/models/iris_depth_camera_modified/iris_depth_camera_modified.sdf"/>
       <arg name="x" value="$(arg x_pos)"/>

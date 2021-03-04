@@ -554,9 +554,9 @@ void GlobalMapperRos::OdomCallback(const nav_msgs::Odometry::ConstPtr& odom_ptr)
   global_mapper_ptr_->UpdateOrigin(xyz);
 }
 
-void GlobalMapperRos::PoseCallback(const snapstack_msgs::State::ConstPtr& pose_ptr)
+void GlobalMapperRos::PoseCallback(const geometry_msgs::PoseStamped::ConstPtr& pose_ptr)
 {
-  double xyz[3] = { pose_ptr->pos.x, pose_ptr->pos.y, pose_ptr->pos.z };
+  double xyz[3] = { pose_ptr->pose.position.x, pose_ptr->pose.position.y, pose_ptr->pose.position.z };
   if (!got_pose_)
   {
     got_pose_ = true;
