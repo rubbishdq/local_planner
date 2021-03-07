@@ -188,6 +188,7 @@ void GlobalMapper::UpdateOccupancyGrid()
   int n = 1;
   // clear voxels around vehicle
   int origin_ixyz[3];
+  int ixyz[3];
   occupancy_grid_.WorldToGrid(origin_, origin_ixyz);
   for (int i = -n; i <= n; i++)
   {
@@ -196,7 +197,6 @@ void GlobalMapper::UpdateOccupancyGrid()
       for (int k = -n; k <= n; k++)
       {
         // printf("Clearing cell around vehicle!");
-        int ixyz[3];
         ixyz[0] = origin_ixyz[0] + i;
         ixyz[1] = origin_ixyz[1] + j;
         ixyz[2] = origin_ixyz[2] + k;
@@ -269,6 +269,7 @@ void GlobalMapper::Spin()
 
     std::unique_lock<std::mutex> output_lock(output_mutex_);
 
+    //printf("%d %d %d !!!", origin_[0], origin_[1], origin_[2]);
     origin_mutex_.lock();
     occupancy_grid_.UpdateOrigin(origin_);
     // distance_grid_.UpdateOrigin(origin_);

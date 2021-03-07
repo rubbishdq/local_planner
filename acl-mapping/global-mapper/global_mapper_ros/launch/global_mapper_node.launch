@@ -10,7 +10,7 @@
   <!--NORMAL:  camera/depth/image_rect_raw -->
   <!--FILTERED:  depthmap_filter/depth_filt -->
   <arg name="depth_image_topic" default="camera/depth/image_raw" />   
-  <arg name="pose_topic" default="$(arg quad)/pose" /> <!--/pose-->
+  <arg name="pose_topic" default="/$(arg quad)/pose" /> <!--/pose-->
   <arg name="goal_topic" default="/move_base_simple/goal" />
 
   <!-- used for the Jackal -->

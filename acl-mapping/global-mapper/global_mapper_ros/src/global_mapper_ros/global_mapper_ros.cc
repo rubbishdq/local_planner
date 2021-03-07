@@ -552,6 +552,7 @@ void GlobalMapperRos::OdomCallback(const nav_msgs::Odometry::ConstPtr& odom_ptr)
     got_pose_ = true;
   }
   global_mapper_ptr_->UpdateOrigin(xyz);
+  //printf("Origin updated by OdomCallback\n");
 }
 
 void GlobalMapperRos::PoseCallback(const geometry_msgs::PoseStamped::ConstPtr& pose_ptr)
@@ -562,6 +563,7 @@ void GlobalMapperRos::PoseCallback(const geometry_msgs::PoseStamped::ConstPtr& p
     got_pose_ = true;
   }
   global_mapper_ptr_->UpdateOrigin(xyz);
+  //printf("Origin updated by PoseCallback\n");
 }
 
 void GlobalMapperRos::GoalCallback(const geometry_msgs::PoseStamped::ConstPtr& goal_ptr)
