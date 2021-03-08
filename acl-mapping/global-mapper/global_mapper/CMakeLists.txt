@@ -61,6 +61,7 @@ target_link_libraries(${PROJECT_NAME}
   distance_grid
   cost_grid
   occupancy_grid
+  voxelized_points
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
   )
@@ -122,6 +123,20 @@ install(TARGETS cost_grid
   )
 install(DIRECTORY src/cost_grid DESTINATION include
   FILES_MATCHING PATTERN "*.h")
+
+#-------------------------------------------------------------------------------
+# voxelized_points library
+#-------------------------------------------------------------------------------
+add_library(voxelized_points SHARED
+src/voxelized_points/voxelized_points.cc
+)
+install(TARGETS voxelized_points
+RUNTIME DESTINATION bin
+LIBRARY DESTINATION lib
+ARCHIVE DESTINATION lib
+)
+install(DIRECTORY src/voxelized_points DESTINATION include
+FILES_MATCHING PATTERN "*.h")
 
 #-------------------------------------------------------------------------------
 # voxel_grid library

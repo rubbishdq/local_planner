@@ -43,6 +43,8 @@ find_package(global_mapper REQUIRED)
 
 add_message_files(FILES
   PlanningGrids.msg
+  VoxelizedPoint.msg
+  VoxelizedPoints.msg
   )
 
 generate_messages(DEPENDENCIES
