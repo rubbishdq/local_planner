@@ -1,6 +1,7 @@
 // Copyright 2017 Massachusetts Institute of Technology
 
 #include "occupancy_grid/occupancy_grid.h"
+#include "voxelized_points/voxelized_points.h"
 
 #include "global_mapper/global_mapper.h"
 
@@ -13,6 +14,7 @@ GlobalMapper::GlobalMapper(Params& params)
   , distance_grid_(params_.origin.data(), params_.world_dimensions.data(), params_.resolution,
                    params_.truncation_distance)
   , cost_grid_(params_.origin.data(), params_.world_dimensions.data(), params_.resolution)
+  , voxelized_points_(params_.origin.data(), params_.world_dimensions.data(), params_.resolution)
   , data_ready_(0)
 {
   origin_[0] = 0.0;
@@ -125,7 +127,7 @@ void GlobalMapper::InsertPointCloud(const PointCloud::ConstPtr& cloud_ptr)
     end[1] = cloud_ptr->points[i].y;
     end[2] = cloud_ptr->points[i].z;
     float intensity = cloud_ptr->points[i].intensity;
-    // bool finite = std::isfinite(intensity);
+    bool finite = std::isfinite(intensity);
     bool NaN = (intensity != intensity);
 
     if (NaN)
@@ -138,6 +140,11 @@ void GlobalMapper::InsertPointCloud(const PointCloud::ConstPtr& cloud_ptr)
       // Inf and valid: clear occupied and unknown
       // --->Inf: Up to clear_unknown_distance_ (value saved in point.z)
       // --->Valid: Up to the finite value saved in point.z.
+      if (finite)
+      {
+        Eigen::Vector3f end_vector((float)(end[0]), (float)(end[1]), (float)(end[2]));
+        voxelized_points_.InsertPoint(end_vector);
+      }
       occupancy_grid_.RayTrace(start, end, params_.miss_inc);
     }
   }
@@ -168,15 +175,17 @@ void GlobalMapper::InsertPointCloud(const PointCloud::ConstPtr& cloud_ptr)
 }
 
 void GlobalMapper::GetVoxelGrids(voxel_grid::VoxelGrid<float>* occupancy_grid,
-                                 voxel_grid::VoxelGrid<int>* distance_grid, voxel_grid::VoxelGrid<int>* cost_grid)
+                                 voxel_grid::VoxelGrid<int>* distance_grid, voxel_grid::VoxelGrid<int>* cost_grid, 
+                                 voxel_grid::VoxelGrid<voxelized_points::VoxelizedPoint>* voxelized_points)
 {
   std::lock_guard<std::mutex> output_lock(output_mutex_);
   *occupancy_grid = occupancy_grid_;
   *distance_grid = distance_grid_;
   *cost_grid = cost_grid_;
+  *voxelized_points = voxelized_points_;
 }
 
-void GlobalMapper::UpdateOccupancyGrid()
+void GlobalMapper::UpdateOccupancyGridAndVoxelizedPoints()
 {
   PointCloud::ConstPtr cloud_ptr = PopPointCloud();
   InsertPointCloud(cloud_ptr);
@@ -277,7 +286,7 @@ void GlobalMapper::Spin()
     origin_mutex_.unlock();
 
     occupancy_grid_.ResetDiffs();
-    UpdateOccupancyGrid();
+    UpdateOccupancyGridAndVoxelizedPoints();
     // UpdateDistanceGrid();
     // if ((spincount++ % 15) == 0)
     //{

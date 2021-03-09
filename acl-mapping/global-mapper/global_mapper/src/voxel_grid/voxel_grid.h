@@ -73,6 +73,9 @@ public:
   void WriteValue(const int ind, T value);
 
   T& GetReference(const int ind);
+  T& GetReference(const int ixyz[3]);
+  T& GetReference(const double xyz[3]);
+  T& GetReference(const double x, const double y, const double z);
 
 private:
   void ShiftOrigin(const int new_lower_left_voxels[3]);
@@ -152,6 +155,28 @@ template <typename T>
 T& VoxelGrid<T>::GetReference(const int ind)
 {
   return data_[ind];
+}
+
+template <typename T>
+T& VoxelGrid<T>::GetReference(const int ixyz[3])
+{
+  int ind = GridToIndex(ixyz);
+  return GetReference(ind);
+}
+
+template <typename T>
+T& VoxelGrid<T>::GetReference(const double xyz[3])
+{
+  int ixyz[3];
+  WorldToGrid(xyz, ixyz);
+  return GetReference(ixyz);
+}
+
+template <typename T>
+T& VoxelGrid<T>::GetReference(const double x, const double y, const double z)
+{
+  double xyz[3] = { x, y, z };
+  return GetReference(xyz);
 }
 
 template <typename T>

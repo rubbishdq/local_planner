@@ -20,6 +20,7 @@ using PointList = std::vector<Point>;
 
 class OccupancyGrid : public voxel_grid::VoxelGrid<float> {
  public:
+  OccupancyGrid();
   OccupancyGrid(const double origin[3], const double world_dimensions[3], const double resolution, float threshold);
   void UpdateValue(const int ixyz[3], float value);
   void UpdateValue(const double xyz[3], float value);

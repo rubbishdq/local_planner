@@ -6,12 +6,20 @@
 # ${PROJECT_NAME}_LIBRARIES    - ${PROJECT_NAME} library and all dependent libraries
 # ${PROJECT_NAME}_DEFINITIONS  - Compiler definitions as semicolon separated list
 
+set(LIB_PATH @CMAKE_INSTALL_PREFIX@/lib)
+set(INCLUDE_PATH @CMAKE_INSTALL_PREFIX@/include)
+
 find_library(@PROJECT_NAME@_LIBRARY @PROJECT_NAME@
-  PATHS @CMAKE_INSTALL_PREFIX@/lib
+  PATHS ${LIB_PATH}
   NO_DEFAULT_PATH
   )
 
 set(@PROJECT_NAME@_LIBRARIES ${@PROJECT_NAME@_LIBRARY}
+  ${LIB_PATH}/libglobal_mapper.so
+  ${LIB_PATH}/libcost_grid.so
+  ${LIB_PATH}/libdistance_grid.so
+  ${LIB_PATH}/liboccupancy_grid.so
+  ${LIB_PATH}/libvoxelized_points.so
   ${PCL_LIBRARIES}
   )
 
@@ -20,11 +28,13 @@ find_path(@PROJECT_NAME@_INCLUDE_DIR global_mapper/global_mapper.h
   NO_DEFAULT_PATH
   )
 
+
 set(@PROJECT_NAME@_INCLUDE_DIRS ${@PROJECT_NAME@_INCLUDE_DIR}
-  src/cost_grid
-  src/distance_grid
-  src/voxel_grid
-  src/occupancy_grid
+  ${INCLUDE_PATH}/cost_grid
+  ${INCLUDE_PATH}/distance_grid
+  ${INCLUDE_PATH}/voxel_grid
+  ${INCLUDE_PATH}/occupancy_grid
+  ${INCLUDE_PATH}/voxelized_points
   ${EIGEN3_INCLUDE_DIR}
   ${PCL_INCLUDE_DIRS}
   )

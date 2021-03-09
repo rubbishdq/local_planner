@@ -23,6 +23,7 @@
   <arg name="frontier_grid_topic" default="~frontier_grid" />
   <arg name="distance_grid_topic" default="~distance_grid" />
   <arg name="cost_grid_topic" default="~cost_grid" />
+  <arg name="voxelized_points_topic" default="~voxelized_points" />
   <arg name="path_topic" default="~path" />
   <arg name="sparse_path_topic" default="~sparse_path" />
 
@@ -43,6 +44,7 @@
       <remap from="~frontier_grid_topic" to="$(arg frontier_grid_topic)" />
       <remap from="~distance_grid_topic" to="$(arg distance_grid_topic)" />
       <remap from="~cost_grid_topic" to="$(arg cost_grid_topic)" />
+      <remap from="~voxelized_points_topic" to="$(arg voxelized_points_topic)" />
       <remap from="~path_topic" to="$(arg path_topic)" />
       <remap from="~sparse_path_topic" to="$(arg sparse_path_topic)" />
   </node>

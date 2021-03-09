@@ -2,6 +2,11 @@
 
 namespace occupancy_grid
 {
+
+OccupancyGrid::OccupancyGrid() : voxel_grid::VoxelGrid<float>(), threshold_(0.0)
+{
+}
+
 OccupancyGrid::OccupancyGrid(const double origin[3], const double world_dimensions[3], const double resolution,
                              float threshold)
   : voxel_grid::VoxelGrid<float>(origin, world_dimensions, resolution), threshold_(threshold)

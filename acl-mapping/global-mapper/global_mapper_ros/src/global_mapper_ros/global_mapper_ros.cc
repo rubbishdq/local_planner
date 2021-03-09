@@ -71,6 +71,7 @@ void GlobalMapperRos::GetParams()
   fla_utils::SafeGetParam(pnh_, "occupancy_grid/occupancy_threshold", params_.occupancy_threshold);
   fla_utils::SafeGetParam(pnh_, "occupancy_grid/publish_unknown_grid", publish_unknown_grid_);
   fla_utils::SafeGetParam(pnh_, "occupancy_grid/publish_occupancy_grid", publish_occupancy_grid_);
+  fla_utils::SafeGetParam(pnh_, "occupancy_grid/publish_voxelized_points", publish_voxelized_points_);
   fla_utils::SafeGetParam(pnh_, "occupancy_grid/clear_unknown_distance", clear_unknown_distance_);
 
   // distance_grid
@@ -119,6 +120,11 @@ void GlobalMapperRos::InitPublishers()
     cost_grid_pub_ = pnh_.advertise<sensor_msgs::PointCloud2>("cost_grid_topic", 1);
   }
 
+  if (publish_voxelized_points_)
+  {
+    voxelized_points_pub_ = pnh_.advertise<global_mapper_ros::VoxelizedPoints>("voxelized_points_topic", 1);
+  }
+
   if (publish_path_)
   {
     path_pub_ = pnh_.advertise<nav_msgs::Path>("path_topic", 1);
@@ -130,7 +136,7 @@ void GlobalMapperRos::InitPublishers()
   grid_pub_timer_ = nh_.createTimer(ros::Duration(0.05), &GlobalMapperRos::Publish, this);
 }
 
-void GlobalMapperRos::PopulateUnknownPointCloudMsg(const voxel_grid::VoxelGrid<float>& occupancy_grid,
+void GlobalMapperRos::PopulateUnknownPointCloudMsg(const occupancy_grid::OccupancyGrid& occupancy_grid,
                                                    sensor_msgs::PointCloud2* pointcloud)
 {
   // check for bad input
@@ -247,7 +253,7 @@ void GlobalMapperRos::PopulateUnknownPointCloudMsg(const voxel_grid::VoxelGrid<f
   pointcloud->header.stamp = tstampLastPclFused_;
 }
 
-void GlobalMapperRos::PopulateOccupancyPointCloudMsg(const voxel_grid::VoxelGrid<float>& occupancy_grid,
+void GlobalMapperRos::PopulateOccupancyPointCloudMsg(const occupancy_grid::OccupancyGrid& occupancy_grid,
                                                      sensor_msgs::PointCloud2* pointcloud)
 {
   // check for bad input
@@ -431,6 +437,53 @@ void GlobalMapperRos::PopulateCostPointCloudMsg(const voxel_grid::VoxelGrid<int>
   pointcloud->header.stamp = ros::Time::now();
 }
 
+void GlobalMapperRos::PopulateVoxelizedPointsMsg(const voxel_grid::VoxelGrid<voxelized_points::VoxelizedPoint>& voxelized_points, 
+    const occupancy_grid::OccupancyGrid& occupancy_grid, global_mapper_ros::VoxelizedPoints* voxelized_points_msg)
+{
+  if (voxelized_points_msg == nullptr)
+  {
+    return;
+  }
+
+  double xyz[3];
+
+  int grid_dimensions[3];
+  voxelized_points.GetGridDimensions(grid_dimensions);
+
+  double origin[3];
+  voxelized_points.GetOrigin(origin);
+
+  for (int x = 0; x < grid_dimensions[0]; x++)
+  {
+    for (int y = 0; y < grid_dimensions[1]; y++)
+    {
+      for (int z = 0; z < grid_dimensions[2]; z++)
+      {
+        int ixyz[3] = {x, y, z};
+        if (!occupancy_grid.IsOccupied(ixyz))
+        {
+          continue;
+        }
+        voxelized_points::VoxelizedPoint point = voxelized_points.ReadValue(ixyz);
+        global_mapper_ros::VoxelizedPoint point_data;
+        point_data.n = point.n_;
+        point_data.mu[0] = point.mu_[0];
+        point_data.mu[1] = point.mu_[1];
+        point_data.mu[2] = point.mu_[2];
+        point_data.sigma[0] = point.sigma_(0,0);
+        point_data.sigma[1] = point.sigma_(0,1);
+        point_data.sigma[2] = point.sigma_(0,2);
+        point_data.sigma[3] = point.sigma_(1,1);
+        point_data.sigma[4] = point.sigma_(1,2);
+        point_data.sigma[5] = point.sigma_(2,2);
+        voxelized_points_msg->points.push_back(point_data);
+      }
+    }
+  }
+  voxelized_points_msg->header.stamp = ros::Time::now();
+  voxelized_points_msg->header.frame_id = "world";
+}
+
 void GlobalMapperRos::PopulatePathMsg(const std::vector<std::array<double, 3>>& path, nav_msgs::Path* path_msg)
 {
   path_msg->header.stamp = ros::Time::now();
@@ -485,11 +538,12 @@ void GlobalMapperRos::PublishPlanningGrids(const voxel_grid::VoxelGrid<float>& o
 void GlobalMapperRos::Publish(const ros::TimerEvent& event)
 {
   // get all maps
-  voxel_grid::VoxelGrid<float> occupancy_grid;
+  occupancy_grid::OccupancyGrid occupancy_grid;
   voxel_grid::VoxelGrid<int> distance_grid;
   voxel_grid::VoxelGrid<int> cost_grid;
+  voxel_grid::VoxelGrid<voxelized_points::VoxelizedPoint> voxelized_points;
 
-  global_mapper_ptr_->GetVoxelGrids(&occupancy_grid, &distance_grid, &cost_grid);
+  global_mapper_ptr_->GetVoxelGrids(&occupancy_grid, &distance_grid, &cost_grid, &voxelized_points);
 
   // PublishPlanningGrids(occupancy_grid, distance_grid, cost_grid);
 
@@ -523,6 +577,13 @@ void GlobalMapperRos::Publish(const ros::TimerEvent& event)
     sensor_msgs::PointCloud2 cost_pointcloud_msg;
     PopulateCostPointCloudMsg(cost_grid, &cost_pointcloud_msg);
     cost_grid_pub_.publish(cost_pointcloud_msg);
+  }
+
+  if (publish_voxelized_points_)
+  {
+    global_mapper_ros::VoxelizedPoints voxelized_points_msg;
+    PopulateVoxelizedPointsMsg(voxelized_points, occupancy_grid, &voxelized_points_msg);
+    voxelized_points_pub_.publish(voxelized_points_msg);
   }
 
   if (publish_path_)

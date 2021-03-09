@@ -136,7 +136,7 @@ LIBRARY DESTINATION lib
 ARCHIVE DESTINATION lib
 )
 install(DIRECTORY src/voxelized_points DESTINATION include
-FILES_MATCHING PATTERN "*.h")
+  FILES_MATCHING PATTERN "*.h")
 
 #-------------------------------------------------------------------------------
 # voxel_grid library

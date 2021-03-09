@@ -23,6 +23,8 @@
 
 #include "global_mapper/global_mapper.h"
 #include "global_mapper_ros/PlanningGrids.h"
+#include "global_mapper_ros/VoxelizedPoint.h"
+#include "global_mapper_ros/VoxelizedPoints.h"
 
 namespace global_mapper_ros
 {
@@ -36,13 +38,15 @@ private:
   void GetParams();
   void InitSubscribers();
   void InitPublishers();
-  void PopulateUnknownPointCloudMsg(const voxel_grid::VoxelGrid<float>& occupancy_grid,
+  void PopulateUnknownPointCloudMsg(const occupancy_grid::OccupancyGrid& occupancy_grid,
                                     sensor_msgs::PointCloud2* pointcloud);
-  void PopulateOccupancyPointCloudMsg(const voxel_grid::VoxelGrid<float>& occupancy_grid,
+  void PopulateOccupancyPointCloudMsg(const occupancy_grid::OccupancyGrid& occupancy_grid,
                                       sensor_msgs::PointCloud2* pointcloud);
   void PopulateDistancePointCloudMsg(const voxel_grid::VoxelGrid<int>& distance_grid,
                                      sensor_msgs::PointCloud2* pointcloud);
   void PopulateCostPointCloudMsg(const voxel_grid::VoxelGrid<int>& cost_grid, sensor_msgs::PointCloud2* pointcloud);
+  void PopulateVoxelizedPointsMsg(const voxel_grid::VoxelGrid<voxelized_points::VoxelizedPoint>& voxelized_points, 
+      const occupancy_grid::OccupancyGrid& occupancy_grid, global_mapper_ros::VoxelizedPoints* voxelized_points_msg);
   void PopulatePathMsg(const std::vector<std::array<double, 3>>& path, nav_msgs::Path* path_msg);
   void Publish(const ros::TimerEvent& event);
 
@@ -75,6 +79,7 @@ private:
   ros::Publisher frontier_grid_pub_;
   ros::Publisher dist_grid_pub_;
   ros::Publisher cost_grid_pub_;
+  ros::Publisher voxelized_points_pub_;
   ros::Publisher path_pub_;
   ros::Publisher sparse_path_pub_;
   ros::Publisher planning_grids_pub_;
@@ -97,6 +102,7 @@ private:
   bool publish_distance_grid_;
   bool publish_cost_grid_;
   bool publish_path_;
+  bool publish_voxelized_points_;
   double clear_unknown_distance_;
   double target_altitude_;
 

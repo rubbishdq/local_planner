@@ -20,6 +20,7 @@ occupancy_grid:
   occupancy_threshold: 0.6  # [0.0, 1.0]
   publish_occupancy_grid: true
   publish_unknown_grid: true
+  publish_voxelized_points: true
   clear_unknown_distance: 5.0  # [m]  #Nan ¿and inf? --> Clear the unkown voxels up to this distance
 
 distance_grid:

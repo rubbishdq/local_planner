@@ -16,6 +16,7 @@
 #include "occupancy_grid/occupancy_grid.h"
 #include "distance_grid/distance_grid.h"
 #include "cost_grid/cost_grid.h"
+#include "voxelized_points/voxelized_points.h"
 
 namespace global_mapper
 {
@@ -31,7 +32,7 @@ public:
   GlobalMapper(GlobalMapper&& rhs) = delete;
   GlobalMapper& operator=(GlobalMapper&& rhs) = delete;
   void GetVoxelGrids(voxel_grid::VoxelGrid<float>* occupancy_grid, voxel_grid::VoxelGrid<int>* distance_grid,
-                     voxel_grid::VoxelGrid<int>* cost_grid);
+                     voxel_grid::VoxelGrid<int>* cost_grid, voxel_grid::VoxelGrid<voxelized_points::VoxelizedPoint>* voxelized_points);
   void PushPointCloud(const PointCloud::ConstPtr& cloud_ptr);
   void UpdateOrigin(const double xyz[3]);
   void GetOrigin(double xyz[3]) const;
@@ -49,11 +50,12 @@ public:
   occupancy_grid::OccupancyGrid occupancy_grid_;
   distance_grid::DistanceGrid distance_grid_;
   cost_grid::CostGrid cost_grid_;
+  voxelized_points::VoxelizedPoints voxelized_points_;
 
 private:
   const PointCloud::ConstPtr PopPointCloud();
   void InsertPointCloud(const PointCloud::ConstPtr& point_cloud);
-  void UpdateOccupancyGrid();
+  void UpdateOccupancyGridAndVoxelizedPoints();
   void UpdateDistanceGrid();
   void UpdateCostGrid();
   void Spin();

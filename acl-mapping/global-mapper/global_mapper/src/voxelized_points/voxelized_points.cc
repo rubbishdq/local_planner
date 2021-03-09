@@ -2,10 +2,11 @@
 
 namespace voxelized_points
 {
-
 VoxelizedPoint::VoxelizedPoint()
 {
     n_ = 0;
+    mu_ = Eigen::Vector3f::Zero();
+    sigma_ = Eigen::Matrix3f::Zero();
 }
 
 VoxelizedPoint::VoxelizedPoint(const std::vector<Eigen::Vector3f>& points)
@@ -26,14 +27,14 @@ void VoxelizedPoint::CalculateParams(const std::vector<Eigen::Vector3f>& points)
     }
     mu_.setZero();
     sigma_.setZero();
-    for (auto iter = points.begin(); iter != points.end(); iter++)
+    for (auto pt : points)
     {
-        mu_ += *iter;
+        mu_ += pt;
     }
     mu_ /= n_;
-    for (auto iter = points.begin(); iter != points.end(); iter++)
+    for (auto pt : points)
     {
-        Eigen::Vector3f diff = *iter - mu_;
+        Eigen::Vector3f diff = pt - mu_;
         sigma_ += diff*diff.transpose();
     }
     sigma_ /= n_;
@@ -57,28 +58,45 @@ void VoxelizedPoint::InsertPoint(Eigen::Vector3f point)
     n_++;
 }
 
- VoxelizedPoint& VoxelizedPoint::operator =(VoxelizedPoint &p2)
- {
-     n_ = p2.n_;
-     mu_ = p2.mu_;
-     sigma_ = p2.sigma_;
- }
+void VoxelizedPoint::Clear()
+{
+    n_  = 0;
+    mu_.setZero();
+    sigma_.setZero();
+}
 
-std::ostream& operator <<(std::ostream &output, VoxelizedPoint &p)
+std::ostream& operator <<(std::ostream &output, VoxelizedPoint p)
 {
     output << "n_:  " << p.n_ << std::endl;
     output << "mu:\n" << p.mu_.transpose() << std::endl;
     output << "sigma:\n" << p.sigma_ << std::endl;
 }
 
+VoxelizedPoints::VoxelizedPoints(const double origin[3], const double world_dimensions[3], const double resolution)
+    : voxel_grid::VoxelGrid<VoxelizedPoint>(origin, world_dimensions, resolution)
+{
+  double indexer_origin[3];
+  GetOrigin(indexer_origin);
+  UpdateOrigin(indexer_origin);
+}
+
+void VoxelizedPoints::InsertPoint(Eigen::Vector3f point)
+{
+    VoxelizedPoint *DataPtr = &(this->GetReference(double(point[0]), double(point[1]), double(point[2])));
+    DataPtr->InsertPoint(point);
+}
+
 void VoxelizedPoints::PreShiftOrigin(const std::vector<int>& slice_indexes)
 {
-    //TODO
+    // empty
 }
 
 void VoxelizedPoints::PostShiftOrigin(const std::vector<int>& slice_indexes)
 {
-    //TODO
+  for (int index : slice_indexes)
+  {
+    WriteValue(index, empty_voxel_);
+  }
 }
 
 }// namespace voxelized_points
