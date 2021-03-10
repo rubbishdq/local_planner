@@ -21,9 +21,9 @@
 #include <cstdlib>
 #include <sys/time.h>
 
-namespace localExplorer
+namespace local_explorer
 {
 
     ;
 
-}
+} // namespace local_explorer

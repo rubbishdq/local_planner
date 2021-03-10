@@ -8,16 +8,15 @@ project(local_explorer)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  global_mapper_ros
   geometry_msgs
   roscpp
   rospy
   sensor_msgs
   std_msgs
 )
-
-## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
-
+find_package(Eigen3 REQUIRED)
+find_package(global_mapper REQUIRED)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -105,9 +104,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
+  INCLUDE_DIRS include
 #  LIBRARIES local_explorer
-#  CATKIN_DEPENDS geometry_msgs roscpp rospy sensor_msgs std_msgs
+  CATKIN_DEPENDS global_mapper_ros geometry_msgs roscpp rospy sensor_msgs std_msgs
 #  DEPENDS system_lib
 )
 
@@ -119,6 +118,8 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
 # include
+  ${Eigen3_INCLUDE_DIR}
+  ${global_mapper_INCLUDE_DIRS}
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -207,11 +208,8 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
-find_package(Eigen3 REQUIRED)
-include_directories(${EIGEN3_INCLUDE_DIR})
-
 set(HeaderDir "include/local_explorer")
-include_directories(include/local_explorer)
+include_directories(${HeaderDir})
 
 add_subdirectory(./third_party/qhull)
 
@@ -222,12 +220,11 @@ link_directories(${QHullDir}/build ${QHullDir}/lib)
 
 set(QHullLibs qhullcpp qhull_r)
 
-add_executable(QHullTest src/QHullTest.cpp)
-target_link_libraries(QHullTest ${QHullLibs})
+add_executable(qhull_test test/qhull_test.cpp)
+target_link_libraries(qhull_test ${QHullLibs})
 
-#add_executable(frontier_generator ${HeaderDir}/frontier_generator.h)
-add_executable(frontier_generator src/frontier_generator.cpp)
-target_link_libraries(frontier_generator ${QHullLibs})
+add_executable(rviz_interface src/rviz_interface.cpp)
+target_link_libraries(rviz_interface ${global_mapper_LIBRARIES} ${catkin_LIBRARIES})
 
 
 

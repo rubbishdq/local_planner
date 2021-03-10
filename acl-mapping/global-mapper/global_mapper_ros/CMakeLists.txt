@@ -123,5 +123,5 @@ install(TARGETS global_mapper_ros
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   )
 
-  message(STATUS "global_mapper_include_dirs: ${global_mapper_INCLUDE_DIRS}")
+message(STATUS "global_mapper_include_dirs: ${global_mapper_INCLUDE_DIRS}")
 message(STATUS "global_mapper_libraries: ${global_mapper_LIBRARIES}")
