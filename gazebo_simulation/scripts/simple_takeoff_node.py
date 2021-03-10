@@ -4,13 +4,14 @@
 import rospy
 import numpy as np
 import math
+import sys
 from geometry_msgs.msg import PoseStamped
 from mavros_msgs.msg import State
 from mavros_msgs.srv import CommandBool
 from mavros_msgs.srv import SetMode
 
 class CoreControllerNode:
-    def __init__(self):
+    def __init__(self, ns = ''):
         rospy.init_node('core_controller_node', anonymous=True)
 
         self.is_takeoff_ = False
@@ -19,16 +20,17 @@ class CoreControllerNode:
         self.uav_target_pose_local_ = PoseStamped()
         self.uav_target_pose_local_.header.seq = 1
         self.uav_target_pose_local_.header.frame_id = 'map'
+        self.uav_target_pose_local_.pose.position.z = 1.5
         self.uav_target_pose_local_.pose.orientation.w = 1
 
         self.last_request_ = rospy.Time.now()
 
-        self.uav_target_pose_local_pub_ = rospy.Publisher('/mavros/setpoint_position/local', PoseStamped, queue_size=100)
-        self.mavstateSub_ = rospy.Subscriber('/mavros/state', State, self.mavstateCallback)
+        self.uav_target_pose_local_pub_ = rospy.Publisher(ns+'/mavros/setpoint_position/local', PoseStamped, queue_size=100)
+        self.mavstateSub_ = rospy.Subscriber(ns+'/mavros/state', State, self.mavstateCallback)
 
-        self.arming_client_ = rospy.ServiceProxy('/mavros/cmd/arming', CommandBool)
-        self.land_client_ = rospy.ServiceProxy('/mavros/cmd/land', CommandBool)
-        self.set_mode_client_ = rospy.ServiceProxy('/mavros/set_mode', SetMode)
+        self.arming_client_ = rospy.ServiceProxy(ns+'/mavros/cmd/arming', CommandBool)
+        self.land_client_ = rospy.ServiceProxy(ns+'/mavros/cmd/land', CommandBool)
+        self.set_mode_client_ = rospy.ServiceProxy(ns+'/mavros/set_mode', SetMode)
 
         self.statusloop_timer_ = rospy.Timer(rospy.Duration(1), self.statusloopCallback)
         self.publishloop_timer_ = rospy.Timer(rospy.Duration(0.1), self.publishloopCallback)
@@ -49,7 +51,7 @@ class CoreControllerNode:
     def statusloopCallback(self, event):
         if self.is_takeoff_ == False:
             if self.current_state_.mode != 'OFFBOARD' and (rospy.Time.now() - self.last_request_ > rospy.Duration(4.0)):
-                response = self.set_mode_client_(0, 'OFFBOARD')  #请求解锁
+                response = self.set_mode_client_(custom_mode= 'OFFBOARD')  #请求解锁
                 if response.mode_sent:
                     rospy.loginfo('Offboard enabled')
                 self.last_request_ = rospy.Time.now()
@@ -67,4 +69,7 @@ class CoreControllerNode:
         self.uav_target_pose_local_pub_.publish(self.uav_target_pose_local_)
 
 if __name__ == '__main__':
-    cc = CoreControllerNode()
+    if len(sys.argv) > 1:
+        cc = CoreControllerNode(sys.argv[1])
+    else:
+        cc = CoreControllerNode()
