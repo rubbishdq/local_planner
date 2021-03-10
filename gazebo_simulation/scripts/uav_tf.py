@@ -9,29 +9,26 @@ from geometry_msgs.msg import PoseStamped
 from gazebo_msgs.msg import ModelStates
 class UAV_tf_node:
 
-    def __init__(self, use_gazebo_ground_truth):
+    def __init__(self, start_frame, end_frame, ns = '', use_gazebo_ground_truth = False):
         rospy.init_node('uav_tf_node', anonymous=True)
-        if len(sys.argv) < 3:
-            rospy.logerr('Error: len(sys.argv) must not be less than 3! Now %d' % (len(sys.argv)))
+        self.start_frame_ = start_frame
+        self.end_frame_ = end_frame
+        self.mavpos_ = (0., 0., 0.)
+        self.mavrot_ = (0., 0., 0., 1.)
+        self.is_pose_init_ = False
+        if use_gazebo_ground_truth:
+            self.mavposeSub_ = rospy.Subscriber('/gazebo/model_states', ModelStates, self.gazeboposeCallback)
         else:
-            self.start_frame_ = sys.argv[1]
-            self.end_frame_ = sys.argv[2]
-            self.mavpos_ = (0., 0., 0.)
-            self.mavrot_ = (0., 0., 0., 1.)
-            self.is_pose_init_ = False
-            if use_gazebo_ground_truth:
-                self.mavposeSub_ = rospy.Subscriber('/gazebo/model_states', ModelStates, self.gazeboposeCallback)
-            else:
-                self.mavposeSub_ = rospy.Subscriber('/mavros/local_position/pose', PoseStamped, self.mavposeCallback)
-            self.mavposePub_ = rospy.Publisher('/'+self.start_frame_+'/pose', PoseStamped, queue_size=100)
-            self.tfBroadcaster_ = tf.TransformBroadcaster()
-            rate = rospy.Rate(15.0)
-            while not rospy.is_shutdown():
-                if self.is_pose_init_:
-                    self.tfBroadcaster_.sendTransform(self.mavpos_, self.mavrot_, rospy.Time.now(), self.end_frame_, self.start_frame_)
-                    self.publishMavpose()
-                rate.sleep()
-            pass
+            self.mavposeSub_ = rospy.Subscriber(ns+'/mavros/local_position/pose', PoseStamped, self.mavposeCallback)
+        self.mavposePub_ = rospy.Publisher('/'+self.start_frame_+'/pose', PoseStamped, queue_size=100)
+        self.tfBroadcaster_ = tf.TransformBroadcaster()
+        rate = rospy.Rate(15.0)
+        while not rospy.is_shutdown():
+            if self.is_pose_init_:
+                self.tfBroadcaster_.sendTransform(self.mavpos_, self.mavrot_, rospy.Time.now(), self.end_frame_, self.start_frame_)
+                self.publishMavpose()
+            rate.sleep()
+        pass
 
     def mavposeCallback(self, msg):
         self.mavpos_ = (msg.pose.position.x, msg.pose.position.y, msg.pose.position.z)
@@ -61,5 +58,12 @@ class UAV_tf_node:
 
 
 if __name__ == '__main__':
-    utn = UAV_tf_node(True)
+    use_gazebo_ground_truth = True
+    if len(sys.argv) < 3:
+        rospy.logerr('Error: len(sys.argv) must not be less than 3! Now %d' % (len(sys.argv)))
+        exit()
+    if len(sys.argv) > 3:
+        utn = UAV_tf_node(sys.argv[1], sys.argv[2], sys.argv[3], use_gazebo_ground_truth = use_gazebo_ground_truth)
+    else:
+        utn = UAV_tf_node(sys.argv[1], sys.argv[2], use_gazebo_ground_truth = use_gazebo_ground_truth)
 
