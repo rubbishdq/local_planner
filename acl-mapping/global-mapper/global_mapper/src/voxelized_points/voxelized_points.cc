@@ -58,6 +58,12 @@ void VoxelizedPoint::InsertPoint(Eigen::Vector3f point)
     n_++;
 }
 
+void VoxelizedPoint::InsertPoint(const double point[3])
+{
+    Eigen::Vector3f point_vector((float)point[0], (float)point[1], (float)point[2]);
+    InsertPoint(point_vector);
+}
+
 void VoxelizedPoint::Clear()
 {
     n_  = 0;
@@ -83,6 +89,12 @@ VoxelizedPoints::VoxelizedPoints(const double origin[3], const double world_dime
 void VoxelizedPoints::InsertPoint(Eigen::Vector3f point)
 {
     VoxelizedPoint *DataPtr = &(this->GetReference(double(point[0]), double(point[1]), double(point[2])));
+    DataPtr->InsertPoint(point);
+}
+
+void VoxelizedPoints::InsertPoint(const double point[3])
+{
+    VoxelizedPoint *DataPtr = &(this->GetReference(point));
     DataPtr->InsertPoint(point);
 }
 

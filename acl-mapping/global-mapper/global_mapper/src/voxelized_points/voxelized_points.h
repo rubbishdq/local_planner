@@ -23,6 +23,7 @@ public:
     VoxelizedPoint(const std::vector<Eigen::Vector3f>& points);
     void CalculateParams(const std::vector<Eigen::Vector3f>& points);
     void InsertPoint(Eigen::Vector3f point);
+    void InsertPoint(const double point[3]);
     void Clear();
 
     int n_;
@@ -37,6 +38,7 @@ class VoxelizedPoints : public voxel_grid::VoxelGrid<VoxelizedPoint>
 public:
     VoxelizedPoints(const double origin[3], const double world_dimensions[3], const double resolution);
     void InsertPoint(Eigen::Vector3f point);
+    void InsertPoint(const double point[3]);
 private:
     virtual void PreShiftOrigin(const std::vector<int>& slice_indexes) override;
     virtual void PostShiftOrigin(const std::vector<int>& slice_indexes) override;

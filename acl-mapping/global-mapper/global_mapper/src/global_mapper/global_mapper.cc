@@ -46,11 +46,13 @@ void GlobalMapper::SetCostWeights(int altitude_weight, int inflation_weight, int
 void GlobalMapper::SetObstacle(const double xyz[3])
 {
   occupancy_grid_.UpdateValue(xyz, 1.0);
+  voxelized_points_.InsertPoint(xyz);
 }
 
 void GlobalMapper::RemoveObstacle(const double xyz[3])
 {
   occupancy_grid_.UpdateValue(xyz, -1.0);
+  // TODO: make RemoveObstacle() works in voxelized_points
 }
 
 void GlobalMapper::UpdateGrids()
@@ -142,8 +144,7 @@ void GlobalMapper::InsertPointCloud(const PointCloud::ConstPtr& cloud_ptr)
       // --->Valid: Up to the finite value saved in point.z.
       if (finite)
       {
-        Eigen::Vector3f end_vector((float)(end[0]), (float)(end[1]), (float)(end[2]));
-        voxelized_points_.InsertPoint(end_vector);
+        voxelized_points_.InsertPoint(end);
       }
       occupancy_grid_.RayTrace(start, end, params_.miss_inc);
     }
