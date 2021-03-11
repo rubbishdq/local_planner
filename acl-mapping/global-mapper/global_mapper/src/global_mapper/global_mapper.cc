@@ -284,6 +284,7 @@ void GlobalMapper::Spin()
     occupancy_grid_.UpdateOrigin(origin_);
     // distance_grid_.UpdateOrigin(origin_);
     // cost_grid_.UpdateOrigin(origin_);
+    voxelized_points_.UpdateOrigin(origin_);
     origin_mutex_.unlock();
 
     occupancy_grid_.ResetDiffs();

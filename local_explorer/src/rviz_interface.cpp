@@ -5,9 +5,9 @@ namespace local_explorer
 
 RvizInterfaceNode::RvizInterfaceNode()
 {
-    voxelized_points_pub_ = n_.advertise<sensor_msgs::PointCloud2>("/rviz_interface", 1);
+    voxelized_points_pub_ = n_.advertise<sensor_msgs::PointCloud2>("rviz_interface/voxelized_pointcloud", 1);
 
-    voxelized_points_sub_ = n_.subscribe("/iris/global_mapper_ros/voxelized_points", 1, &RvizInterfaceNode::VoxelizedPointsCallback, this, ros::TransportHints().tcpNoDelay());  
+    voxelized_points_sub_ = n_.subscribe("global_mapper_ros/voxelized_points", 1, &RvizInterfaceNode::VoxelizedPointsCallback, this, ros::TransportHints().tcpNoDelay());  
 
     ROS_INFO("Rviz interface node started.");
 

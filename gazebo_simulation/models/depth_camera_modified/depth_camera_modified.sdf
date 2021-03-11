@@ -23,12 +23,12 @@
           </mesh>
         </geometry>
       </visual>
-      <sensor name="realsense_R200" type="depth">
+      <sensor name="realsense_D435_low_res_and_fps" type="depth">
         <always_on>1</always_on>
         <visualize>0</visualize>
         <update_rate>10</update_rate>
         <camera>
-          <horizontal_fov>1.3439</horizontal_fov>
+          <horizontal_fov>1.501</horizontal_fov>
           <image>
             <width>640</width>
             <height>360</height>

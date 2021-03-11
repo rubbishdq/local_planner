@@ -44,14 +44,12 @@ class Communication:
         ros publishers
         '''
         self.target_motion_pub = rospy.Publisher(self.vehicle_type+"/mavros/setpoint_raw/local", PositionTarget, queue_size=10)
-        self.odom_groundtruth_pub = rospy.Publisher('/rc/'+self.vehicle_type+'/ground_truth/odom', Odometry, queue_size=10)
 
         '''
         ros services
         '''
         self.armService = rospy.ServiceProxy(self.vehicle_type+"/mavros/cmd/arming", CommandBool)
         self.flightModeService = rospy.ServiceProxy(self.vehicle_type+"/mavros/set_mode", SetMode)
-        self.gazeboModelstate = rospy.ServiceProxy('gazebo/get_model_state', GetModelState)
 
         print(self.vehicle_type+": "+"communication initialized")
 
@@ -67,16 +65,6 @@ class Communication:
             if (self.flight_mode is "LAND") and (self.current_position.z < 0.15):
                 if(self.disarm()):
                     self.flight_mode = "DISARMED"
-                    
-            try:
-                response = self.gazeboModelstate (self.vehicle_type,'ground_plane')
-            except rospy.ServiceException, e:
-                print "Gazebo model state service call failed: %s"%e
-            odom = Odometry()
-            odom.header = response.header
-            odom.pose.pose = response.pose
-            odom.twist.twist = response.twist
-            self.odom_groundtruth_pub.publish(odom)
 
             rate.sleep()
 
