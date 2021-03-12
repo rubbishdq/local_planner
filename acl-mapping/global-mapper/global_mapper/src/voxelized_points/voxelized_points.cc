@@ -9,6 +9,13 @@ VoxelizedPoint::VoxelizedPoint()
     sigma_ = Eigen::Matrix3f::Zero();
 }
 
+VoxelizedPoint::VoxelizedPoint(int n, Eigen::Vector3f mu, Eigen::Matrix3f sigma)
+{
+    n_ = n;
+    mu_ = mu;
+    sigma_ = sigma;
+}
+
 VoxelizedPoint::VoxelizedPoint(const std::vector<Eigen::Vector3f>& points)
 {
     CalculateParams(points);

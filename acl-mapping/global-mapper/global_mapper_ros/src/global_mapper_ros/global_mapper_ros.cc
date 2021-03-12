@@ -482,6 +482,9 @@ void GlobalMapperRos::PopulateVoxelizedPointsMsg(const voxel_grid::VoxelGrid<vox
   }
   voxelized_points_msg->header.stamp = ros::Time::now();
   voxelized_points_msg->header.frame_id = "world";
+  voxelized_points_msg->origin.x = (float)origin[0];
+  voxelized_points_msg->origin.y = (float)origin[1];
+  voxelized_points_msg->origin.z = (float)origin[2];
 }
 
 void GlobalMapperRos::PopulatePathMsg(const std::vector<std::array<double, 3>>& path, nav_msgs::Path* path_msg)

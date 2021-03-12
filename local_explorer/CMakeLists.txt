@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0.2)
 project(local_explorer)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -208,7 +208,7 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
-set(HeaderDir "include/local_explorer")
+set(HeaderDir "include")
 include_directories(${HeaderDir})
 
 add_subdirectory(./third_party/qhull)
@@ -220,11 +220,14 @@ link_directories(${QHullDir}/build ${QHullDir}/lib)
 
 set(QHullLibs qhullcpp qhull_r)
 
-add_executable(qhull_test test/qhull_test.cpp)
-target_link_libraries(qhull_test ${QHullLibs})
+add_library(viewpoint_generator src/local_explorer/viewpoint_generator.cpp)
+target_link_libraries(viewpoint_generator ${global_mapper_LIBRARIES} ${catkin_LIBRARIES} ${QHullLibs})
+
+add_executable(local_explorer src/local_explorer/local_explorer.cpp)
+target_link_libraries(local_explorer viewpoint_generator ${global_mapper_LIBRARIES} ${catkin_LIBRARIES})
 
 add_executable(rviz_interface src/rviz_interface.cpp)
-target_link_libraries(rviz_interface ${global_mapper_LIBRARIES} ${catkin_LIBRARIES})
+target_link_libraries(rviz_interface ${catkin_LIBRARIES})
 
-
-
+add_executable(qhull_test test/qhull_test.cpp)
+target_link_libraries(qhull_test ${QHullLibs})

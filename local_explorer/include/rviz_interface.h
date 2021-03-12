@@ -1,3 +1,6 @@
+#ifndef __RVIZ_INTERFACE_H__
+#define __RVIZ_INTERFACE_H__
+
 //#include "voxelized_points/voxelized_points.h"
 
 #include "sensor_msgs/PointCloud2.h"
@@ -27,3 +30,5 @@ private:
 };
 
 } // namespace local_explorer
+
+#endif

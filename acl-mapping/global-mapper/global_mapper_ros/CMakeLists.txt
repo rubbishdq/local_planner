@@ -33,6 +33,7 @@ set(REQ_CATKIN_PKGS
   cv_bridge
   fla_msgs
   snapstack_msgs
+  geometry_msgs
   )
 find_package(catkin REQUIRED COMPONENTS ${REQ_CATKIN_PKGS})
 
@@ -49,6 +50,7 @@ add_message_files(FILES
 
 generate_messages(DEPENDENCIES
   std_msgs
+  geometry_msgs
   )
 
 # setup downstream dependencies

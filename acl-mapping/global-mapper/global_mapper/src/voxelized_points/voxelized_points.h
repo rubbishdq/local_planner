@@ -20,6 +20,7 @@ class VoxelizedPoint
 {
 public:
     VoxelizedPoint();
+    VoxelizedPoint(int n, Eigen::Vector3f mu, Eigen::Matrix3f sigma);
     VoxelizedPoint(const std::vector<Eigen::Vector3f>& points);
     void CalculateParams(const std::vector<Eigen::Vector3f>& points);
     void InsertPoint(Eigen::Vector3f point);
