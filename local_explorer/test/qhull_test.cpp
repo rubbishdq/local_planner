@@ -124,18 +124,18 @@ int main() {
      */
 
     vector<Pt3d> pts;
-    /*
+    
     pts.push_back(Pt3d(0, 0, 0));
     pts.push_back(Pt3d(0, 0, 1));
     pts.push_back(Pt3d(0, 1, 0));
     pts.push_back(Pt3d(0.2, 0.2, 0.2));
     pts.push_back(Pt3d(1, 0, 0));
-     */
+     
+     /*
     for (int i = 0; i < 10000; i++)
     {
         pts.push_back(Pt3d(random(0, 99), random(0, 99), random(0, 99)));
-    }
-
+    }*/
 
     char str[5000000];
     gettimeofday(&t1, nullptr);
@@ -156,7 +156,7 @@ int main() {
     gettimeofday(&t2, nullptr);
     deltaT = double(t2.tv_sec-t1.tv_sec) + double(t2.tv_usec-t1.tv_usec)/1e6;
     cout << "Time usage: " << deltaT << " s" << endl;
-    /*
+    
     cout << "vertexList(): \n";
     cout << qhull.vertexList();
     cout << "facetList(): \n";
@@ -172,7 +172,7 @@ int main() {
         cout << "id: " << iter->id() << endl;
     }
     cout << "TestFacet: \n";
-     */
+     
     return 0;
 }
 

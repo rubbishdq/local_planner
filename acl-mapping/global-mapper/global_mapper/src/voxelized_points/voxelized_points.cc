@@ -83,6 +83,7 @@ std::ostream& operator <<(std::ostream &output, VoxelizedPoint p)
     output << "n_:  " << p.n_ << std::endl;
     output << "mu:\n" << p.mu_.transpose() << std::endl;
     output << "sigma:\n" << p.sigma_ << std::endl;
+    return output;
 }
 
 VoxelizedPoints::VoxelizedPoints(const double origin[3], const double world_dimensions[3], const double resolution)
