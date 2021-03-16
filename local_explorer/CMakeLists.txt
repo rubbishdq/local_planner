@@ -4,6 +4,7 @@ project(local_explorer)
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
 
+string(REGEX REPLACE ".*/\(.*\)" "\\1" CURDIR ${CMAKE_CURRENT_SOURCE_DIR})
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -17,6 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 find_package(Eigen3 REQUIRED)
 find_package(global_mapper REQUIRED)
+find_package(qhull REQUIRED)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -213,15 +215,19 @@ include_directories(${HeaderDir})
 
 add_subdirectory(./third_party/qhull)
 
-set(QHullDir "third_party/qhull")
+set(QHullDir "${CMAKE_CURRENT_SOURCE_DIR}/third_party/qhull")
 
 include_directories(${QHullDir}/src/libqhullcpp ${QHullDir}/src)
-link_directories(${QHullDir}/build ${QHullDir}/lib)
+#link_directories(${QHullDir}/build ${QHullDir}/lib)
 
 set(QHullLibs qhullcpp qhull_r)
+#set(QHullLibs "${CMAKE_CURRENT_SOURCE_DIR}/lib/libqhullcpp.a" "${CMAKE_CURRENT_SOURCE_DIR}/lib/libqhull_r.so")
+
+add_library(viewpoint src/local_explorer/viewpoint.cpp)
+target_link_libraries(viewpoint ${global_mapper_LIBRARIES} ${QHullLibs})
 
 add_library(viewpoint_generator src/local_explorer/viewpoint_generator.cpp)
-target_link_libraries(viewpoint_generator ${global_mapper_LIBRARIES} ${catkin_LIBRARIES} ${QHullLibs})
+target_link_libraries(viewpoint_generator viewpoint ${catkin_LIBRARIES})
 
 add_executable(local_explorer src/local_explorer/local_explorer.cpp)
 target_link_libraries(local_explorer viewpoint_generator ${global_mapper_LIBRARIES} ${catkin_LIBRARIES})
@@ -231,3 +237,6 @@ target_link_libraries(rviz_interface ${catkin_LIBRARIES})
 
 add_executable(qhull_test test/qhull_test.cpp)
 target_link_libraries(qhull_test ${QHullLibs})
+message(STATUS "catkin_INCLUDE_DIRS: ${catkin_INCLUDE_DIRS}")
+message(STATUS "catkin_LIBRARIES: ${catkin_LIBRARIES}")
+

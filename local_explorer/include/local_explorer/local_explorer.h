@@ -24,12 +24,15 @@ public:
 
 private:
     void RepublishVoxelizedPoints(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr);
+    void PublishViewpoint(Viewpoint &viewpoint);
+    void PublishCandidateFrontier(Viewpoint &viewpoint);
 
     void VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr);
 
     ros::NodeHandle n_;
 
     ros::Publisher voxelized_points_pub_;
+    ros::Publisher viewpoint_pub_;
     ros::Publisher frontier_pub_;
 
     ros::Subscriber voxelized_points_sub_;
