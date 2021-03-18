@@ -8,6 +8,7 @@ extern "C" {
 #include "qhull_a.h"
 }
 #include "Eigen/Core"
+#include "ros/ros.h"
 
 #include <memory>
 #include <iostream>

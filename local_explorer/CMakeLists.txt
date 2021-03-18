@@ -221,7 +221,7 @@ include_directories(${QhullDir}/src/libqhull)
 find_library(QhullLib qhull)
 
 add_library(qhull_bridge src/local_explorer/qhull_bridge.cpp)
-target_link_libraries(qhull_bridge ${QhullLib})
+target_link_libraries(qhull_bridge ${QhullLib} ${catkin_LIBRARIES})
 
 add_library(viewpoint src/local_explorer/viewpoint.cpp)
 target_link_libraries(viewpoint ${global_mapper_LIBRARIES} qhull_bridge)

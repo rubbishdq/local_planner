@@ -5,6 +5,7 @@ namespace local_explorer
 
 Viewpoint::Viewpoint()
 {
+    convex_hull_ptr_ = std::make_shared<ConvexHull>();
     is_generated_ = false;
 }
 
@@ -14,20 +15,21 @@ void Viewpoint::GenerateViewpoint(std::vector<LabeledPoint> &cloud, std::vector<
     if (cloud_size >= 4)
     {
         convex_hull_ptr_ = std::make_shared<ConvexHull>();
-       
+        
         double *arr = new double[3*cloud_size];
         Points2Array(inverted_cloud, arr);
         convex_hull_ptr_->CalcConvexHull(cloud_size, arr);
         convex_hull_ptr_->ReadQhullGlobalData();
         
         delete []arr;
-
+        
         int vertex_count = convex_hull_ptr_->VertexCount();
         vertex_data_.resize(vertex_count);
         for (auto vertex_ptr : convex_hull_ptr_->vertex_list_)
         {
             vertex_data_[vertex_ptr->id_] = cloud[vertex_ptr->original_id_];
         }
+        is_generated_ = true;
     }
 }
 

@@ -5,6 +5,8 @@ namespace local_explorer
 
 ViewpointGenerator::ViewpointGenerator()
 {
+    viewpoint_ptr_ = std::make_shared<Viewpoint>();
+    is_initialized_ = false;
 }
 
 void ViewpointGenerator::PreprocessVoxelizedPoints(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr, 
@@ -86,7 +88,7 @@ void ViewpointGenerator::ProcessVoxelizedPoints(const global_mapper_ros::Voxeliz
     InvertPoints(*processed_cloud_ptr_, *inverted_cloud_ptr_);
 
     viewpoint_ptr_->GenerateViewpoint(*processed_cloud_ptr_, *inverted_cloud_ptr_);
-
+    is_initialized_ = true;
 }
 
 std::shared_ptr<Viewpoint> ViewpointGenerator::GetViewpointPtr()
@@ -96,7 +98,9 @@ std::shared_ptr<Viewpoint> ViewpointGenerator::GetViewpointPtr()
 
 bool ViewpointGenerator::IsGenerated()
 {
-    return viewpoint_ptr_->IsGenerated();
+    if (is_initialized_)
+        return viewpoint_ptr_->IsGenerated();
+    return false;
 }
 
 } // namespace local_explorer

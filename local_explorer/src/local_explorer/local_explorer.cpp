@@ -57,6 +57,7 @@ void LocalExplorer::VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPo
 {
     ROS_INFO("Voxelized points message received.");
     viewpoint_generator_ptr_->ProcessVoxelizedPoints(msg_ptr);
+
     if (viewpoint_generator_ptr_->IsGenerated())
     {
         ROS_INFO("Viewpoint successfully generated.");

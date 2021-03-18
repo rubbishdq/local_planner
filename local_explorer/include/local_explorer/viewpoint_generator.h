@@ -28,6 +28,7 @@ private:
     std::shared_ptr<std::vector<LabeledPoint>> inverted_cloud_ptr_;
     Eigen::Vector3f origin_;
     std::shared_ptr<Viewpoint> viewpoint_ptr_;
+    bool is_initialized_;
 
 };
 
