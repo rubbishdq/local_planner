@@ -5,6 +5,7 @@
 
   <arg name="load_params" default="true" />
   <arg name="param_file" default="global_mapper.yaml" />
+  <arg name="output" default="screen" />
 
   <!-- input topics -->
   <!--NORMAL:  camera/depth/image_rect_raw -->
@@ -28,7 +29,7 @@
   <arg name="sparse_path_topic" default="~sparse_path" />
 
   <!-- node -->
-  <node ns="$(arg quad)" pkg="global_mapper_ros" type="global_mapper_node" name="global_mapper_ros" output="screen">
+  <node ns="$(arg quad)" pkg="global_mapper_ros" type="global_mapper_node" name="global_mapper_ros" output="$(arg output)">
       <!-- params -->
       <rosparam command="load" if="$(arg load_params)" file="$(find global_mapper_ros)/cfg/$(arg param_file)"/>
 

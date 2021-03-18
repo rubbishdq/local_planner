@@ -15,7 +15,7 @@ public:
 
     void PreprocessVoxelizedPoints(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr, 
         std::vector<LabeledPoint> &cloud);
-    void AddBoarderPoints(std::vector<LabeledPoint> &cloud, double origin[3]);
+    void AddBoarderPoints(std::vector<LabeledPoint> &cloud);
     void InvertPoints(std::vector<LabeledPoint> &cloud, std::vector<LabeledPoint> &inverted_cloud);
 
     void ProcessVoxelizedPoints(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr);
@@ -26,7 +26,7 @@ public:
 private:
     std::shared_ptr<std::vector<LabeledPoint>> processed_cloud_ptr_;
     std::shared_ptr<std::vector<LabeledPoint>> inverted_cloud_ptr_;
-    //char qhull_input_str_[500000];
+    Eigen::Vector3f origin_;
     std::shared_ptr<Viewpoint> viewpoint_ptr_;
 
 };

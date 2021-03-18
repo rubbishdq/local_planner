@@ -10,8 +10,7 @@ ViewpointGenerator::ViewpointGenerator()
 void ViewpointGenerator::PreprocessVoxelizedPoints(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr, 
     std::vector<LabeledPoint> &cloud)
 {
-    double origin[3] = {(double)msg_ptr->origin.x, (double)msg_ptr->origin.y, (double)msg_ptr->origin.z};
-    Eigen::Vector3f origin_vec(msg_ptr->origin.x, msg_ptr->origin.y, msg_ptr->origin.z);
+    origin_ << msg_ptr->origin.x, msg_ptr->origin.y, msg_ptr->origin.z;
     int n;
     Eigen::Vector3f mu;
     Eigen::Matrix3f sigma;
@@ -22,19 +21,19 @@ void ViewpointGenerator::PreprocessVoxelizedPoints(const global_mapper_ros::Voxe
         sigma << point.sigma[0], point.sigma[1], point.sigma[2], 
             point.sigma[1], point.sigma[3], point.sigma[4], 
             point.sigma[2], point.sigma[4], point.sigma[5];
-        if ((origin_vec-mu).norm() <= MIN_RANGE_FOR_EXTENSION)
+        if ((origin_-mu).norm() <= MIN_RANGE_FOR_EXTENSION)
         {
             continue;
         }
         cloud.push_back(LabeledPoint(n, mu, sigma, NORMAL)); 
     }
-    AddBoarderPoints(cloud, origin);
+    AddBoarderPoints(cloud);
 }
 
-void ViewpointGenerator::AddBoarderPoints(std::vector<LabeledPoint> &cloud, double origin[3])
+void ViewpointGenerator::AddBoarderPoints(std::vector<LabeledPoint> &cloud)
 {
-    double lowest_vertex[3] = {origin[0]-DIMENSION[0]/2, origin[1]-DIMENSION[1]/2, origin[2]-DIMENSION[2]/2};
-    double highest_vertex[3] = {origin[0]+DIMENSION[0]/2, origin[1]+DIMENSION[1]/2, origin[2]+DIMENSION[2]/2};
+    double lowest_vertex[3] = {origin_[0]-DIMENSION[0]/2, origin_[1]-DIMENSION[1]/2, origin_[2]-DIMENSION[2]/2};
+    double highest_vertex[3] = {origin_[0]+DIMENSION[0]/2, origin_[1]+DIMENSION[1]/2, origin_[2]+DIMENSION[2]/2};
     Eigen::Vector3f mu;
     for (double diff_x = RESOLUTION; diff_x < DIMENSION[0]; diff_x+=RESOLUTION)
     {

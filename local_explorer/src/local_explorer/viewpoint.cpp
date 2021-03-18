@@ -13,45 +13,25 @@ void Viewpoint::GenerateViewpoint(std::vector<LabeledPoint> &cloud, std::vector<
     int cloud_size = int(inverted_cloud.size());
     if (cloud_size >= 4)
     {
-        qhull_ptr_ = std::make_shared<orgQhull::Qhull>();
-        /*
-        Points2Str(*inverted_cloud_ptr_, qhull_input_str_, 4, 3);
-        std::istringstream is(qhull_input_str_);
-        orgQhull::RboxPoints rbox;
-        rbox.appendPoints(is);
-        qhull_ptr_->runQhull(rbox, "");
-        */
+        convex_hull_ptr_ = std::make_shared<ConvexHull>();
        
         double *arr = new double[3*cloud_size];
-        //Points2Array(inverted_cloud, arr);
-        arr[0] = 0; arr[1] = 0; arr[2] = 0;
-        arr[3] = 1; arr[4] = 0; arr[5] = 0;
-        arr[6] = 0; arr[7] = 1; arr[8] = 0;
-        arr[9] = 0; arr[10] = 0; arr[11] = 1;
+        Points2Array(inverted_cloud, arr);
+        convex_hull_ptr_->CalcConvexHull(cloud_size, arr);
+        convex_hull_ptr_->ReadQhullGlobalData();
         
-        //qhull_ptr_->runQhull("rbox", 3, cloud_size, arr, "");
-        //qhull_ptr_->runQhull("rbox", 3, 4, arr, "");
-        printf("2222222222222222222222222222222\n");
-        
-        //delete []arr;
-        /*
-        printf("3333333333333333333333333333333\n");
+        delete []arr;
 
-        int vertex_count = qhull_ptr_->vertexCount();
+        int vertex_count = convex_hull_ptr_->VertexCount();
         vertex_data_.resize(vertex_count);
-        printf("0000000000000000000000000000000\n");
-        std::vector<orgQhull::QhullVertex> vertex_list = qhull_ptr_->vertexList().toStdVector();
-        printf("4444444444444444444444444444444\n");
-        for (auto vertex : vertex_list)
+        for (auto vertex_ptr : convex_hull_ptr_->vertex_list_)
         {
-            orgQhull::QhullPoint p = vertex.point();
-            int p_id = p.id(), v_id = vertex.id();
-            vertex_data_[v_id-1] = cloud[p_id];
-        }*/
-        //is_generated_ = true;
+            vertex_data_[vertex_ptr->id_] = cloud[vertex_ptr->original_id_];
+        }
     }
 }
 
+// useless in non-reentrant qhull
 void Viewpoint::Points2Str(std::vector<LabeledPoint> &pts, char* str, int int_num, int dec_num)
 {
     // not widely using sprintf because sprintf is slow, but will add zero
@@ -118,9 +98,9 @@ void Viewpoint::Points2Array(std::vector<LabeledPoint> &pts, double* arr)
     }
 }
 
-std::shared_ptr<orgQhull::Qhull> Viewpoint::GetQhullPtr()
+std::shared_ptr<ConvexHull> Viewpoint::GetConvexHullPtr()
 {
-    return qhull_ptr_;
+    return convex_hull_ptr_;
 }
 
 std::vector<LabeledPoint>& Viewpoint::GetVertexData()

@@ -32,6 +32,11 @@ public:
         mu_ /= pow(mu_.norm(), param);
     }
 
+    void reinvert(double param)
+    {
+        mu_ *= pow(mu_.norm(), 1/(1-param)-1);
+    }
+
     PointType type_;
 };
 

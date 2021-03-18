@@ -1,4 +1,0 @@
-[submodule "third_party/qhull"]
-	path = ./local_explorer/third_party/qhull
-	url = https://github.com/qhull/qhull.git
-	ignore = all
