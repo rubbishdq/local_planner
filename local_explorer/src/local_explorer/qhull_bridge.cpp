@@ -72,6 +72,7 @@ void ConvexHull::ReadQhullGlobalData()
         }
         i++;
     }
+    qh_freeqhull2(1);
 }
 
 int ConvexHull::VertexCount()

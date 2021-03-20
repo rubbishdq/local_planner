@@ -48,7 +48,7 @@ class ConvexHull
 public:
     ConvexHull();
     int CalcConvexHull(int numpoints, double *points);
-    void ReadQhullGlobalData();
+    void ReadQhullGlobalData();  // non-reentrant qhull's global data will be released at the end of this function
     int VertexCount();
     int FacetCount();
 
