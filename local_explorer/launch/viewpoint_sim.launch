@@ -22,7 +22,7 @@
     </group>
 
     <group if="$(arg visualization)">
-        <node type="rviz" name="rviz" pkg="rviz" args="-d $(find local_explorer)/launch/voxelized_points_sim.rviz" />
+        <node type="rviz" name="rviz" pkg="rviz" args="-d $(find local_explorer)/launch/viewpoint_sim.rviz" />
     </group>
   
   </launch>

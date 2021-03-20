@@ -11,6 +11,7 @@ r1: 0.8 #[m] Points in the sphere centerd in the drone with r>r1 and r<r2 are pu
 r2: 8.0 #[m] See above
 z_min_unknown: 0.1 #[m] points below z_min_unkown are not published in the unkown grid
 z_max_unknown: 5 #[m] points above z_max_unkown are not published in the unkown grid
+publish_interval: 0.2
 
 
 occupancy_grid:
@@ -20,7 +21,6 @@ occupancy_grid:
   occupancy_threshold: 0.6  # [0.0, 1.0]
   publish_occupancy_grid: true
   publish_unknown_grid: false
-  publish_voxelized_points: true
   clear_unknown_distance: 5.0  # [m]  #Nan ¿and inf? --> Clear the unkown voxels up to this distance
 
 distance_grid:
@@ -36,3 +36,6 @@ cost_grid:
   unknown_weight: 20
   obstacle_weight: 10000
   target_altitude: 2  # target altitude [m]
+
+voxelized_points:
+  publish_voxelized_points: true

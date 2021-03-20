@@ -105,6 +105,7 @@ private:
   bool publish_voxelized_points_;
   double clear_unknown_distance_;
   double target_altitude_;
+  double publish_interval_;
 
   // i/o flags
   bool got_goal_;

@@ -63,6 +63,7 @@ void GlobalMapperRos::GetParams()
   fla_utils::SafeGetParam(pnh_, "r2", params_.r2);
   fla_utils::SafeGetParam(pnh_, "z_min_unknown", params_.z_min_unknown);
   fla_utils::SafeGetParam(pnh_, "z_max_unknown", params_.z_max_unknown);
+  fla_utils::SafeGetParam(pnh_, "publish_interval", publish_interval_);
 
   // occupancy_grid
   fla_utils::SafeGetParam(pnh_, "occupancy_grid/init_value", params_.init_value);
@@ -71,7 +72,6 @@ void GlobalMapperRos::GetParams()
   fla_utils::SafeGetParam(pnh_, "occupancy_grid/occupancy_threshold", params_.occupancy_threshold);
   fla_utils::SafeGetParam(pnh_, "occupancy_grid/publish_unknown_grid", publish_unknown_grid_);
   fla_utils::SafeGetParam(pnh_, "occupancy_grid/publish_occupancy_grid", publish_occupancy_grid_);
-  fla_utils::SafeGetParam(pnh_, "occupancy_grid/publish_voxelized_points", publish_voxelized_points_);
   fla_utils::SafeGetParam(pnh_, "occupancy_grid/clear_unknown_distance", clear_unknown_distance_);
 
   // distance_grid
@@ -87,6 +87,9 @@ void GlobalMapperRos::GetParams()
   fla_utils::SafeGetParam(pnh_, "cost_grid/unknown_weight", params_.unknown_weight);
   fla_utils::SafeGetParam(pnh_, "cost_grid/obstacle_weight", params_.obstacle_weight);
   fla_utils::SafeGetParam(pnh_, "cost_grid/target_altitude", target_altitude_);
+
+  // voxelized_points
+  fla_utils::SafeGetParam(pnh_, "voxelized_points/publish_voxelized_points", publish_voxelized_points_);
 }
 
 void GlobalMapperRos::InitSubscribers()
@@ -133,7 +136,7 @@ void GlobalMapperRos::InitPublishers()
 
   // planning_grids_pub_ = pnh_.advertise<global_mapper_ros::PlanningGrids>("planning_grids", 1);
 
-  grid_pub_timer_ = nh_.createTimer(ros::Duration(0.05), &GlobalMapperRos::Publish, this);
+  grid_pub_timer_ = nh_.createTimer(ros::Duration(publish_interval_), &GlobalMapperRos::Publish, this);
 }
 
 void GlobalMapperRos::PopulateUnknownPointCloudMsg(const occupancy_grid::OccupancyGrid& occupancy_grid,
