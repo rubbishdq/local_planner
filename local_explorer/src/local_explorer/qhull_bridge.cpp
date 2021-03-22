@@ -3,6 +3,28 @@
 namespace local_explorer
 {
 
+void Facet::CalcArea()
+{
+    Eigen::Vector3f p1, p2, p3;
+    p1 = vertices_[0]->pos_;
+    p2 = vertices_[1]->pos_;
+    p3 = vertices_[2]->pos_;
+    area_ = 0.5*norm(cross(p2-p1, p3-p1));
+}
+
+float Facet::RidgeMaxLength()
+{
+    Eigen::Vector3f p1, p2, p3;
+    float l1, l2, l3;
+    p1 = vertices_[0]->pos_;
+    p2 = vertices_[1]->pos_;
+    p3 = vertices_[2]->pos_;
+    l1 = norm(p2-p1);
+    l2 = norm(p3-p1);
+    l3 = norm(p3-p2);
+    return (l1 > l2 && l1 > l3) ? l1 : (l2 > l3 ? l2 : l3);  
+}
+
 ConvexHull::ConvexHull()
 {
     // empty
@@ -83,6 +105,14 @@ int ConvexHull::VertexCount()
 int ConvexHull::FacetCount()
 {
     return facet_list_.size();
+}
+
+void ConvexHull::ClearFacetFlag()
+{
+    for (auto facet_ptr : facet_list_)
+    {
+        facet_ptr_->flag_ = 0;
+    }
 }
 
 } // namespace local_explorer

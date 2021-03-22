@@ -28,6 +28,7 @@ void Viewpoint::GenerateViewpoint(std::vector<LabeledPoint> &cloud, std::vector<
         for (auto vertex_ptr : convex_hull_ptr_->vertex_list_)
         {
             vertex_data_[vertex_ptr->id_] = cloud[vertex_ptr->original_id_];
+            vertex_ptr->pos_ = cloud[vertex_ptr->original_id_].mu_;
         }
         is_generated_ = true;
     }
