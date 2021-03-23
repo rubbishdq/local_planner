@@ -5,6 +5,7 @@
 #include "local_explorer/viewpoint_generator.h"
 
 #include "sensor_msgs/PointCloud2.h"
+#include "visualization_msgs/Marker.h"
 #include "global_mapper_ros/VoxelizedPoints.h"
 #include "ros/ros.h"
 #include <pcl_ros/point_cloud.h>

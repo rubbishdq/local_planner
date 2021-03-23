@@ -11,7 +11,7 @@ LocalExplorer::LocalExplorer()
 
     voxelized_points_pub_ = n_.advertise<sensor_msgs::PointCloud2>("local_explorer/voxelized_pointcloud", 1);
     viewpoint_pub_ = n_.advertise<sensor_msgs::PointCloud2>("local_explorer/viewpoint", 1);
-    frontier_cluster_list_pub_ = n_.advertise<sensor_msgs::PointCloud2>("local_explorer/frontier_cluster_list", 1);
+    frontier_cluster_list_pub_ = n_.advertise<visualization_msgs::Marker>("local_explorer/frontier_cluster_list", 1);
 
     voxelized_points_sub_ = n_.subscribe("global_mapper_ros/voxelized_points", 1, &LocalExplorer::VoxelizedPointsCallback, this, ros::TransportHints().tcpNoDelay());  
 
@@ -51,6 +51,7 @@ void LocalExplorer::PublishViewpoint(Viewpoint &viewpoint)
 
 void LocalExplorer::PublishFrontierCluster(Viewpoint &viewpoint)
 {
+    /*
     sensor_msgs::PointCloud2 cloud_msg;
     pcl::PointCloud<pcl::PointXYZ> cloud;
     std::vector<FrontierCluster> frontier_cluster_list = viewpoint.GetFrontierClusterList();
@@ -68,6 +69,44 @@ void LocalExplorer::PublishFrontierCluster(Viewpoint &viewpoint)
     cloud_msg.header.stamp = ros::Time::now();
     cloud_msg.header.frame_id = "world";
     frontier_cluster_list_pub_.publish(cloud_msg);
+    */
+    visualization_msgs::Marker marker;
+    geometry_msgs::Point point;
+    std::vector<FrontierCluster> frontier_cluster_list = viewpoint.GetFrontierClusterList();
+    ROS_INFO("FrontierClusterCount: %d", viewpoint.GetFrontierClusterCount());
+    for (auto &frontier_cluster : frontier_cluster_list)
+    {
+        for (auto facet_ptr : frontier_cluster.facet_list_)
+        {
+            for (auto vertex_ptr : facet_ptr->vertices_)
+            {
+                point.x = vertex_ptr->pos_[0]; point.y = vertex_ptr->pos_[1]; point.z = vertex_ptr->pos_[2];
+                marker.points.push_back(point);
+            }
+        }
+    }
+    marker.id = 0;
+    marker.type = visualization_msgs::Marker::TRIANGLE_LIST;
+    marker.action = visualization_msgs::Marker::ADD;
+    marker.pose.position.x = 0;
+    marker.pose.position.y = 0;
+    marker.pose.position.z = 0;
+    marker.pose.orientation.x = 0.0;
+    marker.pose.orientation.y = 0.0;
+    marker.pose.orientation.z = 0.0;
+    marker.pose.orientation.w = 1.0;
+    marker.scale.x = 1;
+    marker.scale.y = 1;
+    marker.scale.z = 1;
+    marker.color.a = 0.8;
+    marker.color.r = 0.0;
+    marker.color.g = 1.0;
+    marker.color.b = 1.0;
+    //marker.lifetime = ros::Duration(0.2);
+
+    marker.header.frame_id = "world";
+    marker.header.stamp = ros::Time::now();
+    frontier_cluster_list_pub_.publish(marker);
 }
 
 void LocalExplorer::VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr)
