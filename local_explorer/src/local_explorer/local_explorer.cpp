@@ -7,10 +7,11 @@ LocalExplorer::LocalExplorer()
 {
     // make_unique is a C++14 feature
     //viewpoint_generator_ptr_ = std::make_unique<ViewpointGenerator>();
-    viewpoint_generator_ptr_ = std::unique_ptr<ViewpointGenerator>(new ViewpointGenerator());
+    //viewpoint_generator_ptr_ = std::unique_ptr<ViewpointGenerator>(new ViewpointGenerator());
 
     voxelized_points_pub_ = n_.advertise<sensor_msgs::PointCloud2>("local_explorer/voxelized_pointcloud", 1);
     viewpoint_pub_ = n_.advertise<sensor_msgs::PointCloud2>("local_explorer/viewpoint", 1);
+    frontier_cluster_list_pub_ = n_.advertise<sensor_msgs::PointCloud2>("local_explorer/frontier_cluster_list", 1);
 
     voxelized_points_sub_ = n_.subscribe("global_mapper_ros/voxelized_points", 1, &LocalExplorer::VoxelizedPointsCallback, this, ros::TransportHints().tcpNoDelay());  
 
@@ -48,20 +49,38 @@ void LocalExplorer::PublishViewpoint(Viewpoint &viewpoint)
     viewpoint_pub_.publish(cloud_msg);
 }
 
-void LocalExplorer::PublishCandidateFrontier(Viewpoint &viewpoint)
+void LocalExplorer::PublishFrontierCluster(Viewpoint &viewpoint)
 {
-    // TODO
+    sensor_msgs::PointCloud2 cloud_msg;
+    pcl::PointCloud<pcl::PointXYZ> cloud;
+    std::vector<FrontierCluster> frontier_cluster_list = viewpoint.GetFrontierClusterList();
+    for (auto &frontier_cluster : frontier_cluster_list)
+    {
+        for (auto facet_ptr : frontier_cluster.facet_list_)
+        {
+            for (auto vertex_ptr : facet_ptr->vertices_)
+            {
+                cloud.push_back(pcl::PointXYZ(vertex_ptr->pos_[0], vertex_ptr->pos_[1], vertex_ptr->pos_[2]));
+            }
+        }
+    }
+    pcl::toROSMsg(cloud, cloud_msg);
+    cloud_msg.header.stamp = ros::Time::now();
+    cloud_msg.header.frame_id = "world";
+    frontier_cluster_list_pub_.publish(cloud_msg);
 }
 
 void LocalExplorer::VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr)
 {
     ROS_INFO("Voxelized points message received.");
+    viewpoint_generator_ptr_ = std::unique_ptr<ViewpointGenerator>(new ViewpointGenerator());
     viewpoint_generator_ptr_->ProcessVoxelizedPoints(msg_ptr);
 
     if (viewpoint_generator_ptr_->IsGenerated())
     {
         ROS_INFO("Viewpoint successfully generated.");
         PublishViewpoint(*(viewpoint_generator_ptr_->GetViewpointPtr()));
+        PublishFrontierCluster(*(viewpoint_generator_ptr_->GetViewpointPtr()));
     }
     RepublishVoxelizedPoints(msg_ptr);
 }

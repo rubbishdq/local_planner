@@ -221,7 +221,7 @@ include_directories(${QhullDir}/src/libqhull)
 find_library(QhullLib qhull)
 
 add_library(qhull_bridge src/local_explorer/qhull_bridge.cpp)
-target_link_libraries(qhull_bridge ${QhullLib} ${catkin_LIBRARIES})
+target_link_libraries(qhull_bridge ${QhullLib})
 
 add_library(viewpoint src/local_explorer/viewpoint.cpp)
 target_link_libraries(viewpoint ${global_mapper_LIBRARIES} qhull_bridge)
@@ -230,7 +230,7 @@ add_library(viewpoint_generator src/local_explorer/viewpoint_generator.cpp)
 target_link_libraries(viewpoint_generator viewpoint ${catkin_LIBRARIES})
 
 add_executable(local_explorer src/local_explorer/local_explorer.cpp)
-target_link_libraries(local_explorer viewpoint_generator ${global_mapper_LIBRARIES} ${catkin_LIBRARIES})
+target_link_libraries(local_explorer viewpoint viewpoint_generator ${global_mapper_LIBRARIES} ${catkin_LIBRARIES})
 
 add_executable(rviz_interface src/rviz_interface.cpp)
 target_link_libraries(rviz_interface ${catkin_LIBRARIES})

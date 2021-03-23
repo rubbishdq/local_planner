@@ -3,9 +3,21 @@
 namespace local_explorer
 {
 
+FrontierCluster::FrontierCluster()
+{
+    area_ = 0.0;
+}
+
+void FrontierCluster::AddFacet(std::shared_ptr<Facet> facet_ptr)
+{
+    facet_list_.push_back(facet_ptr);
+    area_ += facet_ptr->area_;
+}
+
 Viewpoint::Viewpoint()
 {
     convex_hull_ptr_ = std::make_shared<ConvexHull>();
+    frontier_cluster_count_ = 0;
     is_generated_ = false;
 }
 
@@ -30,6 +42,52 @@ void Viewpoint::GenerateViewpoint(std::vector<LabeledPoint> &cloud, std::vector<
             vertex_data_[vertex_ptr->id_] = cloud[vertex_ptr->original_id_];
             vertex_ptr->pos_ = cloud[vertex_ptr->original_id_].mu_;
         }
+        // calculate facets' area
+        for (auto facet_ptr : convex_hull_ptr_->facet_list_)
+        {
+            facet_ptr->CalcArea();
+        }
+        
+        // select frontier facets
+        convex_hull_ptr_->ClearFacetFlag();
+        for (auto facet_ptr : convex_hull_ptr_->facet_list_)
+        {
+            if (IsFrontierFacet(*facet_ptr))
+            {
+                facet_ptr->flag_ = -1;  // labeled as frontier facet
+            }
+        }
+        // cluster frontier facets
+        for (auto facet_ptr : convex_hull_ptr_->facet_list_)
+        {
+            if (facet_ptr->flag_ == -1)
+            {
+                frontier_cluster_count_++;
+                ClusterSingleFacet(*facet_ptr, frontier_cluster_count_);
+            }
+        }
+        frontier_cluster_list_.resize(frontier_cluster_count_);
+        for (auto facet_ptr : convex_hull_ptr_->facet_list_)
+        {
+            if (facet_ptr->flag_ > 0)
+            {
+                frontier_cluster_list_[facet_ptr->flag_-1].AddFacet(facet_ptr);
+            }
+        }
+        // remove facet cluster that is too small
+        auto fc_iter = frontier_cluster_list_.begin();
+        while (fc_iter != frontier_cluster_list_.end())
+        {
+            if (fc_iter->area_ < MIN_FRONTIER_CLUSTER_AREA)
+            {
+                fc_iter = frontier_cluster_list_.erase(fc_iter);
+            }
+            else
+            {
+                fc_iter++;
+            }
+        }
+
         is_generated_ = true;
     }
 }
@@ -101,6 +159,34 @@ void Viewpoint::Points2Array(std::vector<LabeledPoint> &pts, double* arr)
     }
 }
 
+bool Viewpoint::IsFrontierFacet(Facet &facet)
+{
+    if (facet.RidgeMaxLength() > MIN_FRONTIER_RIDGE_LENGTH)
+        return true;
+    for (auto vertex_ptr : facet.vertices_)
+    {
+        int v_id = vertex_ptr->id_;
+        if (vertex_data_[v_id].type_ == BOARDER)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+void Viewpoint::ClusterSingleFacet(Facet &facet, int cluster_id)
+{
+    facet.flag_ = cluster_id;
+    for (auto next_facet_wptr : facet.neighbors_)
+    {
+        auto next_facet_ptr = next_facet_wptr.lock();
+        if (next_facet_ptr->flag_ < 0)
+        {
+            ClusterSingleFacet(*next_facet_ptr, cluster_id);
+        }
+    }
+}
+
 std::shared_ptr<ConvexHull> Viewpoint::GetConvexHullPtr()
 {
     return convex_hull_ptr_;
@@ -109,6 +195,16 @@ std::shared_ptr<ConvexHull> Viewpoint::GetConvexHullPtr()
 std::vector<LabeledPoint>& Viewpoint::GetVertexData()
 {
     return vertex_data_;
+}
+
+std::vector<FrontierCluster>& Viewpoint::GetFrontierClusterList()
+{
+    return frontier_cluster_list_;
+}
+
+int Viewpoint::GetFrontierClusterCount()
+{
+    return frontier_cluster_count_;
 }
 
 bool Viewpoint::IsGenerated()

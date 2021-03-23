@@ -9,7 +9,7 @@ void Facet::CalcArea()
     p1 = vertices_[0]->pos_;
     p2 = vertices_[1]->pos_;
     p3 = vertices_[2]->pos_;
-    area_ = 0.5*norm(cross(p2-p1, p3-p1));
+    area_ = 0.5*(p2-p1.cross(p3-p1)).norm();
 }
 
 float Facet::RidgeMaxLength()
@@ -19,9 +19,9 @@ float Facet::RidgeMaxLength()
     p1 = vertices_[0]->pos_;
     p2 = vertices_[1]->pos_;
     p3 = vertices_[2]->pos_;
-    l1 = norm(p2-p1);
-    l2 = norm(p3-p1);
-    l3 = norm(p3-p2);
+    l1 = (p2-p1).norm();
+    l2 = (p3-p1).norm();
+    l3 = (p3-p2).norm();
     return (l1 > l2 && l1 > l3) ? l1 : (l2 > l3 ? l2 : l3);  
 }
 
@@ -111,7 +111,7 @@ void ConvexHull::ClearFacetFlag()
 {
     for (auto facet_ptr : facet_list_)
     {
-        facet_ptr_->flag_ = 0;
+        facet_ptr->flag_ = 0;
     }
 }
 

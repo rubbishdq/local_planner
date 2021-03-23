@@ -46,7 +46,7 @@ public:
     float area_;
     int flag_;  // used to label facet
     std::vector<std::shared_ptr<Vertex>> vertices_;
-    std::vector<std::shared_ptr<Facet>> neighbors_;
+    std::vector<std::weak_ptr<Facet>> neighbors_;
 };
 
 class ConvexHull
