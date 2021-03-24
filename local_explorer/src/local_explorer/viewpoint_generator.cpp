@@ -84,7 +84,7 @@ void ViewpointGenerator::InvertPoints(std::vector<LabeledPoint> &cloud, std::vec
     inverted_cloud.assign(cloud.begin(), cloud.end());
     for (auto &point : inverted_cloud)
     {
-        point.invert(INVERT_PARAM);
+        point.invert(origin_, INVERT_PARAM);
     }
 }
 
