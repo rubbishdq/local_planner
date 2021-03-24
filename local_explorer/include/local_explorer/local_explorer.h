@@ -25,6 +25,7 @@ public:
 
 private:
     void RepublishVoxelizedPoints(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr);
+    void PublishInvertedCloud(ViewpointGenerator &viewpoint_generator);
     void PublishViewpoint(Viewpoint &viewpoint);
     void PublishFrontierCluster(Viewpoint &viewpoint);
 
@@ -33,6 +34,7 @@ private:
     ros::NodeHandle n_;
 
     ros::Publisher voxelized_points_pub_;
+    ros::Publisher inverted_cloud_pub_;
     ros::Publisher viewpoint_pub_;
     ros::Publisher frontier_cluster_list_pub_;
 

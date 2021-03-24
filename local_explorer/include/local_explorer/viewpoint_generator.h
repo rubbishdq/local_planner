@@ -20,6 +20,8 @@ public:
 
     void ProcessVoxelizedPoints(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr);
 
+    std::shared_ptr<std::vector<LabeledPoint>> GetProcessedCloudPtr();
+    std::shared_ptr<std::vector<LabeledPoint>> GetInvertedCloudPtr();
     std::shared_ptr<Viewpoint> GetViewpointPtr();
     bool IsGenerated();
 

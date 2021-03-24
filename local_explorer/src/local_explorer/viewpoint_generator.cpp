@@ -36,11 +36,19 @@ void ViewpointGenerator::AddBoarderPoints(std::vector<LabeledPoint> &cloud)
 {
     double lowest_vertex[3] = {origin_[0]-BOARDER_DIMENSION[0]/2, origin_[1]-BOARDER_DIMENSION[1]/2, origin_[2]-BOARDER_DIMENSION[2]/2};
     double highest_vertex[3] = {origin_[0]+BOARDER_DIMENSION[0]/2, origin_[1]+BOARDER_DIMENSION[1]/2, origin_[2]+BOARDER_DIMENSION[2]/2};
+    if (lowest_vertex[2] < BOARDER_HEIGHT_RANGE[0])
+    {
+        lowest_vertex[2] = BOARDER_HEIGHT_RANGE[0];
+    }
+    if (highest_vertex[2] < BOARDER_HEIGHT_RANGE[1])
+    {
+        highest_vertex[2] = BOARDER_HEIGHT_RANGE[1];
+    }
     Eigen::Vector3f mu;
     /*
-    for (double diff_x = RESOLUTION; diff_x < BOARDER_DIMENSION[0]; diff_x+=RESOLUTION)
+    for (double diff_x = BOARDER_RESOLUTION; diff_x < BOARDER_DIMENSION[0]; diff_x+=BOARDER_RESOLUTION)
     {
-        for (double diff_y = RESOLUTION; diff_y < BOARDER_DIMENSION[1]; diff_y+=RESOLUTION)
+        for (double diff_y = BOARDER_RESOLUTION; diff_y < BOARDER_DIMENSION[1]; diff_y+=BOARDER_RESOLUTION)
         {
             mu << (float)(lowest_vertex[0]+diff_x), (float)(lowest_vertex[1]+diff_y), (float)(lowest_vertex[2]);
             cloud.push_back(LabeledPoint(1, mu, Eigen::Matrix3f::Zero(), BOARDER)); 
@@ -49,9 +57,9 @@ void ViewpointGenerator::AddBoarderPoints(std::vector<LabeledPoint> &cloud)
         }
     }
     */
-    for (double diff_x = RESOLUTION; diff_x < BOARDER_DIMENSION[0]; diff_x+=RESOLUTION)
+    for (double diff_x = BOARDER_RESOLUTION; diff_x < BOARDER_DIMENSION[0]; diff_x+=BOARDER_RESOLUTION)
     {
-        for (double diff_z = RESOLUTION; diff_z < BOARDER_DIMENSION[2]; diff_z+=RESOLUTION)
+        for (double diff_z = BOARDER_RESOLUTION; diff_z < BOARDER_DIMENSION[2]; diff_z+=BOARDER_RESOLUTION)
         {
             mu << (float)(lowest_vertex[0]+diff_x), (float)(lowest_vertex[1]), (float)(lowest_vertex[2]+diff_z);
             cloud.push_back(LabeledPoint(1, mu, Eigen::Matrix3f::Zero(), BOARDER)); 
@@ -59,9 +67,9 @@ void ViewpointGenerator::AddBoarderPoints(std::vector<LabeledPoint> &cloud)
             cloud.push_back(LabeledPoint(1, mu, Eigen::Matrix3f::Zero(), BOARDER)); 
         }
     }
-    for (double diff_y = RESOLUTION; diff_y < BOARDER_DIMENSION[1]; diff_y+=RESOLUTION)
+    for (double diff_y = BOARDER_RESOLUTION; diff_y < BOARDER_DIMENSION[1]; diff_y+=BOARDER_RESOLUTION)
     {
-        for (double diff_z = RESOLUTION; diff_z < BOARDER_DIMENSION[2]; diff_z+=RESOLUTION)
+        for (double diff_z = BOARDER_RESOLUTION; diff_z < BOARDER_DIMENSION[2]; diff_z+=BOARDER_RESOLUTION)
         {
             mu << (float)(lowest_vertex[0]), (float)(lowest_vertex[1]+diff_y), (float)(lowest_vertex[2]+diff_z);
             cloud.push_back(LabeledPoint(1, mu, Eigen::Matrix3f::Zero(), BOARDER)); 
@@ -91,6 +99,16 @@ void ViewpointGenerator::ProcessVoxelizedPoints(const global_mapper_ros::Voxeliz
 
     viewpoint_ptr_->GenerateViewpoint(*processed_cloud_ptr_, *inverted_cloud_ptr_);
     is_initialized_ = true;
+}
+
+std::shared_ptr<std::vector<LabeledPoint>> ViewpointGenerator::GetProcessedCloudPtr()
+{
+    return processed_cloud_ptr_;
+}
+
+std::shared_ptr<std::vector<LabeledPoint>> ViewpointGenerator::GetInvertedCloudPtr()
+{
+    return inverted_cloud_ptr_;
 }
 
 std::shared_ptr<Viewpoint> ViewpointGenerator::GetViewpointPtr()

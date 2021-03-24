@@ -10,6 +10,7 @@ LocalExplorer::LocalExplorer()
     //viewpoint_generator_ptr_ = std::unique_ptr<ViewpointGenerator>(new ViewpointGenerator());
 
     voxelized_points_pub_ = n_.advertise<sensor_msgs::PointCloud2>("local_explorer/voxelized_pointcloud", 1);
+    inverted_cloud_pub_ = n_.advertise<sensor_msgs::PointCloud2>("local_explorer/inverted_pointcloud", 1);
     viewpoint_pub_ = n_.advertise<sensor_msgs::PointCloud2>("local_explorer/viewpoint", 1);
     frontier_cluster_list_pub_ = n_.advertise<visualization_msgs::Marker>("local_explorer/frontier_cluster_list", 1);
 
@@ -32,6 +33,23 @@ void LocalExplorer::RepublishVoxelizedPoints(const global_mapper_ros::VoxelizedP
     cloud_msg.header.stamp = ros::Time::now();
     cloud_msg.header.frame_id = "world";
     voxelized_points_pub_.publish(cloud_msg);
+}
+
+void LocalExplorer::PublishInvertedCloud(ViewpointGenerator &viewpoint_generator)
+{
+    sensor_msgs::PointCloud2 cloud_msg;
+    pcl::PointCloud<pcl::PointXYZ> cloud;
+    auto inverted_cloud_ptr = viewpoint_generator.GetInvertedCloudPtr();
+    for (auto &point : *inverted_cloud_ptr)
+    {
+        cloud.push_back(pcl::PointXYZ(INVERT_CLOUD_VISUALIZE_PARAM*point.mu_[0], 
+            INVERT_CLOUD_VISUALIZE_PARAM*point.mu_[1], 
+            INVERT_CLOUD_VISUALIZE_PARAM*point.mu_[2]));
+    }
+    pcl::toROSMsg(cloud, cloud_msg);
+    cloud_msg.header.stamp = ros::Time::now();
+    cloud_msg.header.frame_id = "world";
+    inverted_cloud_pub_.publish(cloud_msg);
 }
 
 void LocalExplorer::PublishViewpoint(Viewpoint &viewpoint)
@@ -118,6 +136,7 @@ void LocalExplorer::VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPo
     if (viewpoint_generator_ptr_->IsGenerated())
     {
         ROS_INFO("Viewpoint successfully generated.");
+        PublishInvertedCloud(*viewpoint_generator_ptr_);
         PublishViewpoint(*(viewpoint_generator_ptr_->GetViewpointPtr()));
         PublishFrontierCluster(*(viewpoint_generator_ptr_->GetViewpointPtr()));
     }
