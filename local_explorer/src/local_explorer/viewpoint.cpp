@@ -161,6 +161,25 @@ void Viewpoint::Points2Array(std::vector<LabeledPoint> &pts, double* arr)
 
 bool Viewpoint::IsFrontierFacet(Facet &facet)
 {
+    if (USE_HEIGHT_DIFF_THRESHOLD)
+    {
+        /*
+        Eigen::Vector3f centroid = facet.GetCentroid();
+        if ((centroid[2]-BOARDER_HEIGHT_RANGE[0]) < HEIGHT_DIFF_THRESHOLD || 
+            (-centroid[2]+BOARDER_HEIGHT_RANGE[1]) < HEIGHT_DIFF_THRESHOLD)
+        {
+            return false;
+        }*/
+        for (int i = 0; i < 3; i++)
+        {
+            Eigen::Vector3f p = facet.vertices_[i]->pos_;
+            if ((p[2]-BOARDER_HEIGHT_RANGE[0]) < HEIGHT_DIFF_THRESHOLD || 
+                (-p[2]+BOARDER_HEIGHT_RANGE[1]) < HEIGHT_DIFF_THRESHOLD)
+            {
+                return false;
+            }
+        }
+    }
     if (facet.RidgeMaxLength() > MIN_FRONTIER_RIDGE_LENGTH)
         return true;
     for (auto vertex_ptr : facet.vertices_)

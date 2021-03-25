@@ -2,9 +2,11 @@
 #define __VIEWPOINT_GENERATOR_H__
 
 #include "local_explorer/viewpoint.h"
+#include "local_explorer/utils.h"
 
 #include "global_mapper_ros/VoxelizedPoints.h"
 #include "ros/ros.h"
+#include "Eigen/Dense"
 
 namespace local_explorer
 {

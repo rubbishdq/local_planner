@@ -58,7 +58,7 @@ void VoxelizedPoint::InsertPoint(Eigen::Vector3f point)
     {
         Eigen::Vector3f mu_new = (n_*mu_+point) / (n_+1);
         Eigen::Matrix3f sigma_new = (n_*sigma_+point*point.transpose()
-            +n_*mu_*mu_.transpose()-(n_+1)*mu_new*mu_new.transpose());
+            +n_*mu_*mu_.transpose()-(n_+1)*mu_new*mu_new.transpose()) / (n_+1);
         mu_ = mu_new;
         sigma_ = sigma_new;
     }

@@ -12,6 +12,15 @@ void Facet::CalcArea()
     area_ = 0.5*(p2-p1.cross(p3-p1)).norm();
 }
 
+Eigen::Vector3f Facet::GetCentroid()
+{
+    Eigen::Vector3f p1, p2, p3;
+    p1 = vertices_[0]->pos_;
+    p2 = vertices_[1]->pos_;
+    p3 = vertices_[2]->pos_;
+    return (p1+p2+p3)/3;
+}
+
 float Facet::RidgeMaxLength()
 {
     Eigen::Vector3f p1, p2, p3;

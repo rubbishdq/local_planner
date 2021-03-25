@@ -40,6 +40,7 @@ class Facet
 public:
     Facet(int id = 0) : id_(id), area_(0.0), flag_(0) {}
     void CalcArea(); // must be used after vertices_ are initialized
+    Eigen::Vector3f GetCentroid();
     float RidgeMaxLength(); // return length of the longest ridge
 
     int id_;
