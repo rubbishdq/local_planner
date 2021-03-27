@@ -3,15 +3,45 @@
 namespace local_explorer
 {
 
-FrontierCluster::FrontierCluster()
+FrontierCluster::FrontierCluster(int id)
 {
+    id_ = id;
     area_ = 0.0;
+    is_empty_ = true;
 }
 
 void FrontierCluster::AddFacet(std::shared_ptr<Facet> facet_ptr)
 {
+    for (int i = 0; i < 3; i++)
+    {
+        Eigen::Vector3f p = facet_ptr->vertices_[i]->pos_;
+        if (is_empty_)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                xyz_range_[0][j] = p[j];
+                xyz_range_[1][j] = p[j];
+            }
+            is_empty_ = false;
+        }
+        else
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                if (xyz_range_[0][j] > p[j])
+                    xyz_range_[0][j] = p[j];
+                if (xyz_range_[1][j] < p[j])
+                    xyz_range_[1][j] = p[j];
+            }
+        }
+    }
     facet_list_.push_back(facet_ptr);
     area_ += facet_ptr->area_;
+}
+
+bool FrontierCluster::IsEmpty()
+{
+    return is_empty_;
 }
 
 Viewpoint::Viewpoint()
@@ -62,10 +92,12 @@ void Viewpoint::GenerateViewpoint(std::vector<LabeledPoint> &cloud, std::vector<
         {
             if (facet_ptr->flag_ == -1)
             {
+                frontier_cluster_list_.push_back(FrontierCluster(frontier_cluster_count_));
                 frontier_cluster_count_++;
-                ClusterSingleFacet(*facet_ptr, frontier_cluster_count_);
+                ClusterSingleFacet(facet_ptr, frontier_cluster_count_);
             }
         }
+        /*
         frontier_cluster_list_.resize(frontier_cluster_count_);
         for (auto facet_ptr : convex_hull_ptr_->facet_list_)
         {
@@ -74,6 +106,7 @@ void Viewpoint::GenerateViewpoint(std::vector<LabeledPoint> &cloud, std::vector<
                 frontier_cluster_list_[facet_ptr->flag_-1].AddFacet(facet_ptr);
             }
         }
+        */
         // remove facet cluster that is too small
         auto fc_iter = frontier_cluster_list_.begin();
         while (fc_iter != frontier_cluster_list_.end())
@@ -81,6 +114,7 @@ void Viewpoint::GenerateViewpoint(std::vector<LabeledPoint> &cloud, std::vector<
             if (fc_iter->area_ < MIN_FRONTIER_CLUSTER_AREA)
             {
                 fc_iter = frontier_cluster_list_.erase(fc_iter);
+                frontier_cluster_count_--;
             }
             else
             {
@@ -193,15 +227,33 @@ bool Viewpoint::IsFrontierFacet(Facet &facet)
     return false;
 }
 
-void Viewpoint::ClusterSingleFacet(Facet &facet, int cluster_id)
+void Viewpoint::ClusterSingleFacet(std::shared_ptr<Facet> facet_ptr, int cluster_id)
 {
-    facet.flag_ = cluster_id;
-    for (auto next_facet_wptr : facet.neighbors_)
+    facet_ptr->flag_ = cluster_id;
+    frontier_cluster_list_[cluster_id-1].AddFacet(facet_ptr);
+    for (auto next_facet_wptr : facet_ptr->neighbors_) // std::weak_ptr
     {
         auto next_facet_ptr = next_facet_wptr.lock();
         if (next_facet_ptr->flag_ < 0)
         {
-            ClusterSingleFacet(*next_facet_ptr, cluster_id);
+            // check if adding this facet will exceed frontier cluster size limit
+            bool loop_flag = true;  // if loop_flag == false, next_facet_ptr will not be added to this cluster
+            for (int i = 0; i < 3 && loop_flag; i++)
+            {
+                Eigen::Vector3f p = next_facet_ptr->vertices_[i]->pos_;
+                for (int j = 0; j < 3 && loop_flag; j++)
+                {
+                    if (p[j] > frontier_cluster_list_[cluster_id-1].xyz_range_[0][j]+FRONTIER_CLUSTER_SIZE_LIMIT[j]
+                        || p[j] < frontier_cluster_list_[cluster_id-1].xyz_range_[1][j]-FRONTIER_CLUSTER_SIZE_LIMIT[j])
+                    {
+                        loop_flag = false;
+                    }
+                }
+            }
+            if (loop_flag)
+            {
+                ClusterSingleFacet(next_facet_ptr, cluster_id);
+            }
         }
     }
 }

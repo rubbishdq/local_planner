@@ -14,6 +14,9 @@
 #include <sstream>
 #include <vector>
 #include <memory>
+#include <cstdlib>
+#include <ctime>
+#include <stdarg.h>
 
 namespace local_explorer
 {
@@ -24,12 +27,15 @@ public:
     LocalExplorer();
 
 private:
+    void InitFrontierColor();
     void RepublishVoxelizedPoints(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr);
     void PublishInvertedCloud(ViewpointGenerator &viewpoint_generator);
     void PublishViewpoint(Viewpoint &viewpoint);
     void PublishFrontierCluster(Viewpoint &viewpoint);
 
     void VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr);
+
+    float frontier_color_[FRONTIER_COLOR_COUNT][3];  // used to visualize frontier clusters
 
     ros::NodeHandle n_;
 

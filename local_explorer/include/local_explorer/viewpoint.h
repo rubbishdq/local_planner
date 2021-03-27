@@ -11,11 +11,15 @@ namespace local_explorer
 class FrontierCluster
 {
 public:
-    FrontierCluster();
+    FrontierCluster(int id = 0);
     void AddFacet(std::shared_ptr<Facet> facet_ptr);
+    bool IsEmpty();
 
+    int id_;  // start from 1
     std::vector<std::shared_ptr<Facet>> facet_list_;
+    float xyz_range_[2][3];
     float area_;
+    bool is_empty_;
 };
 class Viewpoint
 {
@@ -25,7 +29,7 @@ public:
     void Points2Str(std::vector<LabeledPoint> &pts, char* str, int int_num, int dec_num); // convert std::vector<LabeledPoint> to qhull's input format
     void Points2Array(std::vector<LabeledPoint> &pts, double* arr);
     bool IsFrontierFacet(Facet &facet);
-    void ClusterSingleFacet(Facet &facet, int cluster_id);
+    void ClusterSingleFacet(std::shared_ptr<Facet> facet_ptr, int cluster_id);
 
     std::shared_ptr<ConvexHull> GetConvexHullPtr();
     std::vector<LabeledPoint>& GetVertexData();

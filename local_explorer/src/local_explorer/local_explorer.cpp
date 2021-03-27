@@ -5,6 +5,9 @@ namespace local_explorer
 
 LocalExplorer::LocalExplorer()
 {
+    srand(time(0));
+    InitFrontierColor();
+
     // make_unique is a C++14 feature
     //viewpoint_generator_ptr_ = std::make_unique<ViewpointGenerator>();
     //viewpoint_generator_ptr_ = std::unique_ptr<ViewpointGenerator>(new ViewpointGenerator());
@@ -19,6 +22,17 @@ LocalExplorer::LocalExplorer()
     ROS_INFO("Local explorer node started.");
 
     ros::spin();
+}
+
+void LocalExplorer::InitFrontierColor()
+{
+    for (int i = 0; i < FRONTIER_COLOR_COUNT; i++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            frontier_color_[i][j] = float(rand()) / RAND_MAX;
+        }
+    }
 }
 
 void LocalExplorer::RepublishVoxelizedPoints(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr)
@@ -90,12 +104,19 @@ void LocalExplorer::PublishFrontierCluster(Viewpoint &viewpoint)
     */
     visualization_msgs::Marker marker;
     geometry_msgs::Point point;
+    std_msgs::ColorRGBA color_rgba;
     std::vector<FrontierCluster> frontier_cluster_list = viewpoint.GetFrontierClusterList();
     ROS_INFO("FrontierClusterCount: %d", viewpoint.GetFrontierClusterCount());
     for (auto &frontier_cluster : frontier_cluster_list)
     {
+        int color_index = frontier_cluster.id_ % FRONTIER_COLOR_COUNT;
         for (auto facet_ptr : frontier_cluster.facet_list_)
         {
+            color_rgba.r = frontier_color_[color_index][0];
+            color_rgba.g = frontier_color_[color_index][1];
+            color_rgba.b = frontier_color_[color_index][2];
+            color_rgba.a = MARKER_ALPHA;
+            marker.colors.push_back(color_rgba);
             for (auto vertex_ptr : facet_ptr->vertices_)
             {
                 point.x = vertex_ptr->pos_[0]; point.y = vertex_ptr->pos_[1]; point.z = vertex_ptr->pos_[2];
@@ -116,10 +137,12 @@ void LocalExplorer::PublishFrontierCluster(Viewpoint &viewpoint)
     marker.scale.x = 1;
     marker.scale.y = 1;
     marker.scale.z = 1;
-    marker.color.a = 0.8;
+    
+    marker.color.a = MARKER_ALPHA;
     marker.color.r = 0.0;
     marker.color.g = 1.0;
     marker.color.b = 1.0;
+    
     //marker.lifetime = ros::Duration(0.2);
 
     marker.header.frame_id = "world";
