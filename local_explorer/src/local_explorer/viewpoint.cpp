@@ -71,12 +71,13 @@ void Viewpoint::GenerateViewpoint(std::vector<LabeledPoint> &cloud, std::vector<
             convex_hull_ptr_->RidgeCount(), 
             convex_hull_ptr_->GoodRidgeCount());
 
-        int vertex_count = convex_hull_ptr_->VertexCount();
-        vertex_data_.resize(vertex_count);
         for (auto vertex_ptr : convex_hull_ptr_->vertex_list_)
         {
-            vertex_data_[vertex_ptr->id_] = cloud[vertex_ptr->flag_];
             vertex_ptr->pos_ = cloud[vertex_ptr->flag_].mu_;
+            if (cloud[vertex_ptr->flag_].type_ == BOARDER)
+                vertex_ptr->flag_ = 1;
+            else
+                vertex_ptr->flag_ = 0;
         }
         /*
         for (auto facet_ptr : convex_hull_ptr_->facet_list_)
@@ -230,8 +231,7 @@ bool Viewpoint::IsFrontierFacet(Facet &facet)
         return true;
     for (int i = 0; i < 3; i++)
     {
-        int v_id = facet.vertices_[i]->id_;
-        if (vertex_data_[v_id].type_ == BOARDER)
+        if (facet.vertices_[i]->flag_)
         {
             return true;
         }
@@ -273,11 +273,6 @@ void Viewpoint::ClusterSingleFacet(std::shared_ptr<Facet> facet_ptr, int cluster
 std::shared_ptr<ConvexHull> Viewpoint::GetConvexHullPtr()
 {
     return convex_hull_ptr_;
-}
-
-std::vector<LabeledPoint>& Viewpoint::GetVertexData()
-{
-    return vertex_data_;
 }
 
 std::vector<FrontierCluster>& Viewpoint::GetFrontierClusterList()

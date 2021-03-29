@@ -11,7 +11,7 @@ const double SENSOR_RANGE = 5.0;
 
 const double MIN_RANGE_FOR_EXTENSION = 1.0;
 const int EXTENSION_COUNT = 1;
-const double EXTENSION_LENGTH_THRESHOLD = 0;
+const double EXTENSION_LENGTH_THRESHOLD = 5e-3;
 const double EXTENSION_PARAM = 2.0;
 
 const double MAP_DIMENSION[3] = {15.0, 15.0, 8.0};

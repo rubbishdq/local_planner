@@ -163,10 +163,10 @@ void LocalExplorer::PublishViewpoint(Viewpoint &viewpoint)
 {
     sensor_msgs::PointCloud2 cloud_msg;
     pcl::PointCloud<pcl::PointXYZ> cloud;
-    std::vector<LabeledPoint> vertex_data = viewpoint.GetVertexData();
+    std::vector<std::shared_ptr<Vertex>> vertex_data = viewpoint.GetConvexHullPtr()->vertex_list_;
     for (auto &vertex : vertex_data)
     {
-        cloud.push_back(pcl::PointXYZ(vertex.mu_[0], vertex.mu_[1], vertex.mu_[2]));
+        cloud.push_back(pcl::PointXYZ(vertex->pos_[0], vertex->pos_[1], vertex->pos_[2]));
     }
     pcl::toROSMsg(cloud, cloud_msg);
     cloud_msg.header.stamp = ros::Time::now();
@@ -235,8 +235,8 @@ void LocalExplorer::VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPo
     {
         ROS_INFO("Viewpoint successfully generated.");
         PublishInvertedCloud(*viewpoint_generator_ptr_);
-        PublishConvexHull(*(viewpoint_generator_ptr_->GetViewpointPtr()->GetConvexHullPtr()));
-        PublishColoredConvexHull(*(viewpoint_generator_ptr_->GetViewpointPtr()->GetConvexHullPtr()));
+        //PublishConvexHull(*(viewpoint_generator_ptr_->GetViewpointPtr()->GetConvexHullPtr()));
+        //PublishColoredConvexHull(*(viewpoint_generator_ptr_->GetViewpointPtr()->GetConvexHullPtr()));
         PublishViewpoint(*(viewpoint_generator_ptr_->GetViewpointPtr()));
         PublishFrontierCluster(*(viewpoint_generator_ptr_->GetViewpointPtr()));
     }
