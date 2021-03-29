@@ -30,6 +30,8 @@ private:
     void InitFrontierColor();
     void RepublishVoxelizedPoints(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr);
     void PublishInvertedCloud(ViewpointGenerator &viewpoint_generator);
+    void PublishConvexHull(ConvexHull &convex_hull);  // inverted
+    void PublishColoredConvexHull(ConvexHull &convex_hull);  // inverted
     void PublishViewpoint(Viewpoint &viewpoint);
     void PublishFrontierCluster(Viewpoint &viewpoint);
 
@@ -41,6 +43,8 @@ private:
 
     ros::Publisher voxelized_points_pub_;
     ros::Publisher inverted_cloud_pub_;
+    ros::Publisher convex_hull_pub_;
+    ros::Publisher colored_convex_hull_pub_;
     ros::Publisher viewpoint_pub_;
     ros::Publisher frontier_cluster_list_pub_;
 

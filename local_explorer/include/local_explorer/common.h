@@ -3,18 +3,24 @@
 
 namespace local_explorer
 {
+typedef int flag_t;
+
 const bool USE_HEIGHT_DIFF_THRESHOLD = true;
 
 const double SENSOR_RANGE = 5.0;
+
 const double MIN_RANGE_FOR_EXTENSION = 1.0;
-const int EXTENSION_COUNT = 3;
+const int EXTENSION_COUNT = 1;
+const double EXTENSION_LENGTH_THRESHOLD = 0;
+const double EXTENSION_PARAM = 2.0;
 
 const double MAP_DIMENSION[3] = {15.0, 15.0, 8.0};
 const double BOARDER_DIMENSION[3] = {10.0, 10.0, 3.0};
 const double MAP_RESOLUTION = 0.15;
 const double BOARDER_RESOLUTION = 0.3;
-const double BOARDER_HEIGHT_RANGE[2] = {0.0, 3.0};
+const double BOARDER_HEIGHT_RANGE[2] = {-0.05, 3.05};
 const double HEIGHT_DIFF_THRESHOLD = 0.12;
+const double RAND_ERROR = 1e-2;  // avoid computational error of qhull
 
 const double INVERT_PARAM = 1.018;
 const double INVERT_CLOUD_VISUALIZE_PARAM = 8.0;

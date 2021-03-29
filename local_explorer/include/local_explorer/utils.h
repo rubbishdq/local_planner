@@ -4,9 +4,25 @@
 #include "Eigen/Core"
 #include "Eigen/Dense"
 #include <cstdio>
+#include <cstring>
 
 namespace local_explorer
 {
+
+inline double Random(double min_val = 0.0, double max_val = 1.0)
+{
+    return (double(rand())/RAND_MAX) * (max_val - min_val) + min_val;
+}
+
+inline void PrintSpace(int space_count)
+{
+    char *str = new char[space_count+1]; 
+    memset(str, ' ', space_count*sizeof(char));
+    str[space_count] = '\0';
+    printf("%s", str);
+    delete[]str;
+}
+
 // get eigenvalues and corresponding eigenvectors, with eigenvalues sorted
 void CalcEigen(Eigen::Matrix3f mat, float evalue[3], Eigen::Vector3f evector[3])  // get eigenvalues and corresponding eigenvectors, with eigenvalues sorted
 {

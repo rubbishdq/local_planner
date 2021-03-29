@@ -65,13 +65,25 @@ void Viewpoint::GenerateViewpoint(std::vector<LabeledPoint> &cloud, std::vector<
         
         delete []arr;
         
+        printf("Convex hull vertex count: %d    facet count: %d    ridge count: %d    good ridge count: %d\n", 
+            convex_hull_ptr_->VertexCount(), 
+            convex_hull_ptr_->FacetCount(), 
+            convex_hull_ptr_->RidgeCount(), 
+            convex_hull_ptr_->GoodRidgeCount());
+
         int vertex_count = convex_hull_ptr_->VertexCount();
         vertex_data_.resize(vertex_count);
         for (auto vertex_ptr : convex_hull_ptr_->vertex_list_)
         {
-            vertex_data_[vertex_ptr->id_] = cloud[vertex_ptr->original_id_];
-            vertex_ptr->pos_ = cloud[vertex_ptr->original_id_].mu_;
+            vertex_data_[vertex_ptr->id_] = cloud[vertex_ptr->flag_];
+            vertex_ptr->pos_ = cloud[vertex_ptr->flag_].mu_;
         }
+        /*
+        for (auto facet_ptr : convex_hull_ptr_->facet_list_)
+        {
+            facet_ptr->CheckRidgeStatus();
+        }
+        */ // for debug
         // calculate facets' area
         for (auto facet_ptr : convex_hull_ptr_->facet_list_)
         {
@@ -216,9 +228,9 @@ bool Viewpoint::IsFrontierFacet(Facet &facet)
     }
     if (facet.RidgeMaxLength() > MIN_FRONTIER_RIDGE_LENGTH)
         return true;
-    for (auto vertex_ptr : facet.vertices_)
+    for (int i = 0; i < 3; i++)
     {
-        int v_id = vertex_ptr->id_;
+        int v_id = facet.vertices_[i]->id_;
         if (vertex_data_[v_id].type_ == BOARDER)
         {
             return true;
@@ -231,9 +243,9 @@ void Viewpoint::ClusterSingleFacet(std::shared_ptr<Facet> facet_ptr, int cluster
 {
     facet_ptr->flag_ = cluster_id;
     frontier_cluster_list_[cluster_id-1].AddFacet(facet_ptr);
-    for (auto next_facet_wptr : facet_ptr->neighbors_) // std::weak_ptr
+    for (int k = 0; k < 3; k++)
     {
-        auto next_facet_ptr = next_facet_wptr.lock();
+        auto next_facet_ptr = facet_ptr->neighbors_[k].lock();
         if (next_facet_ptr->flag_ < 0)
         {
             // check if adding this facet will exceed frontier cluster size limit

@@ -48,11 +48,14 @@ void ViewpointGenerator::PreprocessVoxelizedPoints(const global_mapper_ros::Voxe
             {
                 for (int j = -EXTENSION_COUNT; j <= EXTENSION_COUNT; j++)
                 {
-                    if ((evalue[1] == 0 && i != 0) || (evalue[2] == 0 && j != 0))
+                    if ((evalue[1] <= EXTENSION_LENGTH_THRESHOLD && i != 0) 
+                        || (evalue[2] <= EXTENSION_LENGTH_THRESHOLD && j != 0))
                     {
                         continue;
                     }
-                    Eigen::Vector3f mu_new = mu+(0.5*i*sqrt(evalue[1]))*evector[1]+(0.5*j*sqrt(evalue[2]))*evector[2];
+                    Eigen::Vector3f mu_new = mu
+                        +(0.5*EXTENSION_PARAM*i*sqrt(evalue[1]))*evector[1]
+                        +(0.5*EXTENSION_PARAM*j*sqrt(evalue[2]))*evector[2];
                     //std::cout << mu_new << std::endl;
                     cloud.push_back(LabeledPoint(n, mu_new, sigma, ADDITIONAL)); 
                 }
@@ -81,9 +84,13 @@ void ViewpointGenerator::AddBoarderPoints(std::vector<LabeledPoint> &cloud)
     {
         for (double diff_y = BOARDER_RESOLUTION; diff_y < BOARDER_DIMENSION[1]; diff_y+=BOARDER_RESOLUTION)
         {
-            mu << (float)(lowest_vertex[0]+diff_x), (float)(lowest_vertex[1]+diff_y), (float)(lowest_vertex[2]);
+            mu << (float)(lowest_vertex[0]+diff_x+Random(-RAND_ERROR, RAND_ERROR)), 
+                (float)(lowest_vertex[1]+diff_y+Random(-RAND_ERROR, RAND_ERROR)), 
+                (float)(lowest_vertex[2]+Random(-RAND_ERROR, RAND_ERROR));
             cloud.push_back(LabeledPoint(1, mu, Eigen::Matrix3f::Zero(), BOARDER)); 
-            mu << (float)(lowest_vertex[0]+diff_x), (float)(lowest_vertex[1]+diff_y), (float)(highest_vertex[2]);
+            mu << (float)(lowest_vertex[0]+diff_x+Random(-RAND_ERROR, RAND_ERROR)), 
+                (float)(lowest_vertex[1]+diff_y+Random(-RAND_ERROR, RAND_ERROR)), 
+                (float)(highest_vertex[2]+Random(-RAND_ERROR, RAND_ERROR));
             cloud.push_back(LabeledPoint(1, mu, Eigen::Matrix3f::Zero(), BOARDER)); 
         }
     }
@@ -91,9 +98,13 @@ void ViewpointGenerator::AddBoarderPoints(std::vector<LabeledPoint> &cloud)
     {
         for (double diff_z = BOARDER_RESOLUTION; diff_z < BOARDER_DIMENSION[2]; diff_z+=BOARDER_RESOLUTION)
         {
-            mu << (float)(lowest_vertex[0]+diff_x), (float)(lowest_vertex[1]), (float)(lowest_vertex[2]+diff_z);
+            mu << (float)(lowest_vertex[0]+diff_x+Random(-RAND_ERROR, RAND_ERROR)), 
+                (float)(lowest_vertex[1]+Random(-RAND_ERROR, RAND_ERROR)), 
+                (float)(lowest_vertex[2]+diff_z+Random(-RAND_ERROR, RAND_ERROR));
             cloud.push_back(LabeledPoint(1, mu, Eigen::Matrix3f::Zero(), BOARDER)); 
-            mu << (float)(lowest_vertex[0]+diff_x), (float)(highest_vertex[1]), (float)(lowest_vertex[2]+diff_z);
+            mu << (float)(lowest_vertex[0]+diff_x+Random(-RAND_ERROR, RAND_ERROR)), 
+                (float)(highest_vertex[1]+Random(-RAND_ERROR, RAND_ERROR)), 
+                (float)(lowest_vertex[2]+diff_z+Random(-RAND_ERROR, RAND_ERROR));
             cloud.push_back(LabeledPoint(1, mu, Eigen::Matrix3f::Zero(), BOARDER)); 
         }
     }
@@ -101,9 +112,13 @@ void ViewpointGenerator::AddBoarderPoints(std::vector<LabeledPoint> &cloud)
     {
         for (double diff_z = BOARDER_RESOLUTION; diff_z < BOARDER_DIMENSION[2]; diff_z+=BOARDER_RESOLUTION)
         {
-            mu << (float)(lowest_vertex[0]), (float)(lowest_vertex[1]+diff_y), (float)(lowest_vertex[2]+diff_z);
+            mu << (float)(lowest_vertex[0]+Random(-RAND_ERROR, RAND_ERROR)), 
+                (float)(lowest_vertex[1]+diff_y+Random(-RAND_ERROR, RAND_ERROR)), 
+                (float)(lowest_vertex[2]+diff_z+Random(-RAND_ERROR, RAND_ERROR));
             cloud.push_back(LabeledPoint(1, mu, Eigen::Matrix3f::Zero(), BOARDER)); 
-            mu << (float)(highest_vertex[0]), (float)(lowest_vertex[1]+diff_y), (float)(lowest_vertex[2]+diff_z);
+            mu << (float)(highest_vertex[0]+Random(-RAND_ERROR, RAND_ERROR)), 
+                (float)(lowest_vertex[1]+diff_y+Random(-RAND_ERROR, RAND_ERROR)), 
+                (float)(lowest_vertex[2]+diff_z+Random(-RAND_ERROR, RAND_ERROR));
             cloud.push_back(LabeledPoint(1, mu, Eigen::Matrix3f::Zero(), BOARDER)); 
         }
     }
