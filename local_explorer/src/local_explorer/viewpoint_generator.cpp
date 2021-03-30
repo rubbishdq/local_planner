@@ -129,7 +129,7 @@ void ViewpointGenerator::InvertPoints(std::vector<LabeledPoint> &cloud, std::vec
     inverted_cloud.assign(cloud.begin(), cloud.end());
     for (auto &point : inverted_cloud)
     {
-        point.invert(origin_, INVERT_PARAM);
+        point.Invert(origin_, INVERT_PARAM);
     }
 }
 
@@ -142,7 +142,7 @@ void ViewpointGenerator::ProcessVoxelizedPoints(const global_mapper_ros::Voxeliz
 
     InvertPoints(*processed_cloud_ptr_, *inverted_cloud_ptr_);
 
-    viewpoint_ptr_->GenerateViewpoint(*processed_cloud_ptr_, *inverted_cloud_ptr_);
+    viewpoint_ptr_->GenerateViewpoint(*processed_cloud_ptr_, *inverted_cloud_ptr_, origin_);
     is_initialized_ = true;
 }
 

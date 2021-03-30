@@ -46,21 +46,22 @@ public:
 class Facet
 {
 public:
-    Facet(int id = 0) : id_(id), area_(0.0), flag_(0) {}
+    Facet(int id = 0) : id_(id), area_(0.0) {flag_ = 0;}
     void Print();
     void PrintVerbose(int space_count);
     void CalcArea(); // must be used after vertices_ are initialized
     Eigen::Vector3f GetCentroid();
-    float RidgeMaxLength(); // return length of the longest ridge
     bool Contain(std::shared_ptr<Vertex> vertex_ptr);
+    std::shared_ptr<Ridge> FindLongestRidge();
     std::shared_ptr<Vertex> FindLastVertex(std::shared_ptr<Vertex> v1, std::shared_ptr<Vertex> v2);
-    std::shared_ptr<Facet> FindNeighborFacet(std::shared_ptr<Vertex> v1, std::shared_ptr<Vertex> v2); // find facet that contains v1 but doesn't contains v2
+    std::shared_ptr<Facet> FindNeighborFacet(std::shared_ptr<Vertex> v1, std::shared_ptr<Vertex> v2); // find neighbor facet that contains v1 but doesn't contains v2
+    std::shared_ptr<Ridge> FindOtherRidge(std::shared_ptr<Vertex> v1, std::shared_ptr<Vertex> v2); // find ridge that contains v1 but doesn't contains v2
 
     void CheckRidgeStatus(); // only used for debug
 
     int id_;
     float area_;
-    flag_t flag_;  // used to label facet
+    flag_t flag_;
     std::shared_ptr<Vertex> vertices_[3];
     std::weak_ptr<Facet> neighbors_[3];
     std::weak_ptr<Ridge> ridges_[3];
@@ -69,9 +70,10 @@ public:
 class Ridge
 {
 public:
-    Ridge(int id = 0) : id_(id) {is_good_ = false;}
+    Ridge(int id = 0, bool is_good = false) : id_(id), is_good_(is_good) {}
     void Print();
     void PrintVerbose(int space_count);
+    bool Contain(std::shared_ptr<Vertex> vertex_ptr);
     float GetLength();
     Eigen::Vector3f GetMidPoint();
 
@@ -84,9 +86,10 @@ public:
 class ConvexHull
 {
 public:
-    ConvexHull();
+    ConvexHull(Eigen::Vector3f origin);
     int CalcConvexHull(int numpoints, double *points);
     void ReadQhullGlobalData();  // non-reentrant qhull's global data will be released at the end of this function
+    void DevideLongRidge();  // devide long ridges and mark frontier vertices
     int VertexCount();
     int FacetCount();
     int RidgeCount();
@@ -94,6 +97,7 @@ public:
     void ClearFacetFlag();
     void ClearVertexFlag();
 
+    Eigen::Vector3f origin_;
     std::vector<std::shared_ptr<Facet>> facet_list_;
     std::vector<std::shared_ptr<Vertex>> vertex_list_;
     std::vector<std::shared_ptr<Ridge>> ridge_list_;

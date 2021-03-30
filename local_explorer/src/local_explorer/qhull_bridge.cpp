@@ -69,19 +69,6 @@ Eigen::Vector3f Facet::GetCentroid()
     return (p1+p2+p3)/3;
 }
 
-float Facet::RidgeMaxLength()
-{
-    Eigen::Vector3f p1, p2, p3;
-    float l1, l2, l3;
-    p1 = vertices_[0]->pos_;
-    p2 = vertices_[1]->pos_;
-    p3 = vertices_[2]->pos_;
-    l1 = (p2-p1).norm();
-    l2 = (p3-p1).norm();
-    l3 = (p3-p2).norm();
-    return (l1 > l2 && l1 > l3) ? l1 : (l2 > l3 ? l2 : l3);  
-}
-
 bool Facet::Contain(std::shared_ptr<Vertex> vertex_ptr)
 {
     for (int i = 0; i < 3; i++)
@@ -92,6 +79,22 @@ bool Facet::Contain(std::shared_ptr<Vertex> vertex_ptr)
     return false;
 }
 
+std::shared_ptr<Ridge> Facet::FindLongestRidge()
+{
+    float max_length = 0;
+    std::shared_ptr<Ridge> longest_ridge_ptr;
+    for (int i = 0; i < 3; i++)
+    {
+        auto ridge_ptr = ridges_[i].lock();
+        if (ridge_ptr->GetLength() > max_length)
+        {
+            max_length = ridge_ptr->GetLength();
+            longest_ridge_ptr = ridge_ptr;
+        }
+    }
+    return longest_ridge_ptr;
+}
+
 std::shared_ptr<Vertex> Facet::FindLastVertex(std::shared_ptr<Vertex> v1, std::shared_ptr<Vertex> v2)
 {
     for (int i = 0; i < 3; i++)
@@ -100,6 +103,7 @@ std::shared_ptr<Vertex> Facet::FindLastVertex(std::shared_ptr<Vertex> v1, std::s
             return vertices_[i];
     }
     printf("Error in Facet::FindLastVertex: last vertex not found.\n");
+    printf("Vertices ID: v1(%d), v2(%d).\n", v1->id_, v2->id_);
     return std::shared_ptr<Vertex>();
 }
 
@@ -112,7 +116,21 @@ std::shared_ptr<Facet> Facet::FindNeighborFacet(std::shared_ptr<Vertex> v1, std:
             return facet_ptr;
     }
     printf("Error in Facet::FindNeighborFacet: neighbor facet not found.\n");
+    printf("Vertices ID: v1(%d), v2(%d).\n", v1->id_, v2->id_);
     return std::shared_ptr<Facet>();
+}
+
+std::shared_ptr<Ridge> Facet::FindOtherRidge(std::shared_ptr<Vertex> v1, std::shared_ptr<Vertex> v2)
+{
+    for (int i = 0; i < 3; i++)
+    {
+        auto ridge_ptr = ridges_[i].lock();
+        if (ridge_ptr->Contain(v1) && !ridge_ptr->Contain(v2))
+            return ridge_ptr;
+    }
+    printf("Error in Facet::FindOtherRidge: the other ridge not found.\n");
+    printf("Vertices ID: v1(%d), v2(%d).\n", v1->id_, v2->id_);
+    return std::shared_ptr<Ridge>();
 }
 
 // only used for debug
@@ -181,6 +199,16 @@ void Ridge::PrintVerbose(int space_count = 0)
     printf("\n");
 }
 
+bool Ridge::Contain(std::shared_ptr<Vertex> vertex_ptr)
+{
+    for (int i = 0; i < 2; i++)
+    {
+        if (vertices_[i] == vertex_ptr)
+            return true;
+    }
+    return false;
+}
+
 float Ridge::GetLength()
 {
     Eigen::Vector3f p1, p2;
@@ -194,10 +222,10 @@ Eigen::Vector3f Ridge::GetMidPoint()
     Eigen::Vector3f p1, p2;
     p1 = vertices_[0]->pos_;
     p2 = vertices_[1]->pos_;
-    return (p2-p1)/2;
+    return (p2+p1)/2;
 }
 
-ConvexHull::ConvexHull()
+ConvexHull::ConvexHull(Eigen::Vector3f origin = Eigen::Vector3f::Zero()) : origin_(origin)
 {
     // empty
 }
@@ -316,6 +344,152 @@ void ConvexHull::ReadQhullGlobalData()
     deltaT = double(t2.tv_sec - t1.tv_sec) + double(t2.tv_usec - t1.tv_usec) / 1e6;
     printf("Time usage for ConvexHull::ReadQhullGlobalData(): %lf\n", deltaT);
     qh_freeqhull2(1);
+}
+
+void ConvexHull::DevideLongRidge()
+{
+    struct timeval t1, t2;
+    double deltaT;
+    gettimeofday(&t1, nullptr);
+    int k = 0;
+    while (k < RidgeCount())
+    {
+        auto ridge_ptr = ridge_list_[k];
+        if (!ridge_ptr->is_good_ 
+            || ridge_ptr->GetLength() < MIN_FRONTIER_RIDGE_LENGTH)  // only divide good ridges
+        {
+            k++;
+            continue;
+        }
+        // divide longest ridge of triangle first
+        for (int i = 0; i < 2; i++)
+        {
+            std::shared_ptr<Facet> facet_ptr = ridge_ptr->facets_[i].lock();
+            std::shared_ptr<Ridge> longest_ridge_ptr = facet_ptr->FindLongestRidge();
+            if (longest_ridge_ptr != ridge_ptr)
+            {
+                ridge_ptr = longest_ridge_ptr;
+                break;
+            }
+        }
+        /*
+        printf("Current ridge length: %f\n", ridge_ptr->GetLength());
+        for (int i = 0; i < 2; i++)
+        {
+            std::shared_ptr<Facet> facet_ptr = ridge_ptr->facets_[i].lock();
+            facet_ptr->PrintVerbose();
+        }
+        */
+        std::shared_ptr<Vertex> ridge_vertex_ptr[2], last_vertex_ptr[2];  // last_vertex: neighbor's third vertex besides ridge vertices
+        std::shared_ptr<Facet> neighbor_facet_ptr[2], nn_facet_ptr[2][2]; // nn: neighbor's neighbor
+        std::shared_ptr<Ridge> neighbor_other_ridge_ptr[2][2];
+        for (int i = 0; i < 2; i++)
+        {
+            ridge_vertex_ptr[i] = ridge_ptr->vertices_[i];
+            neighbor_facet_ptr[i] = ridge_ptr->facets_[i].lock();
+        }
+        for (int i = 0; i < 2; i++)
+        {
+            last_vertex_ptr[i] = neighbor_facet_ptr[i]->FindLastVertex(ridge_vertex_ptr[0], ridge_vertex_ptr[1]);
+            nn_facet_ptr[i][0] = neighbor_facet_ptr[i]->FindNeighborFacet(ridge_vertex_ptr[0], ridge_vertex_ptr[1]);
+            nn_facet_ptr[i][1] = neighbor_facet_ptr[i]->FindNeighborFacet(ridge_vertex_ptr[1], ridge_vertex_ptr[0]);
+            neighbor_other_ridge_ptr[i][0] = neighbor_facet_ptr[i]->FindOtherRidge(ridge_vertex_ptr[0], ridge_vertex_ptr[1]);
+            neighbor_other_ridge_ptr[i][1] = neighbor_facet_ptr[i]->FindOtherRidge(ridge_vertex_ptr[1], ridge_vertex_ptr[0]);
+        }
+        Eigen::Vector3f midpoint = ridge_ptr->GetMidPoint();
+        std::shared_ptr<Vertex> new_vertex_ptr = std::make_shared<Vertex>(VertexCount(), Invert(midpoint, origin_));
+        new_vertex_ptr->pos_ = midpoint;
+        std::shared_ptr<Facet> new_facet_ptr[2];
+        std::shared_ptr<Ridge> new_ridge_ptr[3];
+        for (int i = 0; i < 2; i++)
+        {
+            new_facet_ptr[i] = std::make_shared<Facet>(FacetCount()+i);
+        }
+        for (int i = 0; i < 3; i++)
+        {
+            new_ridge_ptr[i] = std::make_shared<Ridge>(RidgeCount()+i, true);
+        }
+        new_vertex_ptr->flag_ = 1;  // mark as frontier
+        // new_vertex_ptr's data is all set
+        for (int i = 0; i < 2; i++)
+        {
+            new_ridge_ptr[i]->vertices_[0] = new_vertex_ptr;
+            new_ridge_ptr[i]->vertices_[1] = last_vertex_ptr[i];
+            new_ridge_ptr[i]->facets_[0] = new_facet_ptr[i];
+            new_ridge_ptr[i]->facets_[1] = neighbor_facet_ptr[i];
+        }
+        ridge_ptr->vertices_[0] = ridge_vertex_ptr[0];
+        ridge_ptr->vertices_[1] = new_vertex_ptr;
+        //ridge_ptr->facets_[0] = neighbor_facet_ptr[0];
+        //ridge_ptr->facets_[1] = neighbor_facet_ptr[1];
+        new_ridge_ptr[2]->vertices_[0] = new_vertex_ptr;
+        new_ridge_ptr[2]->vertices_[1] = ridge_vertex_ptr[1];
+        new_ridge_ptr[2]->facets_[0] = new_facet_ptr[0];
+        new_ridge_ptr[2]->facets_[1] = new_facet_ptr[1];
+        // new_ridge_ptr's data is all set
+        for (int i = 0; i < 2; i++)
+        {
+            neighbor_facet_ptr[i]->vertices_[0] = ridge_vertex_ptr[0];
+            neighbor_facet_ptr[i]->vertices_[1] = last_vertex_ptr[i];
+            neighbor_facet_ptr[i]->vertices_[2] = new_vertex_ptr;
+            neighbor_facet_ptr[i]->ridges_[0] = ridge_ptr;
+            neighbor_facet_ptr[i]->ridges_[1] = neighbor_other_ridge_ptr[i][0];
+            neighbor_facet_ptr[i]->ridges_[2] = new_ridge_ptr[i];
+            neighbor_facet_ptr[i]->neighbors_[0] = neighbor_facet_ptr[(i+1)%2];
+            neighbor_facet_ptr[i]->neighbors_[1] = nn_facet_ptr[i][0];
+            neighbor_facet_ptr[i]->neighbors_[2] = new_facet_ptr[i];
+        }
+        // old facets' data (neighbor_facet_ptr) is all set (except flag_)
+        for (int i = 0; i < 2; i++)
+        {
+            new_facet_ptr[i]->vertices_[0] = ridge_vertex_ptr[1];
+            new_facet_ptr[i]->vertices_[1] = last_vertex_ptr[i];
+            new_facet_ptr[i]->vertices_[2] = new_vertex_ptr;
+            new_facet_ptr[i]->ridges_[0] = new_ridge_ptr[2];
+            new_facet_ptr[i]->ridges_[1] = neighbor_other_ridge_ptr[i][1];
+            new_facet_ptr[i]->ridges_[2] = new_ridge_ptr[i];
+            new_facet_ptr[i]->neighbors_[0] = new_facet_ptr[(i+1)%2];
+            new_facet_ptr[i]->neighbors_[1] = nn_facet_ptr[i][1];
+            new_facet_ptr[i]->neighbors_[2] = neighbor_facet_ptr[i];
+        }
+        // new_facet_ptr's data is all set (except flag_)
+        for (int i = 0; i < 2; i++)
+        {
+            for (int j = 0; j < 2; j++)
+            {
+                if (neighbor_other_ridge_ptr[i][1]->facets_[j].lock() == neighbor_facet_ptr[i])
+                {
+                    neighbor_other_ridge_ptr[i][1]->facets_[j] = new_facet_ptr[i];
+                    break;
+                }
+            }
+        }
+        // neighbor_other_ridge_ptr's data is reset
+        for (int i = 0; i < 2; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                if (nn_facet_ptr[i][1]->neighbors_[j].lock() == neighbor_facet_ptr[i])
+                {
+                    nn_facet_ptr[i][1]->neighbors_[j] = new_facet_ptr[i];
+                    break;
+                }
+            }
+        }
+        // nn_facet_ptr's data is reset
+        vertex_list_.push_back(new_vertex_ptr);
+        for (int i = 0; i < 2; i++)
+        {
+            facet_list_.push_back(new_facet_ptr[i]);
+        }
+        for (int i = 0; i < 3; i++)
+        {
+            ridge_list_.push_back(new_ridge_ptr[i]);
+        }
+    }
+    gettimeofday(&t2, nullptr);
+    deltaT = double(t2.tv_sec - t1.tv_sec) + double(t2.tv_usec - t1.tv_usec) / 1e6;
+    printf("Time usage for ConvexHull::DivideLongRidge(): %lf\n", deltaT);
 }
 
 int ConvexHull::VertexCount()

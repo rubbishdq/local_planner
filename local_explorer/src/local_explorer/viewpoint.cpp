@@ -44,19 +44,19 @@ bool FrontierCluster::IsEmpty()
     return is_empty_;
 }
 
-Viewpoint::Viewpoint()
+Viewpoint::Viewpoint(Eigen::Vector3f origin)
 {
-    convex_hull_ptr_ = std::make_shared<ConvexHull>();
+    convex_hull_ptr_ = std::make_shared<ConvexHull>(origin);
     frontier_cluster_count_ = 0;
     is_generated_ = false;
 }
 
-void Viewpoint::GenerateViewpoint(std::vector<LabeledPoint> &cloud, std::vector<LabeledPoint> &inverted_cloud)
+void Viewpoint::GenerateViewpoint(std::vector<LabeledPoint> &cloud, std::vector<LabeledPoint> &inverted_cloud, Eigen::Vector3f origin)
 {
     int cloud_size = int(inverted_cloud.size());
     if (cloud_size >= 4)
     {
-        convex_hull_ptr_ = std::make_shared<ConvexHull>();
+        convex_hull_ptr_ = std::make_shared<ConvexHull>(origin);
         
         double *arr = new double[3*cloud_size];
         Points2Array(inverted_cloud, arr);
@@ -78,6 +78,7 @@ void Viewpoint::GenerateViewpoint(std::vector<LabeledPoint> &cloud, std::vector<
                 vertex_ptr->flag_ = 1;
             else
                 vertex_ptr->flag_ = 0;
+            // now vertex_ptr->flag_ represents if this vertex is a frontier vertex
         }
         /*
         for (auto facet_ptr : convex_hull_ptr_->facet_list_)
@@ -85,6 +86,13 @@ void Viewpoint::GenerateViewpoint(std::vector<LabeledPoint> &cloud, std::vector<
             facet_ptr->CheckRidgeStatus();
         }
         */ // for debug
+        convex_hull_ptr_->DevideLongRidge();
+        printf("Convex hull (after long ridges division) vertex count: %d    facet count: %d    ridge count: %d    good ridge count: %d\n", 
+            convex_hull_ptr_->VertexCount(), 
+            convex_hull_ptr_->FacetCount(), 
+            convex_hull_ptr_->RidgeCount(), 
+            convex_hull_ptr_->GoodRidgeCount());
+        
         // calculate facets' area
         for (auto facet_ptr : convex_hull_ptr_->facet_list_)
         {
@@ -227,8 +235,6 @@ bool Viewpoint::IsFrontierFacet(Facet &facet)
             }
         }
     }
-    if (facet.RidgeMaxLength() > MIN_FRONTIER_RIDGE_LENGTH)
-        return true;
     for (int i = 0; i < 3; i++)
     {
         if (facet.vertices_[i]->flag_)
@@ -269,6 +275,17 @@ void Viewpoint::ClusterSingleFacet(std::shared_ptr<Facet> facet_ptr, int cluster
         }
     }
 }
+
+void Viewpoint::SetOrigin(Eigen::Vector3f origin)
+{
+    convex_hull_ptr_->origin_ = origin;
+}
+
+Eigen::Vector3f Viewpoint::GetOrigin()
+{
+    return convex_hull_ptr_->origin_;
+}
+
 
 std::shared_ptr<ConvexHull> Viewpoint::GetConvexHullPtr()
 {

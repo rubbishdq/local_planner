@@ -27,12 +27,12 @@ public:
         // there is no copy constructor for voxelized_points::VoxelizedPoint, or bugs will occur during compilation
         // TODO: fix these bugs
     }
-    void invert(Eigen::Vector3f origin, double param)
+    void Invert(Eigen::Vector3f origin, double param)
     {
         mu_ = (mu_-origin)/pow((mu_-origin).norm(), param)+origin;
     }
 
-    void reinvert(Eigen::Vector3f origin, double param)
+    void Reinvert(Eigen::Vector3f origin, double param)
     {
         mu_ = (mu_-origin)*pow((mu_-origin).norm(), 1/(1-param)-1)+origin;
     }

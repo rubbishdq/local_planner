@@ -1,6 +1,7 @@
 #ifndef __UTILS_H__
 #define __UTILS_H__
 
+#include "local_explorer/common.h"
 #include "Eigen/Core"
 #include "Eigen/Dense"
 #include <cstdio>
@@ -21,6 +22,11 @@ inline void PrintSpace(int space_count)
     str[space_count] = '\0';
     printf("%s", str);
     delete[]str;
+}
+
+inline Eigen::Vector3f Invert(Eigen::Vector3f pos, Eigen::Vector3f origin, double param = INVERT_PARAM)
+{
+    return (pos-origin)/pow((pos-origin).norm(), param)+origin;
 }
 
 // get eigenvalues and corresponding eigenvectors, with eigenvalues sorted

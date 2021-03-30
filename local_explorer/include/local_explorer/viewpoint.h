@@ -24,13 +24,15 @@ public:
 class Viewpoint
 {
 public:
-    Viewpoint();
-    void GenerateViewpoint(std::vector<LabeledPoint> &cloud, std::vector<LabeledPoint> &inverted_cloud);
+    Viewpoint(Eigen::Vector3f origin = Eigen::Vector3f::Zero());
+    void GenerateViewpoint(std::vector<LabeledPoint> &cloud, std::vector<LabeledPoint> &inverted_cloud, Eigen::Vector3f origin);
     void Points2Str(std::vector<LabeledPoint> &pts, char* str, int int_num, int dec_num); // convert std::vector<LabeledPoint> to qhull's input format
     void Points2Array(std::vector<LabeledPoint> &pts, double* arr);
     bool IsFrontierFacet(Facet &facet);
     void ClusterSingleFacet(std::shared_ptr<Facet> facet_ptr, int cluster_id);
 
+    void SetOrigin(Eigen::Vector3f origin);
+    Eigen::Vector3f GetOrigin();
     std::shared_ptr<ConvexHull> GetConvexHullPtr();
     std::vector<FrontierCluster>& GetFrontierClusterList();
     int GetFrontierClusterCount();
