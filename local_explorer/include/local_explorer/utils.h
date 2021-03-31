@@ -17,6 +17,8 @@ inline double Random(double min_val = 0.0, double max_val = 1.0)
 
 inline void PrintSpace(int space_count)
 {
+    if (space_count <= 0)
+        return;
     char *str = new char[space_count+1]; 
     memset(str, ' ', space_count*sizeof(char));
     str[space_count] = '\0';
@@ -26,7 +28,7 @@ inline void PrintSpace(int space_count)
 
 inline Eigen::Vector3f Invert(Eigen::Vector3f pos, Eigen::Vector3f origin, double param = INVERT_PARAM)
 {
-    return (pos-origin)/pow((pos-origin).norm(), param)+origin;
+    return (pos-origin)/pow((pos-origin).norm(), param);
 }
 
 // get eigenvalues and corresponding eigenvectors, with eigenvalues sorted

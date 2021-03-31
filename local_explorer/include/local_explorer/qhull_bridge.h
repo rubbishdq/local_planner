@@ -30,6 +30,7 @@ namespace local_explorer
 class Vertex;
 class Facet;
 class Ridge;
+class FacetBox;
 class Vertex
 {
 public:
@@ -96,6 +97,7 @@ public:
     int GoodRidgeCount();
     void ClearFacetFlag();
     void ClearVertexFlag();
+    void ReleaseRidge();
 
     Eigen::Vector3f origin_;
     std::vector<std::shared_ptr<Facet>> facet_list_;

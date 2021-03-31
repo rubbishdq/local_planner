@@ -534,4 +534,10 @@ void ConvexHull::ClearVertexFlag()
     }
 }
 
+void ConvexHull::ReleaseRidge()
+{
+    std::vector<std::shared_ptr<Ridge>> vector_temp;
+    vector_temp.swap(ridge_list_);
+}
+
 } // namespace local_explorer

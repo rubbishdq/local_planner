@@ -9,6 +9,7 @@ const bool USE_HEIGHT_DIFF_THRESHOLD = true;
 
 const double SENSOR_RANGE = 5.0;
 
+const double MIN_RANGE_FOR_IGNORANCE = 0.12;
 const double MIN_RANGE_FOR_EXTENSION = 1.0;
 const int EXTENSION_COUNT = 1;
 const double EXTENSION_LENGTH_THRESHOLD = 5e-3;
@@ -32,6 +33,11 @@ const float FRONTIER_CLUSTER_SIZE_LIMIT[3] = {3.0, 3.0, 1.5};
 
 const int FRONTIER_COLOR_COUNT = 256;  // used to visualize frontier clusters
 const float MARKER_ALPHA = 0.8;
+
+const int KD_TREE_MAX_DEPTH = 10;
+const int KD_TREE_MIN_OBJ_COUNT = 50;
+
+const float EPS_F = 2e-4;
 } // namespace local_explorer
 
 #endif

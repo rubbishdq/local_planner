@@ -64,7 +64,7 @@ void LocalExplorer::PublishInvertedCloud(ViewpointGenerator &viewpoint_generator
     }
     pcl::toROSMsg(cloud, cloud_msg);
     cloud_msg.header.stamp = ros::Time::now();
-    cloud_msg.header.frame_id = "world";
+    cloud_msg.header.frame_id = "iris/base_link";
     inverted_cloud_pub_.publish(cloud_msg);
 }
 

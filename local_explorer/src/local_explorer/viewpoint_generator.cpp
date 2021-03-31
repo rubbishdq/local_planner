@@ -23,6 +23,10 @@ void ViewpointGenerator::PreprocessVoxelizedPoints(const global_mapper_ros::Voxe
         sigma << point.sigma[0], point.sigma[1], point.sigma[2], 
             point.sigma[1], point.sigma[3], point.sigma[4], 
             point.sigma[2], point.sigma[4], point.sigma[5];
+        if ((origin_-mu).norm() <= MIN_RANGE_FOR_IGNORANCE)
+        {
+            continue;
+        }
         if ((origin_-mu).norm() <= MIN_RANGE_FOR_EXTENSION)
         {
             float evalue[3]; 

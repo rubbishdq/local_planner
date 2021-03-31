@@ -29,12 +29,12 @@ public:
     }
     void Invert(Eigen::Vector3f origin, double param)
     {
-        mu_ = (mu_-origin)/pow((mu_-origin).norm(), param)+origin;
+        mu_ = (mu_-origin)/pow((mu_-origin).norm(), param);
     }
 
     void Reinvert(Eigen::Vector3f origin, double param)
     {
-        mu_ = (mu_-origin)*pow((mu_-origin).norm(), 1/(1-param)-1)+origin;
+        mu_ = (mu_-origin)*pow((mu_-origin).norm(), 1/(1-param)-1);
     }
 
     PointType type_;
