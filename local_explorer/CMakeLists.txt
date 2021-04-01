@@ -227,7 +227,7 @@ add_library(kd_tree src/local_explorer/kd_tree.cpp)
 target_link_libraries(kd_tree qhull_bridge)
 
 add_library(viewpoint src/local_explorer/viewpoint.cpp)
-target_link_libraries(viewpoint ${global_mapper_LIBRARIES} qhull_bridge)
+target_link_libraries(viewpoint ${global_mapper_LIBRARIES} qhull_bridge kd_tree)
 
 add_library(viewpoint_generator src/local_explorer/viewpoint_generator.cpp)
 target_link_libraries(viewpoint_generator viewpoint ${catkin_LIBRARIES})

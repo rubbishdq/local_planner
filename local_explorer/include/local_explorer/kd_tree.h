@@ -51,6 +51,9 @@ public:
         AxisPlane plane_;  // used in leaf node
         std::vector<FacetBox*> fb_list_;  // used in non-leaf node
     };
+    #ifdef __DEBUG__
+    int fb_count_;
+    #endif
 };
 
 class KdTree

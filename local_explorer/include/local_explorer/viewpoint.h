@@ -4,6 +4,7 @@
 #include "local_explorer/labeled_point.h"
 #include "local_explorer/common.h"
 #include "local_explorer/qhull_bridge.h"
+#include "local_explorer/kd_tree.h"
 
 namespace local_explorer
 {
@@ -40,6 +41,7 @@ public:
 
 private:
     std::shared_ptr<ConvexHull> convex_hull_ptr_;
+    std::shared_ptr<KdTree> kd_tree_ptr_;
     std::vector<FrontierCluster> frontier_cluster_list_;  // candidate frontier
     int frontier_cluster_count_;
     bool is_generated_;

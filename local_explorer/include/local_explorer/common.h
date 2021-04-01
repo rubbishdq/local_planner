@@ -1,6 +1,7 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
 
+//#define __DEBUG__
 namespace local_explorer
 {
 typedef int flag_t;

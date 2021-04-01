@@ -15,7 +15,7 @@ FacetBox::FacetBox(Facet &facet)
 {
     Eigen::Vector3f p[3];
     for (int i = 0; i < 3; i++)
-        p[i] = facet.vertices_[i]->pos_;
+        p[i] = facet.vertices_[i]->pos_inverted_;
     Eigen::Vector3f perp_vec = (p[1]-p[0]).cross(p[2]-p[0]);
     if (perp_vec.norm() != 0)
         normal_ = perp_vec / perp_vec.norm();
@@ -54,11 +54,11 @@ KdTreeNode::~KdTreeNode()
 {
     for (int i = 0; i < 2; i++)
     {
-        if (child_[i] != nullptr)
-        {
-            child_[i]->~KdTreeNode();
-            delete child_[i];
-        }
+        delete child_[i];
+    }
+    if (Leaf())
+    {
+        fb_list_.~vector<FacetBox*>();
     }
 }
 
@@ -84,21 +84,33 @@ bool KdTreeNode::In(Eigen::Vector3f pt)
     {
         if (pt[plane_.dim_] < plane_.pos_)
         {
-            return child_[0]->In(pt);
+            return (child_[0] == nullptr) || child_[0]->In(pt);
         }
         else
         {
-            return child_[1]->In(pt);
+            return (child_[1] == nullptr) || child_[1]->In(pt);
         }
     }
 }
 
 int KdTreeNode::FacetBoxCount()
 {
+    #ifdef __DEBUG__
+    return fb_count_;
+
+    #else
     if (Leaf())
         return fb_list_.size();
     else
-        return child_[0]->FacetBoxCount() + child_[1]->FacetBoxCount();
+    {
+        int count = 0;
+        if (child_[0] != nullptr)
+            count += child_[0]->FacetBoxCount();
+        if (child_[1] != nullptr)
+            count += child_[1]->FacetBoxCount();
+        return count;
+    }
+    #endif
 }
 
 void KdTreeNode::Print(int depth = 0, char* pos_str = nullptr)
@@ -169,11 +181,7 @@ KdTree::KdTree(std::vector<FacetBox*> &fb_list)
 
 KdTree::~KdTree()
 {
-    if (root_ != nullptr)
-    {
-        root_->~KdTreeNode();
-        delete root_;
-    }
+    delete root_;
     for (auto fb_ptr : fb_list_)
     {
         delete fb_ptr;
@@ -189,6 +197,11 @@ KdTreeNode* KdTree::Build(std::vector<FacetBox*> &fb_list, int depth)
         return nullptr;
     }
     KdTreeNode* new_node_ptr = new KdTreeNode;
+
+    #ifdef __DEBUG__
+    new_node_ptr->fb_count_ = fb_count;
+    #endif
+
     if (fb_count < KD_TREE_MIN_OBJ_COUNT || depth == KD_TREE_MAX_DEPTH-1)
     {
         new_node_ptr->fb_list_.assign(fb_list.begin(), fb_list.end());

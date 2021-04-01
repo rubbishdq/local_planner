@@ -30,7 +30,7 @@ namespace local_explorer
 class Vertex;
 class Facet;
 class Ridge;
-class FacetBox;
+
 class Vertex
 {
 public:
