@@ -285,6 +285,11 @@ void Viewpoint::ClusterSingleFacet(std::shared_ptr<Facet> facet_ptr, int cluster
     }
 }
 
+bool Viewpoint::In(Eigen::Vector3f pt)
+{
+    return kd_tree_ptr_->In(pt);
+}
+
 void Viewpoint::SetOrigin(Eigen::Vector3f origin)
 {
     convex_hull_ptr_->origin_ = origin;

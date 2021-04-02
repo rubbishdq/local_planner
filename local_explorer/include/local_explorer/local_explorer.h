@@ -13,6 +13,7 @@
 #include "Eigen/Core"
 #include <sstream>
 #include <vector>
+#include <list>
 #include <memory>
 #include <cstdlib>
 #include <ctime>
@@ -33,9 +34,11 @@ private:
     void PublishConvexHull(ConvexHull &convex_hull);  // inverted
     void PublishColoredConvexHull(ConvexHull &convex_hull);  // inverted
     void PublishViewpoint(Viewpoint &viewpoint);
-    void PublishFrontierCluster(Viewpoint &viewpoint);
+    void PublishSingleFrontierCluster(Viewpoint &viewpoint);
 
     void VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr);
+
+    std::list<std::shared_ptr<Viewpoint>> viewpoint_list_;
 
     float frontier_color_[FRONTIER_COLOR_COUNT][3];  // used to visualize frontier clusters
 
@@ -46,7 +49,7 @@ private:
     ros::Publisher convex_hull_pub_;
     ros::Publisher colored_convex_hull_pub_;
     ros::Publisher viewpoint_pub_;
-    ros::Publisher frontier_cluster_list_pub_;
+    ros::Publisher single_frontier_cluster_list_pub_;
 
     ros::Subscriber voxelized_points_sub_;
 

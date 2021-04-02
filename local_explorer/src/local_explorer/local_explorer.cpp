@@ -174,7 +174,7 @@ void LocalExplorer::PublishViewpoint(Viewpoint &viewpoint)
     viewpoint_pub_.publish(cloud_msg);
 }
 
-void LocalExplorer::PublishFrontierCluster(Viewpoint &viewpoint)
+void LocalExplorer::PublishSingleFrontierCluster(Viewpoint &viewpoint)
 {
     visualization_msgs::Marker marker;
     geometry_msgs::Point point;
@@ -222,7 +222,7 @@ void LocalExplorer::PublishFrontierCluster(Viewpoint &viewpoint)
 
     marker.header.frame_id = "world";
     marker.header.stamp = ros::Time::now();
-    frontier_cluster_list_pub_.publish(marker);
+    single_frontier_cluster_list_pub_.publish(marker);
 }
 
 void LocalExplorer::VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr)
@@ -238,7 +238,7 @@ void LocalExplorer::VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPo
         //PublishConvexHull(*(viewpoint_generator_ptr_->GetViewpointPtr()->GetConvexHullPtr()));
         //PublishColoredConvexHull(*(viewpoint_generator_ptr_->GetViewpointPtr()->GetConvexHullPtr()));
         PublishViewpoint(*(viewpoint_generator_ptr_->GetViewpointPtr()));
-        PublishFrontierCluster(*(viewpoint_generator_ptr_->GetViewpointPtr()));
+        PublishSingleFrontierCluster(*(viewpoint_generator_ptr_->GetViewpointPtr()));
     }
     RepublishVoxelizedPoints(msg_ptr);
 }
