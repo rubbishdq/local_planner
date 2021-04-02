@@ -6,6 +6,8 @@
 #include "local_explorer/qhull_bridge.h"
 #include "local_explorer/kd_tree.h"
 
+#include <list>
+
 namespace local_explorer
 {
 
@@ -14,10 +16,11 @@ class FrontierCluster
 public:
     FrontierCluster(int id = 0);
     void AddFacet(std::shared_ptr<Facet> facet_ptr);
+    void SetFacetFlag(flag_t flag);
     bool IsEmpty();
 
     int id_;  // start from 1
-    std::vector<std::shared_ptr<Facet>> facet_list_;
+    std::list<std::shared_ptr<Facet>> facet_list_;
     float xyz_range_[2][3];
     float area_;
     bool is_empty_;
@@ -29,9 +32,9 @@ public:
     void GenerateViewpoint(std::vector<LabeledPoint> &cloud, std::vector<LabeledPoint> &inverted_cloud, Eigen::Vector3f origin);
     void Points2Str(std::vector<LabeledPoint> &pts, char* str, int int_num, int dec_num); // convert std::vector<LabeledPoint> to qhull's input format
     void Points2Array(std::vector<LabeledPoint> &pts, double* arr);
-    bool IsFrontierFacet(Facet &facet);
     void ClusterSingleFacet(std::shared_ptr<Facet> facet_ptr, int cluster_id);
-    bool In(Eigen::Vector3f pt);
+    bool Visible(Eigen::Vector3f pt);
+    void CheckVisibility(Viewpoint &v2); // removed frontier points visible in v2
 
     void SetOrigin(Eigen::Vector3f origin);
     Eigen::Vector3f GetOrigin();

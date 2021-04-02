@@ -35,6 +35,7 @@ private:
     void PublishColoredConvexHull(ConvexHull &convex_hull);  // inverted
     void PublishViewpoint(Viewpoint &viewpoint);
     void PublishSingleFrontierCluster(Viewpoint &viewpoint);
+    void PublishFrontier();
 
     void VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr);
 
@@ -50,6 +51,7 @@ private:
     ros::Publisher colored_convex_hull_pub_;
     ros::Publisher viewpoint_pub_;
     ros::Publisher single_frontier_cluster_list_pub_;
+    ros::Publisher frontier_pub_;
 
     ros::Subscriber voxelized_points_sub_;
 

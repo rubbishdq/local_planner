@@ -57,6 +57,7 @@ public:
     std::shared_ptr<Vertex> FindLastVertex(std::shared_ptr<Vertex> v1, std::shared_ptr<Vertex> v2);
     std::shared_ptr<Facet> FindNeighborFacet(std::shared_ptr<Vertex> v1, std::shared_ptr<Vertex> v2); // find neighbor facet that contains v1 but doesn't contains v2
     std::shared_ptr<Ridge> FindOtherRidge(std::shared_ptr<Vertex> v1, std::shared_ptr<Vertex> v2); // find ridge that contains v1 but doesn't contains v2
+    bool IsFlaggedFacet(); // return false position of facet is out of range, return true if some of its vertices' are frontier vertices, otherwise return false
 
     void CheckRidgeStatus(); // only used for debug
 

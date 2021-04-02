@@ -17,7 +17,8 @@ LocalExplorer::LocalExplorer()
     convex_hull_pub_ = n_.advertise<visualization_msgs::Marker>("local_explorer/convex_hull", 1);
     colored_convex_hull_pub_ = n_.advertise<visualization_msgs::Marker>("local_explorer/colored_convex_hull", 1);
     viewpoint_pub_ = n_.advertise<sensor_msgs::PointCloud2>("local_explorer/viewpoint", 1);
-    frontier_cluster_list_pub_ = n_.advertise<visualization_msgs::Marker>("local_explorer/frontier_cluster_list", 1);
+    single_frontier_cluster_list_pub_ = n_.advertise<visualization_msgs::Marker>("local_explorer/single_frontier_cluster_list", 1);
+    frontier_pub_ = n_.advertise<visualization_msgs::Marker>("local_explorer/frontier", 1);
 
     voxelized_points_sub_ = n_.subscribe("global_mapper_ros/voxelized_points", 1, &LocalExplorer::VoxelizedPointsCallback, this, ros::TransportHints().tcpNoDelay());  
 
@@ -225,6 +226,62 @@ void LocalExplorer::PublishSingleFrontierCluster(Viewpoint &viewpoint)
     single_frontier_cluster_list_pub_.publish(marker);
 }
 
+void LocalExplorer::PublishFrontier()
+{
+    visualization_msgs::Marker marker;
+    geometry_msgs::Point point;
+    std_msgs::ColorRGBA color_rgba;
+    ROS_INFO("Viewpoint count: %d", int(viewpoint_list_.size()));
+    int k = 0;
+    for (auto viewpoint_ptr : viewpoint_list_)
+    {
+        int color_index = k % FRONTIER_COLOR_COUNT;
+        std::vector<FrontierCluster> frontier_cluster_list = viewpoint_ptr->GetFrontierClusterList();
+        for (auto &frontier_cluster : frontier_cluster_list)
+        {
+            for (auto facet_ptr : frontier_cluster.facet_list_)
+            {
+                color_rgba.r = frontier_color_[color_index][0];
+                color_rgba.g = frontier_color_[color_index][1];
+                color_rgba.b = frontier_color_[color_index][2];
+                color_rgba.a = MARKER_ALPHA;
+                marker.colors.push_back(color_rgba);
+                for (int i = 0; i < 3; i++)
+                {
+                    auto vertex_ptr = facet_ptr->vertices_[i];
+                    point.x = vertex_ptr->pos_[0]; point.y = vertex_ptr->pos_[1]; point.z = vertex_ptr->pos_[2];
+                    marker.points.push_back(point);
+                }
+            }
+        }
+        k++;
+    }
+    marker.id = 0;
+    marker.type = visualization_msgs::Marker::TRIANGLE_LIST;
+    marker.action = visualization_msgs::Marker::ADD;
+    marker.pose.position.x = 0;
+    marker.pose.position.y = 0;
+    marker.pose.position.z = 0;
+    marker.pose.orientation.x = 0.0;
+    marker.pose.orientation.y = 0.0;
+    marker.pose.orientation.z = 0.0;
+    marker.pose.orientation.w = 1.0;
+    marker.scale.x = 1;
+    marker.scale.y = 1;
+    marker.scale.z = 1;
+    
+    marker.color.a = MARKER_ALPHA;
+    marker.color.r = 0.0;
+    marker.color.g = 1.0;
+    marker.color.b = 1.0;
+    
+    //marker.lifetime = ros::Duration(0.2);
+
+    marker.header.frame_id = "world";
+    marker.header.stamp = ros::Time::now();
+    frontier_pub_.publish(marker);
+}
+
 void LocalExplorer::VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr)
 {
     ROS_INFO("Voxelized points message received.");
@@ -233,12 +290,23 @@ void LocalExplorer::VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPo
 
     if (viewpoint_generator_ptr_->IsGenerated())
     {
+        std::shared_ptr<Viewpoint> viewpoint_ptr = viewpoint_generator_ptr_->GetViewpointPtr();
         ROS_INFO("Viewpoint successfully generated.");
-        PublishInvertedCloud(*viewpoint_generator_ptr_);
+        //PublishInvertedCloud(*viewpoint_generator_ptr_);
         //PublishConvexHull(*(viewpoint_generator_ptr_->GetViewpointPtr()->GetConvexHullPtr()));
         //PublishColoredConvexHull(*(viewpoint_generator_ptr_->GetViewpointPtr()->GetConvexHullPtr()));
-        PublishViewpoint(*(viewpoint_generator_ptr_->GetViewpointPtr()));
-        PublishSingleFrontierCluster(*(viewpoint_generator_ptr_->GetViewpointPtr()));
+        PublishViewpoint(*viewpoint_ptr);
+        PublishSingleFrontierCluster(*viewpoint_ptr);
+
+        // check frontier points visibility
+        for (auto old_viewpoint_ptr : viewpoint_list_)
+        {
+            viewpoint_ptr->CheckVisibility(*old_viewpoint_ptr);
+            old_viewpoint_ptr->CheckVisibility(*viewpoint_ptr);
+        }
+
+        viewpoint_list_.push_back(viewpoint_ptr);
+        PublishFrontier();        
     }
     RepublishVoxelizedPoints(msg_ptr);
 }

@@ -133,6 +133,30 @@ std::shared_ptr<Ridge> Facet::FindOtherRidge(std::shared_ptr<Vertex> v1, std::sh
     return std::shared_ptr<Ridge>();
 }
 
+bool Facet::IsFlaggedFacet()
+{
+    if (USE_HEIGHT_DIFF_THRESHOLD)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            Eigen::Vector3f p = vertices_[i]->pos_;
+            if ((p[2]-BOARDER_HEIGHT_RANGE[0]) < HEIGHT_DIFF_THRESHOLD || 
+                (-p[2]+BOARDER_HEIGHT_RANGE[1]) < HEIGHT_DIFF_THRESHOLD)
+            {
+                return false;
+            }
+        }
+    }
+    for (int i = 0; i < 3; i++)
+    {
+        if (vertices_[i]->flag_)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 // only used for debug
 void Facet::CheckRidgeStatus()
 {

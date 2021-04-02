@@ -31,6 +31,16 @@ inline Eigen::Vector3f Invert(Eigen::Vector3f pos, Eigen::Vector3f origin, doubl
     return (pos-origin)/pow((pos-origin).norm(), param);
 }
 
+inline bool InBoxRange(Eigen::Vector3f pos)
+{
+    for (int i = 0; i < 3; i++)
+    {
+        if (pos[i] > BOARDER_DIMENSION[i] || pos[i] < -BOARDER_DIMENSION[i])
+            return false;
+    }
+    return true;
+}
+
 // get eigenvalues and corresponding eigenvectors, with eigenvalues sorted
 void CalcEigen(Eigen::Matrix3f mat, float evalue[3], Eigen::Vector3f evector[3])  // get eigenvalues and corresponding eigenvectors, with eigenvalues sorted
 {

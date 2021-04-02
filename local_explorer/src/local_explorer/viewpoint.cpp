@@ -39,6 +39,14 @@ void FrontierCluster::AddFacet(std::shared_ptr<Facet> facet_ptr)
     area_ += facet_ptr->area_;
 }
 
+void FrontierCluster::SetFacetFlag(flag_t flag)
+{
+    for (auto facet_ptr : facet_list_)
+    {
+        facet_ptr->flag_ = flag;
+    }
+}
+
 bool FrontierCluster::IsEmpty()
 {
     return is_empty_;
@@ -112,7 +120,7 @@ void Viewpoint::GenerateViewpoint(std::vector<LabeledPoint> &cloud, std::vector<
         convex_hull_ptr_->ClearFacetFlag();
         for (auto facet_ptr : convex_hull_ptr_->facet_list_)
         {
-            if (IsFrontierFacet(*facet_ptr))
+            if (facet_ptr->IsFlaggedFacet())
             {
                 facet_ptr->flag_ = -1;  // labeled as frontier facet
             }
@@ -143,6 +151,7 @@ void Viewpoint::GenerateViewpoint(std::vector<LabeledPoint> &cloud, std::vector<
         {
             if (fc_iter->area_ < MIN_FRONTIER_CLUSTER_AREA)
             {
+                fc_iter->SetFacetFlag(0);
                 fc_iter = frontier_cluster_list_.erase(fc_iter);
                 frontier_cluster_count_--;
             }
@@ -223,37 +232,6 @@ void Viewpoint::Points2Array(std::vector<LabeledPoint> &pts, double* arr)
     }
 }
 
-bool Viewpoint::IsFrontierFacet(Facet &facet)
-{
-    if (USE_HEIGHT_DIFF_THRESHOLD)
-    {
-        /*
-        Eigen::Vector3f centroid = facet.GetCentroid();
-        if ((centroid[2]-BOARDER_HEIGHT_RANGE[0]) < HEIGHT_DIFF_THRESHOLD || 
-            (-centroid[2]+BOARDER_HEIGHT_RANGE[1]) < HEIGHT_DIFF_THRESHOLD)
-        {
-            return false;
-        }*/
-        for (int i = 0; i < 3; i++)
-        {
-            Eigen::Vector3f p = facet.vertices_[i]->pos_;
-            if ((p[2]-BOARDER_HEIGHT_RANGE[0]) < HEIGHT_DIFF_THRESHOLD || 
-                (-p[2]+BOARDER_HEIGHT_RANGE[1]) < HEIGHT_DIFF_THRESHOLD)
-            {
-                return false;
-            }
-        }
-    }
-    for (int i = 0; i < 3; i++)
-    {
-        if (facet.vertices_[i]->flag_)
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
 void Viewpoint::ClusterSingleFacet(std::shared_ptr<Facet> facet_ptr, int cluster_id)
 {
     facet_ptr->flag_ = cluster_id;
@@ -285,9 +263,50 @@ void Viewpoint::ClusterSingleFacet(std::shared_ptr<Facet> facet_ptr, int cluster
     }
 }
 
-bool Viewpoint::In(Eigen::Vector3f pt)
+bool Viewpoint::Visible(Eigen::Vector3f pt)
 {
-    return kd_tree_ptr_->In(pt);
+    Eigen::Vector3f pt_inverted = Invert(pt, GetOrigin());
+    return !kd_tree_ptr_->In(pt_inverted);
+}
+
+void Viewpoint::CheckVisibility(Viewpoint &v2)
+{
+    for (auto fc : frontier_cluster_list_)
+    {
+        auto facet_iter = fc.facet_list_.begin();
+        while (facet_iter != fc.facet_list_.end())
+        {
+            bool is_frontier = false;
+            for (auto vertex_ptr : (*facet_iter)->vertices_)
+            {
+                if (vertex_ptr->flag_ == 0)
+                {
+                    continue;
+                }
+                Eigen::Vector3f pos = vertex_ptr->pos_, v2_origin = v2.GetOrigin();
+                if (!InBoxRange(pos-v2_origin))
+                {
+                    continue;
+                }
+                if (v2.Visible(pos))
+                {
+                    vertex_ptr->flag_ = 0;
+                }
+                if (vertex_ptr->flag_ != 0)
+                {
+                    is_frontier = true;
+                }
+            }
+            if (!is_frontier)
+            {
+                facet_iter = fc.facet_list_.erase(facet_iter);
+            }
+            else
+            {
+                facet_iter++;
+            }
+        }
+    }
 }
 
 void Viewpoint::SetOrigin(Eigen::Vector3f origin)
