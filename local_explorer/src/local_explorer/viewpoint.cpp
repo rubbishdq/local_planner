@@ -265,13 +265,19 @@ void Viewpoint::ClusterSingleFacet(std::shared_ptr<Facet> facet_ptr, int cluster
 
 bool Viewpoint::Visible(Eigen::Vector3f pt)
 {
+    Eigen::Vector3f diff = pt - GetOrigin();
+    if (diff.norm() > KD_TREE_IN_THRESHOLD)
+    {
+        pt = pt - (diff/diff.norm())*KD_TREE_IN_THRESHOLD;
+    }
     Eigen::Vector3f pt_inverted = Invert(pt, GetOrigin());
     return !kd_tree_ptr_->In(pt_inverted);
 }
 
 void Viewpoint::CheckVisibility(Viewpoint &v2)
 {
-    for (auto fc : frontier_cluster_list_)
+    int erase_count = 0;
+    for (auto &fc : frontier_cluster_list_)
     {
         auto facet_iter = fc.facet_list_.begin();
         while (facet_iter != fc.facet_list_.end())
@@ -300,6 +306,7 @@ void Viewpoint::CheckVisibility(Viewpoint &v2)
             if (!is_frontier)
             {
                 facet_iter = fc.facet_list_.erase(facet_iter);
+                erase_count++;
             }
             else
             {
@@ -307,6 +314,27 @@ void Viewpoint::CheckVisibility(Viewpoint &v2)
             }
         }
     }
+    //printf("Erased %d frontier facets.\n", erase_count);
+}
+
+void Viewpoint::PrintFrontierData(int id = 0)
+{
+    int frontier_point_count = 0, frontier_facet_count = 0;
+    for (auto &fc : frontier_cluster_list_)
+    {
+        frontier_facet_count += fc.facet_list_.size();
+        for (auto facet_ptr : fc.facet_list_)
+        {
+            for (auto vertex_ptr : facet_ptr->vertices_)
+            {
+                if (vertex_ptr->flag_ != 0)
+                {
+                    frontier_point_count++;
+                }
+            }
+        }
+    }
+    printf("Viewpoint %d frontier points: %d, frontier facets: %d\n", id, frontier_point_count, frontier_facet_count);
 }
 
 void Viewpoint::SetOrigin(Eigen::Vector3f origin)

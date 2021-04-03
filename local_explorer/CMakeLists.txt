@@ -237,3 +237,6 @@ target_link_libraries(local_explorer viewpoint viewpoint_generator ${global_mapp
 
 add_executable(rviz_interface src/rviz_interface.cpp)
 target_link_libraries(rviz_interface ${catkin_LIBRARIES})
+
+add_executable(viewpoint_test src/viewpoint_test.cpp)
+target_link_libraries(viewpoint_test viewpoint viewpoint_generator ${global_mapper_LIBRARIES} ${catkin_LIBRARIES})

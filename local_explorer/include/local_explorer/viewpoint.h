@@ -35,6 +35,7 @@ public:
     void ClusterSingleFacet(std::shared_ptr<Facet> facet_ptr, int cluster_id);
     bool Visible(Eigen::Vector3f pt);
     void CheckVisibility(Viewpoint &v2); // removed frontier points visible in v2
+    void PrintFrontierData(int id);
 
     void SetOrigin(Eigen::Vector3f origin);
     Eigen::Vector3f GetOrigin();

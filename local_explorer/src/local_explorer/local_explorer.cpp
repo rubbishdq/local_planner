@@ -310,8 +310,11 @@ void LocalExplorer::VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPo
             old_viewpoint_ptr->CheckVisibility(*viewpoint_ptr);
         }
         if (is_record_)
+        {
             viewpoint_list_.push_back(viewpoint_ptr);
-        PublishFrontier();        
+            viewpoint_list_.front()->PrintFrontierData(0);
+        }
+        PublishFrontier();
     }
     RepublishVoxelizedPoints(msg_ptr);
 }

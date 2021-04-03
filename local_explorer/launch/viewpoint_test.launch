@@ -1,0 +1,28 @@
+<launch>
+
+    <arg name="robot_name" default="iris"/>
+    <arg name="gazebo_output" default="log"/>
+    <arg name="visualization" default="true"/>
+    <arg name="gui" default="true"/>
+
+    <include file="$(find gazebo_simulation)/launch/simple_world_uav.launch">
+        <arg name="robot_name" value="$(arg robot_name)" />
+        <arg name="output" value="$(arg gazebo_output)" />
+        <arg name="gui" value="$(arg gui)" />
+    </include>
+
+    <include file="$(find global_mapper_ros)/launch/global_mapper_node.launch">
+        <arg name="quad" value="$(arg robot_name)" />
+        <arg name="output" value="log" />
+    </include>
+    
+    <group ns = "$(arg robot_name)"> 
+        <!-- <node name="rviz_interface" pkg="local_explorer" type="rviz_interface"  output="screen" required="true"/> -->
+        <node name="viewpoint_test" pkg="local_explorer" type="viewpoint_test"  output="screen" required="true"/>
+    </group>
+
+    <group if="$(arg visualization)">
+        <node type="rviz" name="rviz" pkg="rviz" args="-d $(find local_explorer)/launch/viewpoint_test.rviz" />
+    </group>
+  
+  </launch>
