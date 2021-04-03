@@ -6,6 +6,7 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
+        - /Marker1
       Splitter Ratio: 0.5
     Tree Height: 549
   - Class: rviz/Selection
@@ -99,12 +100,20 @@ Visualization Manager:
       Value: false
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /iris/local_explorer/frontier_cluster_list
+      Marker Topic: /iris/local_explorer/single_frontier_cluster_list
       Name: Marker
       Namespaces:
         "": true
       Queue Size: 100
       Value: true
+    - Class: rviz/Marker
+      Enabled: false
+      Marker Topic: /iris/local_explorer/frontier
+      Name: Marker
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: false
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48

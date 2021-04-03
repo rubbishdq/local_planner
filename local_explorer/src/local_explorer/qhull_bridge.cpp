@@ -140,8 +140,8 @@ bool Facet::IsFlaggedFacet()
         for (int i = 0; i < 3; i++)
         {
             Eigen::Vector3f p = vertices_[i]->pos_;
-            if ((p[2]-BOARDER_HEIGHT_RANGE[0]) < HEIGHT_DIFF_THRESHOLD || 
-                (-p[2]+BOARDER_HEIGHT_RANGE[1]) < HEIGHT_DIFF_THRESHOLD)
+            if ((p[2]-BOARDER_Z_RANGE[0]) < HEIGHT_DIFF_THRESHOLD || 
+                (-p[2]+BOARDER_Z_RANGE[1]) < HEIGHT_DIFF_THRESHOLD)
             {
                 return false;
             }

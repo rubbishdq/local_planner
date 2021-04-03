@@ -8,6 +8,8 @@ LocalExplorer::LocalExplorer()
     srand(time(0));
     InitFrontierColor();
 
+    is_record_ = false;
+
     // make_unique is a C++14 feature
     //viewpoint_generator_ptr_ = std::make_unique<ViewpointGenerator>();
     //viewpoint_generator_ptr_ = std::unique_ptr<ViewpointGenerator>(new ViewpointGenerator());
@@ -21,6 +23,7 @@ LocalExplorer::LocalExplorer()
     frontier_pub_ = n_.advertise<visualization_msgs::Marker>("local_explorer/frontier", 1);
 
     voxelized_points_sub_ = n_.subscribe("global_mapper_ros/voxelized_points", 1, &LocalExplorer::VoxelizedPointsCallback, this, ros::TransportHints().tcpNoDelay());  
+    record_command_sub_ = n_.subscribe("record_command", 1, &LocalExplorer::RecordCommandCallback, this, ros::TransportHints().tcpNoDelay());  
 
     ROS_INFO("Local explorer node started.");
 
@@ -228,6 +231,8 @@ void LocalExplorer::PublishSingleFrontierCluster(Viewpoint &viewpoint)
 
 void LocalExplorer::PublishFrontier()
 {
+    if (viewpoint_list_.empty())
+        return;
     visualization_msgs::Marker marker;
     geometry_msgs::Point point;
     std_msgs::ColorRGBA color_rgba;
@@ -304,11 +309,16 @@ void LocalExplorer::VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPo
             viewpoint_ptr->CheckVisibility(*old_viewpoint_ptr);
             old_viewpoint_ptr->CheckVisibility(*viewpoint_ptr);
         }
-
-        viewpoint_list_.push_back(viewpoint_ptr);
+        if (is_record_)
+            viewpoint_list_.push_back(viewpoint_ptr);
         PublishFrontier();        
     }
     RepublishVoxelizedPoints(msg_ptr);
+}
+
+void LocalExplorer::RecordCommandCallback(const std_msgs::Bool::ConstPtr& msg_ptr)
+{
+    is_record_ = msg_ptr->data;
 }
 
 } // namespace local_explorer

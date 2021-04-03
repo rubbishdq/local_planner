@@ -4,6 +4,7 @@
 #include "local_explorer/labeled_point.h"
 #include "local_explorer/viewpoint_generator.h"
 
+#include "std_msgs/Bool.h"
 #include "sensor_msgs/PointCloud2.h"
 #include "visualization_msgs/Marker.h"
 #include "global_mapper_ros/VoxelizedPoints.h"
@@ -38,6 +39,9 @@ private:
     void PublishFrontier();
 
     void VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr);
+    void RecordCommandCallback(const std_msgs::Bool::ConstPtr& msg_ptr);
+
+    bool is_record_;  // record viewpoints if true
 
     std::list<std::shared_ptr<Viewpoint>> viewpoint_list_;
 
@@ -54,6 +58,7 @@ private:
     ros::Publisher frontier_pub_;
 
     ros::Subscriber voxelized_points_sub_;
+    ros::Subscriber record_command_sub_;
 
     std::unique_ptr<ViewpointGenerator> viewpoint_generator_ptr_;
 };
