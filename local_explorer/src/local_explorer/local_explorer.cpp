@@ -9,6 +9,8 @@ LocalExplorer::LocalExplorer()
     InitFrontierColor();
 
     is_record_ = false;
+    pose_init_ = false;
+    last_pose_init_ = false;
 
     // make_unique is a C++14 feature
     //viewpoint_generator_ptr_ = std::make_unique<ViewpointGenerator>();
@@ -23,6 +25,7 @@ LocalExplorer::LocalExplorer()
     frontier_pub_ = n_.advertise<visualization_msgs::Marker>("local_explorer/frontier", 1);
 
     voxelized_points_sub_ = n_.subscribe("global_mapper_ros/voxelized_points", 1, &LocalExplorer::VoxelizedPointsCallback, this, ros::TransportHints().tcpNoDelay());  
+    mav_pose_sub_ = n_.subscribe("pose", 1, &LocalExplorer::UavPoseCallback, this, ros::TransportHints().tcpNoDelay());  
     record_command_sub_ = n_.subscribe("record_command", 1, &LocalExplorer::RecordCommandCallback, this, ros::TransportHints().tcpNoDelay());  
 
     ROS_INFO("Local explorer node started.");
@@ -39,6 +42,38 @@ void LocalExplorer::InitFrontierColor()
             frontier_color_[i][j] = float(rand()) / RAND_MAX;
         }
     }
+}
+
+int LocalExplorer::DetermineOperation()
+{
+    if (!pose_init_)
+        return 0;
+    int operation_id; // 0: do nothing; 1: push back viewpoint; 2: erase last viewpoint data and push back viewpoint
+    if (!last_pose_init_)
+    {
+        operation_id = 0;
+        last_pose_init_ = true;
+    }
+    else
+    {
+        if (distxyd(pos_, last_pos_) > NEW_VIEWPOINT_DIST_THRESHOLD)
+            operation_id = 1;
+        else
+        {
+            Eigen::Vector3d angle_diff = EulerAngleDiff(rot_, last_rot_);
+            if (distxyd(pos_, last_pos_) < UPDATE_VIEWPOINT_DIST_THRESHOLD 
+                && MaxElementd(angle_diff) > UPDATE_VIEWPOINT_ANGLE_THRESHOLD)
+            {
+                if (!viewpoint_list_.empty())
+                    operation_id = 2;
+                else
+                    operation_id = 1;
+            }
+            else
+                operation_id = 0;
+        }
+    }
+    return operation_id;
 }
 
 void LocalExplorer::RepublishVoxelizedPoints(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr)
@@ -303,20 +338,49 @@ void LocalExplorer::VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPo
         PublishViewpoint(*viewpoint_ptr);
         PublishSingleFrontierCluster(*viewpoint_ptr);
 
-        // check frontier points visibility
-        for (auto old_viewpoint_ptr : viewpoint_list_)
+        int operation_id = DetermineOperation();
+        if (operation_id != 0)
         {
-            viewpoint_ptr->CheckVisibility(*old_viewpoint_ptr);
-            old_viewpoint_ptr->CheckVisibility(*viewpoint_ptr);
+            if (operation_id == 2)
+            {
+                auto iter = viewpoint_list_.end();
+                iter--;
+                viewpoint_list_.erase(iter);
+            }
+            // check frontier points visibility
+            for (auto old_viewpoint_ptr : viewpoint_list_)
+            {
+                viewpoint_ptr->CheckVisibility(*old_viewpoint_ptr);
+                old_viewpoint_ptr->CheckVisibility(*viewpoint_ptr);
+            }
         }
         if (is_record_)
         {
-            viewpoint_list_.push_back(viewpoint_ptr);
-            viewpoint_list_.front()->PrintFrontierData(0);
+            if (operation_id != 0)
+            {
+                viewpoint_list_.push_back(viewpoint_ptr);
+                last_pos_ = pos_;
+                last_rot_ = rot_;
+                //viewpoint_list_.front()->PrintFrontierData(0);
+            }
+            ROS_INFO("Operation ID: %d", operation_id);
         }
         PublishFrontier();
     }
     RepublishVoxelizedPoints(msg_ptr);
+}
+
+void LocalExplorer::UavPoseCallback(const geometry_msgs::PoseStamped::ConstPtr& msg_ptr)
+{
+    /*
+    pos_ << (float)msg_ptr->pose.position.x, (float)msg_ptr->pose.position.y, (float)msg_ptr->pose.position.z;
+    rot_ = Eigen::Quaternionf((float)msg_ptr->pose.orientation.x, (float)msg_ptr->pose.orientation.y, 
+        (float)msg_ptr->pose.orientation.z, (float)msg_ptr->pose.orientation.w);
+    */
+    pos_ << msg_ptr->pose.position.x, msg_ptr->pose.position.y, msg_ptr->pose.position.z;
+    rot_ = Eigen::Quaterniond(msg_ptr->pose.orientation.x, msg_ptr->pose.orientation.y, 
+        msg_ptr->pose.orientation.z, msg_ptr->pose.orientation.w);
+    pose_init_ = true;
 }
 
 void LocalExplorer::RecordCommandCallback(const std_msgs::Bool::ConstPtr& msg_ptr)

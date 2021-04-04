@@ -6,6 +6,7 @@
 
 #include "std_msgs/Bool.h"
 #include "sensor_msgs/PointCloud2.h"
+#include "geometry_msgs/PoseStamped.h"
 #include "visualization_msgs/Marker.h"
 #include "global_mapper_ros/VoxelizedPoints.h"
 #include "ros/ros.h"
@@ -30,6 +31,8 @@ public:
 
 private:
     void InitFrontierColor();
+    int DetermineOperation();
+
     void RepublishVoxelizedPoints(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr);
     void PublishInvertedCloud(ViewpointGenerator &viewpoint_generator);
     void PublishConvexHull(ConvexHull &convex_hull);  // inverted
@@ -39,9 +42,14 @@ private:
     void PublishFrontier();
 
     void VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr);
+    void UavPoseCallback(const geometry_msgs::PoseStamped::ConstPtr& msg_ptr);
     void RecordCommandCallback(const std_msgs::Bool::ConstPtr& msg_ptr);
 
     bool is_record_;  // record viewpoints if true
+    bool pose_init_, last_pose_init_;
+
+    Eigen::Vector3d last_pos_, pos_;
+    Eigen::Quaterniond last_rot_, rot_;  // use Eigen::Quaternionf?
 
     std::list<std::shared_ptr<Viewpoint>> viewpoint_list_;
 
@@ -58,6 +66,7 @@ private:
     ros::Publisher frontier_pub_;
 
     ros::Subscriber voxelized_points_sub_;
+    ros::Subscriber mav_pose_sub_;
     ros::Subscriber record_command_sub_;
 
     std::unique_ptr<ViewpointGenerator> viewpoint_generator_ptr_;

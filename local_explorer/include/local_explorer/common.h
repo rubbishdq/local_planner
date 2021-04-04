@@ -39,6 +39,10 @@ const int KD_TREE_MAX_DEPTH = 10;
 const int KD_TREE_MIN_OBJ_COUNT = 50;
 const float KD_TREE_IN_THRESHOLD = 0.0;
 
+const double NEW_VIEWPOINT_DIST_THRESHOLD = 1.0;
+const double UPDATE_VIEWPOINT_DIST_THRESHOLD = 0.5;
+const double UPDATE_VIEWPOINT_ANGLE_THRESHOLD = 30;
+
 const float EPS_F = 2e-4;
 } // namespace local_explorer
 

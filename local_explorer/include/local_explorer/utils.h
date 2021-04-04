@@ -106,6 +106,58 @@ void CalcEigen(Eigen::Matrix3f mat, float evalue[3], Eigen::Vector3f evector[3])
     }
 }
 
+double MaxElementd(Eigen::Vector3d v)
+{
+    return (v[0] > v[1] && v[0] > v[2]) ? v[0] : (v[1] > v[2] ? v[1] : v[2]);
+}
+
+float MaxElementf(Eigen::Vector3f v)
+{
+    return (v[0] > v[1] && v[0] > v[2]) ? v[0] : (v[1] > v[2] ? v[1] : v[2]);
+}
+
+double MinElementd(Eigen::Vector3d v)
+{
+    return (v[0] < v[1] && v[0] < v[2]) ? v[0] : (v[1] < v[2] ? v[1] : v[2]);
+}
+
+float MinElementf(Eigen::Vector3f v)
+{
+    return (v[0] < v[1] && v[0] < v[2]) ? v[0] : (v[1] < v[2] ? v[1] : v[2]);
+}
+
+double distxyd(Eigen::Vector3d v1, Eigen::Vector3d v2)
+{
+    return sqrt((v2[0]-v1[0])*(v2[0]-v1[0])+(v2[1]-v1[1])*(v2[1]-v1[1]));
+}
+
+float distxyf(Eigen::Vector3f v1, Eigen::Vector3f v2)
+{
+    return sqrt((v2[0]-v1[0])*(v2[0]-v1[0])+(v2[1]-v1[1])*(v2[1]-v1[1]));
+}
+
+Eigen::Vector3d EulerAngleDiff(Eigen::Quaterniond q1, Eigen::Quaterniond q2) // q1/q2
+{
+    Eigen::Quaterniond q = q1*q2.conjugate();
+    double roll, pitch, yaw;
+    double sinr_cosp = +2.0 * (q.w() * q.x() + q.y() * q.z());
+    double cosr_cosp = +1.0 - 2.0 * (q.x() * q.x() + q.y() * q.y());
+    roll = atan2(sinr_cosp, cosr_cosp);
+
+    // pitch (y-axis rotation)
+    double sinp = +2.0 * (q.w() * q.y() - q.z() * q.x());
+    if (fabs(sinp) >= 1)
+        pitch = copysign(M_PI / 2, sinp); // use 90 degrees if out of range
+    else
+        pitch = asin(sinp);
+
+    // yaw (z-axis rotation)
+    double siny_cosp = +2.0 * (q.w() * q.z() + q.x() * q.y());
+    double cosy_cosp = +1.0 - 2.0 * (q.y() * q.y() + q.z() * q.z());
+    yaw = atan2(siny_cosp, cosy_cosp);
+
+    return Eigen::Vector3d(roll, pitch, yaw) / M_PI * 180;
+}
 
 } // namespace local_explorer
 
