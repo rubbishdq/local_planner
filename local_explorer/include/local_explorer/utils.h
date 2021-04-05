@@ -159,6 +159,14 @@ Eigen::Vector3d EulerAngleDiff(Eigen::Quaterniond q1, Eigen::Quaterniond q2) // 
     return Eigen::Vector3d(roll, pitch, yaw) / M_PI * 180;
 }
 
+bool InCameraRange(Eigen::Vector3f pt)
+{
+    float u, v;
+    u = FX*pt[0]/pt[2] + CX;
+    v = FY*pt[1]/pt[2] + CY;
+    return (u > 0 && u < float(CAM_RES[0]) && v > 0 && v < float(CAM_RES[1]));
+}
+
 } // namespace local_explorer
 
 #endif

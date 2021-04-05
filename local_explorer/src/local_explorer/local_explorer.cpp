@@ -16,6 +16,8 @@ LocalExplorer::LocalExplorer()
     //viewpoint_generator_ptr_ = std::make_unique<ViewpointGenerator>();
     //viewpoint_generator_ptr_ = std::unique_ptr<ViewpointGenerator>(new ViewpointGenerator());
 
+    tf_listener_ptr_ = std::unique_ptr<tf2_ros::TransformListener>(new tf2_ros::TransformListener(tf_buffer_));
+
     voxelized_points_pub_ = n_.advertise<sensor_msgs::PointCloud2>("local_explorer/voxelized_pointcloud", 1);
     inverted_cloud_pub_ = n_.advertise<sensor_msgs::PointCloud2>("local_explorer/inverted_pointcloud", 1);
     convex_hull_pub_ = n_.advertise<visualization_msgs::Marker>("local_explorer/convex_hull", 1);
@@ -26,7 +28,7 @@ LocalExplorer::LocalExplorer()
 
     voxelized_points_sub_ = n_.subscribe("global_mapper_ros/voxelized_points", 1, &LocalExplorer::VoxelizedPointsCallback, this, ros::TransportHints().tcpNoDelay());  
     mav_pose_sub_ = n_.subscribe("pose", 1, &LocalExplorer::UavPoseCallback, this, ros::TransportHints().tcpNoDelay());  
-    record_command_sub_ = n_.subscribe("record_command", 1, &LocalExplorer::RecordCommandCallback, this, ros::TransportHints().tcpNoDelay());  
+    record_command_sub_ = n_.subscribe("record_command", 1, &LocalExplorer::RecordCommandCallback, this, ros::TransportHints().tcpNoDelay());
 
     ROS_INFO("Local explorer node started.");
 
@@ -74,6 +76,72 @@ int LocalExplorer::DetermineOperation()
         }
     }
     return operation_id;
+}
+
+void LocalExplorer::RemoveRedundantBoarder(Viewpoint &viewpoint)
+{
+    geometry_msgs::TransformStamped transform_stamped;
+    Eigen::Vector3f pos_cam;
+    Eigen::Quaternionf rot_cam;
+    int erase_count = 0;
+
+    try
+    {
+        transform_stamped = tf_buffer_.lookupTransform("world", "iris/camera", ros::Time(0), ros::Duration(0.02));
+        pos_cam << (float)transform_stamped.transform.translation.x,
+            (float)transform_stamped.transform.translation.y,
+            (float)transform_stamped.transform.translation.z;
+        rot_cam = Eigen::Quaternionf((float)transform_stamped.transform.rotation.x, 
+            (float)transform_stamped.transform.rotation.y, 
+            (float)transform_stamped.transform.rotation.z, 
+            (float)transform_stamped.transform.rotation.w);
+    }
+    catch (tf2::TransformException& ex)
+    {
+        ROS_WARN("[world_database_master_ros] OnGetTransform failed with %s", ex.what());
+        return;
+    }
+
+    for (auto old_viewpoint_ptr : viewpoint_list_)
+    {
+        Eigen::Vector3f old_origin = old_viewpoint_ptr->GetOrigin();
+        if (!viewpoint.Visible(old_origin))
+            continue;
+        std::vector<FrontierCluster> frontier_cluster_list = old_viewpoint_ptr->GetFrontierClusterList();
+        for (auto &fc : frontier_cluster_list)
+        {
+            auto facet_iter = fc.facet_list_.begin();
+            while (facet_iter != fc.facet_list_.end())
+            {
+                bool is_frontier = false;
+                for (auto vertex_ptr : (*facet_iter)->vertices_)
+                {
+                    if (vertex_ptr->flag_ == 2)
+                    {
+                        Eigen::Vector3f pos_new = rot_cam.conjugate()*(vertex_ptr->pos_-pos_cam);
+                        if (InCameraRange(pos_new))
+                        {
+                            vertex_ptr->flag_ = 0;
+                        }
+                    }
+                    if (vertex_ptr->flag_ != 0)
+                    {
+                        is_frontier = true;
+                    }
+                }
+                if (!is_frontier)
+                {
+                    facet_iter = fc.facet_list_.erase(facet_iter);
+                    erase_count++;
+                }
+                else
+                {
+                    facet_iter++;
+                }
+            }
+        }
+    }
+    //printf("Erased %d frontier facets in LocalExplorer::RemoveRedundantBoarder().\n", erase_count);
 }
 
 void LocalExplorer::RepublishVoxelizedPoints(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr)
@@ -353,6 +421,7 @@ void LocalExplorer::VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPo
                 viewpoint_ptr->CheckVisibility(*old_viewpoint_ptr);
                 old_viewpoint_ptr->CheckVisibility(*viewpoint_ptr);
             }
+            RemoveRedundantBoarder(*viewpoint_ptr);
         }
         if (is_record_)
         {

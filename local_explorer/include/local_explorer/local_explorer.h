@@ -10,6 +10,7 @@
 #include "visualization_msgs/Marker.h"
 #include "global_mapper_ros/VoxelizedPoints.h"
 #include "ros/ros.h"
+#include <tf2_ros/transform_listener.h>
 #include <pcl_ros/point_cloud.h>
 
 #include "Eigen/Core"
@@ -32,6 +33,7 @@ public:
 private:
     void InitFrontierColor();
     int DetermineOperation();
+    void RemoveRedundantBoarder(Viewpoint &viewpoint);
 
     void RepublishVoxelizedPoints(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr);
     void PublishInvertedCloud(ViewpointGenerator &viewpoint_generator);
@@ -68,6 +70,9 @@ private:
     ros::Subscriber voxelized_points_sub_;
     ros::Subscriber mav_pose_sub_;
     ros::Subscriber record_command_sub_;
+
+    std::unique_ptr<tf2_ros::TransformListener> tf_listener_ptr_;
+    tf2_ros::Buffer tf_buffer_;
 
     std::unique_ptr<ViewpointGenerator> viewpoint_generator_ptr_;
 };

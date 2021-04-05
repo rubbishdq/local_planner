@@ -9,6 +9,11 @@ typedef int flag_t;
 const bool USE_HEIGHT_DIFF_THRESHOLD = true;
 
 const double SENSOR_RANGE = 5.0;
+const float FX = 343.15219323854245;
+const float FY = 343.15219323854245;
+const float CX = 320.5;
+const float CY = 180.5;
+const int CAM_RES[2] = {640, 360};
 
 const double MIN_RANGE_FOR_IGNORANCE = 0.15;
 const double MIN_RANGE_FOR_EXTENSION = 1.0;

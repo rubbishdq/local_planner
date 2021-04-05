@@ -433,7 +433,10 @@ void ConvexHull::DevideLongRidge()
         {
             new_ridge_ptr[i] = std::make_shared<Ridge>(RidgeCount()+i, true);
         }
-        new_vertex_ptr->flag_ = 1;  // mark as frontier
+        if (ridge_vertex_ptr[0]->flag_ == 2 || ridge_vertex_ptr[1]->flag_ == 2) // &&?
+            new_vertex_ptr->flag_ = 2;  // mark as boarder
+        else
+            new_vertex_ptr->flag_ = 1;  // mark as frontier
         // new_vertex_ptr's data is all set
         for (int i = 0; i < 2; i++)
         {

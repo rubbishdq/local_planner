@@ -92,7 +92,7 @@ void Viewpoint::GenerateViewpoint(std::vector<LabeledPoint> &cloud, std::vector<
         {
             vertex_ptr->pos_ = cloud[vertex_ptr->flag_].mu_;
             if (cloud[vertex_ptr->flag_].type_ == BOARDER)
-                vertex_ptr->flag_ = 1;
+                vertex_ptr->flag_ = 2;
             else
                 vertex_ptr->flag_ = 0;
             // now vertex_ptr->flag_ represents if this vertex is a frontier vertex
@@ -104,11 +104,13 @@ void Viewpoint::GenerateViewpoint(std::vector<LabeledPoint> &cloud, std::vector<
         }
         */ // for debug
         convex_hull_ptr_->DevideLongRidge();
+        /*
         printf("Convex hull (after long ridges division) vertex count: %d    facet count: %d    ridge count: %d    good ridge count: %d\n", 
             convex_hull_ptr_->VertexCount(), 
             convex_hull_ptr_->FacetCount(), 
             convex_hull_ptr_->RidgeCount(), 
             convex_hull_ptr_->GoodRidgeCount());
+        */
         
         // calculate facets' area
         for (auto facet_ptr : convex_hull_ptr_->facet_list_)
@@ -314,7 +316,7 @@ void Viewpoint::CheckVisibility(Viewpoint &v2)
             }
         }
     }
-    //printf("Erased %d frontier facets.\n", erase_count);
+    //printf("Erased %d frontier facets in Viewpoint::CheckVisibility().\n", erase_count);
 }
 
 void Viewpoint::PrintFrontierData(int id = 0)
