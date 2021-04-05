@@ -366,7 +366,7 @@ void ConvexHull::ReadQhullGlobalData()
     } 
     gettimeofday(&t2, nullptr);
     deltaT = double(t2.tv_sec - t1.tv_sec) + double(t2.tv_usec - t1.tv_usec) / 1e6;
-    printf("Time usage for ConvexHull::ReadQhullGlobalData(): %lf\n", deltaT);
+    //printf("Time usage for ConvexHull::ReadQhullGlobalData(): %lf\n", deltaT);
     qh_freeqhull2(1);
 }
 
@@ -516,7 +516,7 @@ void ConvexHull::DevideLongRidge()
     }
     gettimeofday(&t2, nullptr);
     deltaT = double(t2.tv_sec - t1.tv_sec) + double(t2.tv_usec - t1.tv_usec) / 1e6;
-    printf("Time usage for ConvexHull::DivideLongRidge(): %lf\n", deltaT);
+    //printf("Time usage for ConvexHull::DivideLongRidge(): %lf\n", deltaT);
 }
 
 int ConvexHull::VertexCount()

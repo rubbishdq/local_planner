@@ -39,7 +39,7 @@ private:
     void PublishInvertedCloud(ViewpointGenerator &viewpoint_generator);
     void PublishConvexHull(ConvexHull &convex_hull);  // inverted
     void PublishColoredConvexHull(ConvexHull &convex_hull);  // inverted
-    void PublishViewpoint(Viewpoint &viewpoint);
+    void PublishViewpoint(Viewpoint &viewpoint, bool flagged_only);
     void PublishSingleFrontierCluster(Viewpoint &viewpoint);
     void PublishFrontier();
 

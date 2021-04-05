@@ -73,11 +73,13 @@ void Viewpoint::GenerateViewpoint(std::vector<LabeledPoint> &cloud, std::vector<
         
         delete []arr;
         
+        /*
         printf("Convex hull vertex count: %d    facet count: %d    ridge count: %d    good ridge count: %d\n", 
             convex_hull_ptr_->VertexCount(), 
             convex_hull_ptr_->FacetCount(), 
             convex_hull_ptr_->RidgeCount(), 
             convex_hull_ptr_->GoodRidgeCount());
+        */
         
         // generate kd-tree
         std::vector<FacetBox*> fb_list;
@@ -116,6 +118,32 @@ void Viewpoint::GenerateViewpoint(std::vector<LabeledPoint> &cloud, std::vector<
         for (auto facet_ptr : convex_hull_ptr_->facet_list_)
         {
             facet_ptr->CalcArea();
+        }
+
+        // marked other frontier vertices of a boarder triangle as boarder vertices
+        convex_hull_ptr_->ClearFacetFlag();
+        for (auto facet_ptr : convex_hull_ptr_->facet_list_)
+        {
+            for (auto vertex_ptr : facet_ptr->vertices_)
+            {
+                if (vertex_ptr->flag_ == 2)
+                {
+                    facet_ptr->flag_ = 1;
+                    break;
+                }
+            }
+        }
+        for (auto facet_ptr : convex_hull_ptr_->facet_list_)
+        {
+            if (facet_ptr->flag_ != 1)
+                continue;
+            for (auto vertex_ptr : facet_ptr->vertices_)
+            {
+                if (vertex_ptr->flag_ != 0)
+                {
+                    vertex_ptr->flag_ = 2;
+                }
+            }
         }
         
         // select frontier facets

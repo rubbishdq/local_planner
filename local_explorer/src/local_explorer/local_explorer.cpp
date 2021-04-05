@@ -63,11 +63,17 @@ int LocalExplorer::DetermineOperation()
         else
         {
             Eigen::Vector3d angle_diff = EulerAngleDiff(rot_, last_rot_);
+            double max_angle = 0;
+            for (int i = 0; i < 3; i++)
+            {
+                if (fabs(angle_diff[i]) > max_angle)
+                    max_angle = fabs(angle_diff[i]);
+            }
             if (distxyd(pos_, last_pos_) < UPDATE_VIEWPOINT_DIST_THRESHOLD 
-                && MaxElementd(angle_diff) > UPDATE_VIEWPOINT_ANGLE_THRESHOLD)
+                && max_angle > UPDATE_VIEWPOINT_ANGLE_THRESHOLD)
             {
                 if (!viewpoint_list_.empty())
-                    operation_id = 2;
+                    operation_id = 1;  // may be 2
                 else
                     operation_id = 1;
             }
@@ -118,7 +124,7 @@ void LocalExplorer::RemoveRedundantBoarder(Viewpoint &viewpoint)
                 {
                     if (vertex_ptr->flag_ == 2)
                     {
-                        Eigen::Vector3f pos_new = rot_cam.conjugate()*(vertex_ptr->pos_-pos_cam);
+                        Eigen::Vector3f pos_new = rot_cam.conjugate()*(vertex_ptr->pos_+old_origin-pos_cam);
                         if (InCameraRange(pos_new))
                         {
                             vertex_ptr->flag_ = 0;
@@ -141,7 +147,7 @@ void LocalExplorer::RemoveRedundantBoarder(Viewpoint &viewpoint)
             }
         }
     }
-    //printf("Erased %d frontier facets in LocalExplorer::RemoveRedundantBoarder().\n", erase_count);
+    printf("Erased %d frontier facets in LocalExplorer::RemoveRedundantBoarder().\n", erase_count);
 }
 
 void LocalExplorer::RepublishVoxelizedPoints(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr)
@@ -266,14 +272,15 @@ void LocalExplorer::PublishColoredConvexHull(ConvexHull &convex_hull)
     colored_convex_hull_pub_.publish(marker);
 }
 
-void LocalExplorer::PublishViewpoint(Viewpoint &viewpoint)
+void LocalExplorer::PublishViewpoint(Viewpoint &viewpoint, bool flagged_only = false)
 {
     sensor_msgs::PointCloud2 cloud_msg;
     pcl::PointCloud<pcl::PointXYZ> cloud;
     std::vector<std::shared_ptr<Vertex>> vertex_data = viewpoint.GetConvexHullPtr()->vertex_list_;
     for (auto &vertex : vertex_data)
     {
-        cloud.push_back(pcl::PointXYZ(vertex->pos_[0], vertex->pos_[1], vertex->pos_[2]));
+        if (!flagged_only || vertex->flag_)
+            cloud.push_back(pcl::PointXYZ(vertex->pos_[0], vertex->pos_[1], vertex->pos_[2]));
     }
     pcl::toROSMsg(cloud, cloud_msg);
     cloud_msg.header.stamp = ros::Time::now();
@@ -287,7 +294,7 @@ void LocalExplorer::PublishSingleFrontierCluster(Viewpoint &viewpoint)
     geometry_msgs::Point point;
     std_msgs::ColorRGBA color_rgba;
     std::vector<FrontierCluster> frontier_cluster_list = viewpoint.GetFrontierClusterList();
-    ROS_INFO("FrontierClusterCount: %d", viewpoint.GetFrontierClusterCount());
+    //ROS_INFO("FrontierClusterCount: %d", viewpoint.GetFrontierClusterCount());
     for (auto &frontier_cluster : frontier_cluster_list)
     {
         int color_index = frontier_cluster.id_ % FRONTIER_COLOR_COUNT;
@@ -392,14 +399,14 @@ void LocalExplorer::PublishFrontier()
 
 void LocalExplorer::VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr)
 {
-    ROS_INFO("Voxelized points message received.");
+    //ROS_INFO("Voxelized points message received.");
     viewpoint_generator_ptr_ = std::unique_ptr<ViewpointGenerator>(new ViewpointGenerator());
     viewpoint_generator_ptr_->ProcessVoxelizedPoints(msg_ptr);
 
     if (viewpoint_generator_ptr_->IsGenerated())
     {
         std::shared_ptr<Viewpoint> viewpoint_ptr = viewpoint_generator_ptr_->GetViewpointPtr();
-        ROS_INFO("Viewpoint successfully generated.");
+        //ROS_INFO("Viewpoint successfully generated.");
         //PublishInvertedCloud(*viewpoint_generator_ptr_);
         //PublishConvexHull(*(viewpoint_generator_ptr_->GetViewpointPtr()->GetConvexHullPtr()));
         //PublishColoredConvexHull(*(viewpoint_generator_ptr_->GetViewpointPtr()->GetConvexHullPtr()));
@@ -431,8 +438,8 @@ void LocalExplorer::VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPo
                 last_pos_ = pos_;
                 last_rot_ = rot_;
                 //viewpoint_list_.front()->PrintFrontierData(0);
+                ROS_INFO("Operation ID: %d", operation_id);
             }
-            ROS_INFO("Operation ID: %d", operation_id);
         }
         PublishFrontier();
     }
