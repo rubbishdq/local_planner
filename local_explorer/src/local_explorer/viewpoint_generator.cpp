@@ -27,7 +27,8 @@ void ViewpointGenerator::PreprocessVoxelizedPoints(const global_mapper_ros::Voxe
         {
             continue;
         }
-        if ((origin_-mu).norm() <= MIN_RANGE_FOR_EXTENSION)
+        //if ((origin_-mu).norm() <= MIN_RANGE_FOR_EXTENSION)
+        if (false)
         {
             float evalue[3]; 
             Eigen::Vector3f evector[3];

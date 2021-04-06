@@ -91,7 +91,7 @@ public:
     ConvexHull(Eigen::Vector3f origin);
     int CalcConvexHull(int numpoints, double *points);
     void ReadQhullGlobalData();  // non-reentrant qhull's global data will be released at the end of this function
-    void DevideLongRidge();  // devide long ridges and mark frontier vertices
+    void DivideLongRidge();  // devide long ridges and mark frontier vertices
     int VertexCount();
     int FacetCount();
     int RidgeCount();

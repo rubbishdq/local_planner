@@ -44,7 +44,7 @@ public:
     int GetFrontierClusterCount();
     bool IsGenerated();
 
-private:
+public:
     std::shared_ptr<ConvexHull> convex_hull_ptr_;
     std::shared_ptr<KdTree> kd_tree_ptr_;
     std::vector<FrontierCluster> frontier_cluster_list_;  // candidate frontier

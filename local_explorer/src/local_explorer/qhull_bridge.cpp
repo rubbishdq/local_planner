@@ -370,7 +370,7 @@ void ConvexHull::ReadQhullGlobalData()
     qh_freeqhull2(1);
 }
 
-void ConvexHull::DevideLongRidge()
+void ConvexHull::DivideLongRidge()
 {
     struct timeval t1, t2;
     double deltaT;

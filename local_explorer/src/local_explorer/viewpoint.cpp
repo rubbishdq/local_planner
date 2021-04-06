@@ -105,7 +105,7 @@ void Viewpoint::GenerateViewpoint(std::vector<LabeledPoint> &cloud, std::vector<
             facet_ptr->CheckRidgeStatus();
         }
         */ // for debug
-        convex_hull_ptr_->DevideLongRidge();
+        convex_hull_ptr_->DivideLongRidge();
         /*
         printf("Convex hull (after long ridges division) vertex count: %d    facet count: %d    ridge count: %d    good ridge count: %d\n", 
             convex_hull_ptr_->VertexCount(), 

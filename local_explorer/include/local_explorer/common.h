@@ -34,7 +34,7 @@ const double INVERT_CLOUD_VISUALIZE_PARAM = 8.0;
 const double ALLOWED_BOARDER_ERROR = 1e-5;
 
 const float MIN_FRONTIER_RIDGE_LENGTH = 1.0;
-const float MIN_FRONTIER_CLUSTER_AREA = 1.5;
+const float MIN_FRONTIER_CLUSTER_AREA = 1.0;
 const float FRONTIER_CLUSTER_SIZE_LIMIT[3] = {3.0, 3.0, 1.5};
 
 const int FRONTIER_COLOR_COUNT = 4096;  // used to visualize frontier clusters
@@ -45,7 +45,7 @@ const int KD_TREE_MIN_OBJ_COUNT = 50;
 const float KD_TREE_IN_THRESHOLD = 0.5;
 
 const double NEW_VIEWPOINT_DIST_THRESHOLD = 1.0;
-const double UPDATE_VIEWPOINT_DIST_THRESHOLD = 0.5;
+const double UPDATE_VIEWPOINT_DIST_THRESHOLD = 0.05;
 const double UPDATE_VIEWPOINT_ANGLE_THRESHOLD = 30;
 
 const float EPS_F = 2e-4;
