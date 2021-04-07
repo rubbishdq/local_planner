@@ -4,11 +4,13 @@
     <arg name="gazebo_output" default="log"/>
     <arg name="visualization" default="true"/>
     <arg name="gui" default="true"/>
+    <arg name="world" default="$(find gazebo_simulation)/worlds/simple_world_1.world"/>
 
     <include file="$(find gazebo_simulation)/launch/simple_world_uav.launch">
         <arg name="robot_name" value="$(arg robot_name)" />
         <arg name="output" value="$(arg gazebo_output)" />
         <arg name="gui" value="$(arg gui)" />
+        <arg name="world" value="$(arg world)" />
     </include>
 
     <include file="$(find global_mapper_ros)/launch/global_mapper_node.launch">

@@ -11,7 +11,7 @@
   <arg name="output" default="screen"/>
   <arg name="fcu_protocol" default="v1.0" />
   <arg name="respawn_mavros" default="false" />
-  <arg name="world" default="$(find gazebo_simulation)/worlds/simple_world.world"/>
+  <arg name="world" default="$(find gazebo_simulation)/worlds/simple_world_1.world"/>
   <arg name="gui" default="true"/>
   <arg name="est" default="ekf2"/>
   <arg name="x_pos" default="0.0"/>

@@ -35,7 +35,8 @@ const double ALLOWED_BOARDER_ERROR = 1e-5;
 
 const float MIN_FRONTIER_RIDGE_LENGTH = 1.0;
 const float MIN_FRONTIER_CLUSTER_AREA = 1.0;
-const float FRONTIER_CLUSTER_SIZE_LIMIT[3] = {3.0, 3.0, 1.5};
+//const float FRONTIER_CLUSTER_SIZE_LIMIT[3] = {3.0, 3.0, 1.5};
+const float FRONTIER_CLUSTER_SIZE_LIMIT[3] = {15.0, 15.0, 6.0};
 
 const int FRONTIER_COLOR_COUNT = 4096;  // used to visualize frontier clusters
 const float MARKER_ALPHA = 0.8;
