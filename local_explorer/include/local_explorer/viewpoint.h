@@ -10,6 +10,7 @@
 
 namespace local_explorer
 {
+class Viewpoint;
 
 class FrontierCluster
 {
@@ -25,6 +26,14 @@ public:
     float area_;
     bool is_empty_;
 };
+
+// topological map's node are based on Viewpoint, edge are based on NeighborViewpoint
+struct NeighborViewpoint
+{
+    std::weak_ptr<Viewpoint> viewpoint_ptr_;
+    float dist_;
+};
+
 class Viewpoint
 {
 public:
@@ -36,7 +45,9 @@ public:
     bool Visible(Eigen::Vector3f pt);
     void CheckVisibility(Viewpoint &v2); // removed frontier points visible in v2
     void PrintFrontierData(int id);
+    void AddNeighbor(std::shared_ptr<Viewpoint> viewpoint_ptr);
 
+    float Distance(Viewpoint &v2);
     void SetOrigin(Eigen::Vector3f origin);
     Eigen::Vector3f GetOrigin();
     std::shared_ptr<ConvexHull> GetConvexHullPtr();
@@ -48,6 +59,7 @@ public:
     std::shared_ptr<ConvexHull> convex_hull_ptr_;
     std::shared_ptr<KdTree> kd_tree_ptr_;
     std::vector<FrontierCluster> frontier_cluster_list_;  // candidate frontier
+    std::list<NeighborViewpoint> neighbor_list_;
     int frontier_cluster_count_;
     bool is_generated_;
 };

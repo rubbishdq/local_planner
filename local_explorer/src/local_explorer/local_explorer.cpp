@@ -169,6 +169,64 @@ void LocalExplorer::RemoveRedundantBoarder(Viewpoint &viewpoint, bool last_viewp
     printf("Erased %d frontier facets in LocalExplorer::RemoveRedundantBoarder().\n", erase_count);
 }
 
+void LocalExplorer::ProcessNewViewpoint(std::shared_ptr<Viewpoint> viewpoint_ptr)
+{
+    // if is_record_ == false, only execute CheckVisibility() and RemoveRedundantBoarder()
+    int operation_id = DetermineOperation();
+    if (operation_id != 0)
+    {
+        if (is_record_)
+        {
+            if (operation_id == 2)
+            {
+                auto iter = viewpoint_list_.end();
+                iter--;
+                viewpoint_list_.erase(iter);
+            }
+        }
+        // check frontier points visibility
+        for (auto old_viewpoint_ptr : viewpoint_list_)
+        {
+            viewpoint_ptr->CheckVisibility(*old_viewpoint_ptr);
+            old_viewpoint_ptr->CheckVisibility(*viewpoint_ptr);
+        }
+        RemoveRedundantBoarder(*viewpoint_ptr, true);
+    }
+    else
+    {
+        RemoveRedundantBoarder(*viewpoint_ptr, false);
+    }
+    if (is_record_)
+    {
+        if (operation_id != 0)
+        {
+            UpdateTopologicalMap(viewpoint_ptr);
+            viewpoint_list_.push_back(viewpoint_ptr);
+            last_pos_ = pos_;
+            last_rot_ = rot_;
+            //viewpoint_list_[0]->PrintFrontierData(0);
+            ROS_INFO("Operation ID: %d", operation_id);
+        }
+    }
+}
+
+void LocalExplorer::UpdateTopologicalMap(std::shared_ptr<Viewpoint> viewpoint_ptr)
+{
+    int ind = 0, count = 0;
+    for (auto old_viewpoint_ptr : viewpoint_list_)
+    {
+        if (ind == viewpoint_list_.size()-1 ||
+            (viewpoint_ptr->Distance(*old_viewpoint_ptr) <= SENSOR_RANGE && viewpoint_ptr->Visible(old_viewpoint_ptr->GetOrigin())))
+        {
+            viewpoint_ptr->AddNeighbor(old_viewpoint_ptr);
+            old_viewpoint_ptr->AddNeighbor(viewpoint_ptr);
+            count++;
+        }
+        ind++;
+    }
+    ROS_INFO("New viewpoint connected with %d viewpoints.", count);
+}
+
 void LocalExplorer::RepublishVoxelizedPoints(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr)
 {
     sensor_msgs::PointCloud2 cloud_msg;
@@ -496,51 +554,11 @@ void LocalExplorer::VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPo
 
         if (displayed_viewpoint_num_ >= 0 && displayed_viewpoint_num_ < int(viewpoint_list_.size()))
         {
-            int ind = 0;
-            for (auto old_viewpoint_ptr : viewpoint_list_)
-            {
-                if (ind == displayed_viewpoint_num_)
-                {
-                    displayed_viewpoint_ptr = old_viewpoint_ptr;
-                    break;
-                }
-                ind++;
-            }
-            PublishColoredViewpoint(*displayed_viewpoint_ptr);
+            PublishColoredViewpoint(*viewpoint_list_[displayed_viewpoint_num_]);
         }
 
-        int operation_id = DetermineOperation();
-        if (operation_id != 0)
-        {
-            if (operation_id == 2)
-            {
-                auto iter = viewpoint_list_.end();
-                iter--;
-                viewpoint_list_.erase(iter);
-            }
-            // check frontier points visibility
-            for (auto old_viewpoint_ptr : viewpoint_list_)
-            {
-                viewpoint_ptr->CheckVisibility(*old_viewpoint_ptr);
-                old_viewpoint_ptr->CheckVisibility(*viewpoint_ptr);
-            }
-            RemoveRedundantBoarder(*viewpoint_ptr, true);
-        }
-        else
-        {
-            RemoveRedundantBoarder(*viewpoint_ptr, false);
-        }
-        if (is_record_)
-        {
-            if (operation_id != 0)
-            {
-                viewpoint_list_.push_back(viewpoint_ptr);
-                last_pos_ = pos_;
-                last_rot_ = rot_;
-                //viewpoint_list_.front()->PrintFrontierData(0);
-                ROS_INFO("Operation ID: %d", operation_id);
-            }
-        }
+        ProcessNewViewpoint(viewpoint_ptr);
+
         PublishFrontier();
     }
     RepublishVoxelizedPoints(msg_ptr);

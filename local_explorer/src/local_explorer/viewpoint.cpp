@@ -367,6 +367,20 @@ void Viewpoint::PrintFrontierData(int id = 0)
     printf("Viewpoint %d frontier points: %d, frontier facets: %d\n", id, frontier_point_count, frontier_facet_count);
 }
 
+void Viewpoint::AddNeighbor(std::shared_ptr<Viewpoint> viewpoint_ptr)
+{
+    NeighborViewpoint nv;
+    nv.viewpoint_ptr_ = viewpoint_ptr;
+    nv.dist_ = Distance(*viewpoint_ptr);
+    neighbor_list_.push_back(nv);
+}
+
+float Viewpoint::Distance(Viewpoint &v2)
+{
+    Eigen::Vector3f origin = GetOrigin(), v2_origin = v2.GetOrigin();
+    return (origin - v2_origin).norm();
+}
+
 void Viewpoint::SetOrigin(Eigen::Vector3f origin)
 {
     convex_hull_ptr_->origin_ = origin;
