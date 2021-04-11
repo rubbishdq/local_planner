@@ -30,7 +30,8 @@ class Communication:
         '''
         ros subscribers
         '''
-        self.local_pose_sub = rospy.Subscriber(self.vehicle_type+"/mavros/local_position/pose", PoseStamped, self.local_pose_callback)
+        #self.local_pose_sub = rospy.Subscriber(self.vehicle_type+"/mavros/local_position/pose", PoseStamped, self.local_pose_callback)
+        self.local_pose_sub = rospy.Subscriber(self.vehicle_type+"/pose", PoseStamped, self.local_pose_callback)
         self.mavros_sub = rospy.Subscriber(self.vehicle_type+"/mavros/state", State, self.mavros_state_callback)
         self.cmd_sub = rospy.Subscriber("/rc/"+self.vehicle_type+"/cmd",String,self.cmd_callback)
         self.cmd_pose_flu_sub = rospy.Subscriber("/rc/"+self.vehicle_type+"/cmd_pose_flu", Pose, self.cmd_pose_flu_callback)
@@ -111,39 +112,41 @@ class Communication:
 
     def cmd_pose_flu_callback(self, msg):
         self.coordinate_frame = 9
+        self.motion_type = 0     
         self.target_motion = self.construct_target(x=msg.position.x,y=msg.position.y,z=msg.position.z)
  
     def cmd_pose_enu_callback(self, msg):
         self.coordinate_frame = 1
+        self.motion_type = 0     
         self.target_motion = self.construct_target(x=msg.position.x,y=msg.position.y,z=msg.position.z)
         
     def cmd_vel_flu_callback(self, msg):
         self.hover_state_transition(msg.linear.x, msg.linear.y, msg.linear.z, msg.angular.z)
-        if self.hover_flag == 0:
-            self.coordinate_frame = 8
-            self.motion_type = 1     
-            self.target_motion = self.construct_target(vx=msg.linear.x,vy=msg.linear.y,vz=msg.linear.z,yaw_rate=msg.angular.z)       
+        #if self.hover_flag == 0:
+        self.coordinate_frame = 8
+        self.motion_type = 1     
+        self.target_motion = self.construct_target(vx=msg.linear.x,vy=msg.linear.y,vz=msg.linear.z,yaw_rate=msg.angular.z)       
  
     def cmd_vel_enu_callback(self, msg):
         self.hover_state_transition(msg.linear.x, msg.linear.y, msg.linear.z, msg.angular.z)
-        if self.hover_flag == 0:
-            self.coordinate_frame = 1
-            self.motion_type = 1
-            self.target_motion = self.construct_target(vx=msg.linear.x,vy=msg.linear.y,vz=msg.linear.z,yaw_rate=msg.angular.z)
+        #if self.hover_flag == 0:
+        self.coordinate_frame = 1
+        self.motion_type = 1
+        self.target_motion = self.construct_target(vx=msg.linear.x,vy=msg.linear.y,vz=msg.linear.z,yaw_rate=msg.angular.z)
 
     def cmd_accel_flu_callback(self, msg):
         self.hover_state_transition(msg.linear.x, msg.linear.y, msg.linear.z, msg.angular.z)
-        if self.hover_flag == 0:
-            self.coordinate_frame = 8
-            self.motion_type = 2
-            self.target_motion = self.construct_target(afx=msg.linear.x,afy=msg.linear.y,afz=msg.linear.z,yaw_rate=msg.angular.z)
+        #if self.hover_flag == 0:
+        self.coordinate_frame = 8
+        self.motion_type = 2
+        self.target_motion = self.construct_target(afx=msg.linear.x,afy=msg.linear.y,afz=msg.linear.z,yaw_rate=msg.angular.z)
             
     def cmd_accel_enu_callback(self, msg):
         self.hover_state_transition(msg.linear.x, msg.linear.y, msg.linear.z, msg.angular.z)
-        if self.hover_flag == 0:
-            self.coordinate_frame = 1 
-            self.motion_type = 2
-            self.target_motion = self.construct_target(afx=msg.linear.x,afy=msg.linear.y,afz=msg.linear.z,yaw_rate=msg.angular.z)
+        #if self.hover_flag == 0:
+        self.coordinate_frame = 1 
+        self.motion_type = 2
+        self.target_motion = self.construct_target(afx=msg.linear.x,afy=msg.linear.y,afz=msg.linear.z,yaw_rate=msg.angular.z)
             
     def hover_state_transition(self,x,y,z,w):
         if abs(x) > 0.005 or abs(y)  > 0.005 or abs(z)  > 0.005 or abs(w)  > 0.005:
