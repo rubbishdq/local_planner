@@ -1,5 +1,5 @@
 <launch>
-	<arg name="quad" default="SQ01s"/>
+	<arg name="quad" default="iris"/>
 	<arg name="is_ground_robot" default="false"/>
 	
 	<!-- Start faster commands -->

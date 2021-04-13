@@ -23,20 +23,20 @@ def quat2yaw(q):
 class Faster_Commands:
 
     def __init__(self):
-        self.mode=Mode();
-        self.pose = Pose();
+        self.mode=Mode()
+        self.pose = Pose()
         self.mode.mode=self.mode.ON_GROUND
         self.pubGoal = rospy.Publisher('goal', QuadGoal, queue_size=1)
         self.pubMode = rospy.Publisher("faster/mode",Mode,queue_size=1,latch=True) #TODO Namespace
         self.pubClickedPoint = rospy.Publisher("/move_base_simple/goal",PoseStamped,queue_size=1,latch=True)
 
-        self.is_ground_robot=rospy.get_param('~is_ground_robot', False);
+        self.is_ground_robot=rospy.get_param('~is_ground_robot', False)
 
         print("self.is_ground_robot=", self.is_ground_robot)
 
-        self.alt_taken_off = 1; #Altitude when hovering after taking off
-        self.alt_ground = 0; #Altitude of the ground
-        self.initialized=False;
+        self.alt_taken_off = 1 #Altitude when hovering after taking off
+        self.alt_ground = 0 #Altitude of the ground
+        self.initialized=False
 
     #In rospy, the callbacks are all of them in separate threads
     def stateCB(self, data):
@@ -76,37 +76,37 @@ class Faster_Commands:
 
 
     def takeOff(self):
-        goal=QuadGoal();
-        goal.pos.x = self.pose.position.x;
-        goal.pos.y = self.pose.position.y;
-        goal.pos.z = self.pose.position.z;
+        goal=QuadGoal()
+        goal.pos.x = self.pose.position.x
+        goal.pos.y = self.pose.position.y
+        goal.pos.z = self.pose.position.z
         if(self.is_ground_robot==True):
-            self.alt_taken_off=self.pose.position.z;
+            self.alt_taken_off=self.pose.position.z
         #Note that self.pose.position is being updated in the parallel callback
         while(  abs(self.pose.position.z-self.alt_taken_off)>0.1  ): 
-            goal.pos.z = min(goal.pos.z+0.0035, self.alt_taken_off);
+            goal.pos.z = min(goal.pos.z+0.0035, self.alt_taken_off)
             #rospy.sleep(0.004) #TODO hard-coded
             self.sendGoal(goal)
         rospy.sleep(1.5) 
         self.mode.mode=self.mode.GO
-        self.sendMode();
+        self.sendMode()
 
 
     def land(self):
-        goal=QuadGoal();
-        goal.pos.x = self.pose.position.x;
-        goal.pos.y = self.pose.position.y;
-        goal.pos.z = self.pose.position.z;
+        goal=QuadGoal()
+        goal.pos.x = self.pose.position.x
+        goal.pos.y = self.pose.position.y
+        goal.pos.z = self.pose.position.z
 
         #Note that self.pose.position is being updated in the parallel callback
         while(abs(self.pose.position.z-self.alt_ground)>0.1):
-            goal.pos.z = max(goal.pos.z-0.0035, self.alt_ground);
+            goal.pos.z = max(goal.pos.z-0.0035, self.alt_ground)
             self.sendGoal(goal)
         #Kill motors once we are on the ground
         self.kill()
 
     def kill(self):
-        goal=QuadGoal();
+        goal=QuadGoal()
         goal.cut_power=True
         self.sendGoal(goal)
         self.mode.mode=self.mode.ON_GROUND

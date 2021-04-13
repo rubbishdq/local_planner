@@ -33,13 +33,13 @@ class Communication:
         #self.local_pose_sub = rospy.Subscriber(self.vehicle_type+"/mavros/local_position/pose", PoseStamped, self.local_pose_callback)
         self.local_pose_sub = rospy.Subscriber(self.vehicle_type+"/pose", PoseStamped, self.local_pose_callback)
         self.mavros_sub = rospy.Subscriber(self.vehicle_type+"/mavros/state", State, self.mavros_state_callback)
-        self.cmd_sub = rospy.Subscriber("/rc/"+self.vehicle_type+"/cmd",String,self.cmd_callback)
-        self.cmd_pose_flu_sub = rospy.Subscriber("/rc/"+self.vehicle_type+"/cmd_pose_flu", Pose, self.cmd_pose_flu_callback)
-        self.cmd_pose_enu_sub = rospy.Subscriber("/rc/"+self.vehicle_type+"/cmd_pose_enu", Pose, self.cmd_pose_enu_callback)
-        self.cmd_vel_flu_sub = rospy.Subscriber("/rc/"+self.vehicle_type+"/cmd_vel_flu", Twist, self.cmd_vel_flu_callback)
-        self.cmd_vel_enu_sub = rospy.Subscriber("/rc/"+self.vehicle_type+"/cmd_vel_enu", Twist, self.cmd_vel_enu_callback)
-        self.cmd_accel_flu_sub = rospy.Subscriber("/rc/"+self.vehicle_type+"/cmd_accel_flu", Twist, self.cmd_accel_flu_callback)
-        self.cmd_accel_enu_sub = rospy.Subscriber("/rc/"+self.vehicle_type+"/cmd_accel_enu", Twist, self.cmd_accel_enu_callback)
+        self.cmd_sub = rospy.Subscriber(self.vehicle_type+"rc/cmd",String,self.cmd_callback)
+        self.cmd_pose_flu_sub = rospy.Subscriber(self.vehicle_type+"rc/cmd_pose_flu", Pose, self.cmd_pose_flu_callback)
+        self.cmd_pose_enu_sub = rospy.Subscriber(self.vehicle_type+"rc/cmd_pose_enu", Pose, self.cmd_pose_enu_callback)
+        self.cmd_vel_flu_sub = rospy.Subscriber(self.vehicle_type+"rc/cmd_vel_flu", Twist, self.cmd_vel_flu_callback)
+        self.cmd_vel_enu_sub = rospy.Subscriber(self.vehicle_type+"rc/cmd_vel_enu", Twist, self.cmd_vel_enu_callback)
+        self.cmd_accel_flu_sub = rospy.Subscriber(self.vehicle_type+"rc/cmd_accel_flu", Twist, self.cmd_accel_flu_callback)
+        self.cmd_accel_enu_sub = rospy.Subscriber(self.vehicle_type+"rc/cmd_accel_enu", Twist, self.cmd_accel_enu_callback)
             
         ''' 
         ros publishers

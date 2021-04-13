@@ -65,12 +65,12 @@ if __name__=="__main__":
     rospy.init_node('multirotor_keyboard_multi_control')
     
     if control_type == 'vel':
-        leader_cmd_vel_flu_pub = rospy.Publisher("/rc/"+multirotor_type+"/cmd_vel_flu", Twist, queue_size=10)
-        leader_cmd_pub = rospy.Publisher("/rc/"+multirotor_type+"/cmd", String, queue_size=10)
+        leader_cmd_vel_flu_pub = rospy.Publisher(multirotor_type+"rc/cmd_vel_flu", Twist, queue_size=10)
+        leader_cmd_pub = rospy.Publisher(multirotor_type+"rc/cmd", String, queue_size=10)
  
     else:
-        leader_cmd_accel_flu_pub = rospy.Publisher("/rc/"+multirotor_type+"/cmd_accel_flu", Twist, queue_size=10)
-        leader_cmd_pub = rospy.Publisher("/rc/"+multirotor_type+"/cmd", String, queue_size=10)
+        leader_cmd_accel_flu_pub = rospy.Publisher(multirotor_type+"rc/cmd_accel_flu", Twist, queue_size=10)
+        leader_cmd_pub = rospy.Publisher(multirotor_type+"rc/cmd", String, queue_size=10)
 
     forward  = 0.0
     leftward  = 0.0

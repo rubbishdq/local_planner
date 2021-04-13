@@ -1,6 +1,6 @@
 <launch>
 
-	<arg name="quad" default="SQ01s"/>
+	<arg name="quad" default="iris"/>
 	<arg name="goal_topic" default="goal"/>
 
 
