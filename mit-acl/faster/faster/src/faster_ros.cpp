@@ -119,7 +119,7 @@ FasterRos::FasterRos(ros::NodeHandle nh) : nh_(nh)
 
   // Publishers
   // pub_goal_jackal_ = nh_.advertise<geometry_msgs::Twist>("goal_jackal", 1);
-  pub_goal_ = nh_.advertise<snapstack_msgs::QuadGoal>("goal", 1);
+  pub_goal_ = nh_.advertise<geometry_msgs::Pose>("rc/cmd_pose_flu", 1);
   pub_traj_whole_ = nh_.advertise<nav_msgs::Path>("traj_whole", 1);
   pub_traj_safe_ = nh_.advertise<nav_msgs::Path>("traj_safe", 1);
   pub_setpoint_ = nh_.advertise<visualization_msgs::Marker>("setpoint", 1);
@@ -262,6 +262,7 @@ void FasterRos::pubCB(const ros::TimerEvent& e)
   state next_goal;
   if (faster_ptr_->getNextGoal(next_goal))
   {
+    /*
     snapstack_msgs::QuadGoal quadGoal;
     // visualization_msgs::Marker setpoint;
     // Pub setpoint maker.  setpoint_ is the last quadGoal sent to the drone
@@ -278,11 +279,25 @@ void FasterRos::pubCB(const ros::TimerEvent& e)
     quadGoal.header.frame_id = world_name_;
 
     pub_goal_.publish(quadGoal);
+    */
+    geometry_msgs::Vector3 pos = eigen2rosvector(next_goal.pos);
+    double yaw = next_goal.yaw;
+
+    geometry_msgs::Pose pose_msg;
+    pose_msg.position.x = pos.x;
+    pose_msg.position.y = pos.y;
+    pose_msg.position.z = pos.z;
+    pose_msg.orientation.x = 0;
+    pose_msg.orientation.y = 0;
+    pose_msg.orientation.z = sin(yaw/2);
+    pose_msg.orientation.w = cos(yaw/2);
+
+    pub_goal_.publish(pose_msg);
 
     setpoint_.header.stamp = ros::Time::now();
-    setpoint_.pose.position.x = quadGoal.pos.x;
-    setpoint_.pose.position.y = quadGoal.pos.y;
-    setpoint_.pose.position.z = quadGoal.pos.z;
+    setpoint_.pose.position.x = pos.x;
+    setpoint_.pose.position.y = pos.y;
+    setpoint_.pose.position.z = pos.z;
 
     pub_setpoint_.publish(setpoint_);
   }

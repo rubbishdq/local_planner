@@ -9,6 +9,7 @@
 #  * -------------------------------------------------------------------------- */
 
 import rospy
+from std_msgs.msg import String
 from faster_msgs.msg import Mode
 from snapstack_msgs.msg import QuadGoal, State
 from geometry_msgs.msg import Pose, PoseStamped
@@ -26,24 +27,20 @@ class Faster_Commands:
         self.mode=Mode()
         self.pose = Pose()
         self.mode.mode=self.mode.ON_GROUND
-        self.pubGoal = rospy.Publisher('goal', QuadGoal, queue_size=1)
+        self.pubCmd = rospy.Publisher("rc/cmd", String, queue_size=1)
+        self.pubGoal = rospy.Publisher("rc/cmd_pose_flu", Pose, queue_size=1)
         self.pubMode = rospy.Publisher("faster/mode",Mode,queue_size=1,latch=True) #TODO Namespace
         self.pubClickedPoint = rospy.Publisher("/move_base_simple/goal",PoseStamped,queue_size=1,latch=True)
 
-        self.is_ground_robot=rospy.get_param('~is_ground_robot', False)
+        self.is_ground_robot = False
 
-        print("self.is_ground_robot=", self.is_ground_robot)
-
-        self.alt_taken_off = 1 #Altitude when hovering after taking off
+        self.alt_taken_off = 1.5 #Altitude when hovering after taking off
         self.alt_ground = 0 #Altitude of the ground
         self.initialized=False
 
     #In rospy, the callbacks are all of them in separate threads
     def stateCB(self, data):
-        self.pose.position.x = data.pos.x
-        self.pose.position.y = data.pos.y
-        self.pose.position.z = data.pos.z
-        self.pose.orientation = data.quat
+        self.pose = data.pose
 
         if(self.initialized==False):
             self.pubFirstGoal()
@@ -76,16 +73,19 @@ class Faster_Commands:
 
 
     def takeOff(self):
-        goal=QuadGoal()
-        goal.pos.x = self.pose.position.x
-        goal.pos.y = self.pose.position.y
-        goal.pos.z = self.pose.position.z
+        cmd_str = String()
+        cmd_str.data = "OFFBOARD"
+        self.pubCmd.publish(cmd_str)
+        rospy.sleep(1)
+        cmd_str.data = "ARM"
+        self.pubCmd.publish(cmd_str)
+
+        goal=self.pose
         if(self.is_ground_robot==True):
             self.alt_taken_off=self.pose.position.z
         #Note that self.pose.position is being updated in the parallel callback
         while(  abs(self.pose.position.z-self.alt_taken_off)>0.1  ): 
-            goal.pos.z = min(goal.pos.z+0.0035, self.alt_taken_off)
-            #rospy.sleep(0.004) #TODO hard-coded
+            goal.position.z = self.alt_taken_off
             self.sendGoal(goal)
         rospy.sleep(1.5) 
         self.mode.mode=self.mode.GO
@@ -93,35 +93,38 @@ class Faster_Commands:
 
 
     def land(self):
-        goal=QuadGoal()
-        goal.pos.x = self.pose.position.x
-        goal.pos.y = self.pose.position.y
-        goal.pos.z = self.pose.position.z
-
+        cmd_str = String()
+        cmd_str.data = "AUTO.LAND"
+        self.pubCmd.publish(cmd_str)
+        '''
+        goal = self.pose
         #Note that self.pose.position is being updated in the parallel callback
-        while(abs(self.pose.position.z-self.alt_ground)>0.1):
-            goal.pos.z = max(goal.pos.z-0.0035, self.alt_ground)
+        while(abs(self.pose.position.z-self.alt_ground)>0.0):
+            goal.position.z = max(goal.position.z-0.0035, self.alt_ground)
             self.sendGoal(goal)
+        '''
         #Kill motors once we are on the ground
         self.kill()
 
     def kill(self):
-        goal=QuadGoal()
-        goal.cut_power=True
+        goal=Pose()
         self.sendGoal(goal)
         self.mode.mode=self.mode.ON_GROUND
         self.sendMode()
 
     def sendGoal(self, goal):
-        goal.yaw = quat2yaw(self.pose.orientation)
-        goal.header.stamp = rospy.get_rostime()
+        print("goal sent")
         self.pubGoal.publish(goal)
 
     def pubFirstGoal(self):
         msg=PoseStamped()
         msg.pose.position.x=self.pose.position.x
         msg.pose.position.y=self.pose.position.y
-        msg.pose.position.z=1.0
+        msg.pose.position.z=self.alt_taken_off
+        msg.pose.orientation.x=0.0
+        msg.pose.orientation.y=0.0
+        msg.pose.orientation.z=0.0
+        msg.pose.orientation.w=1.0
         msg.header.frame_id="world"
         msg.header.stamp = rospy.get_rostime()
         self.pubClickedPoint.publish(msg)
@@ -130,7 +133,7 @@ class Faster_Commands:
 def startNode():
     c = Faster_Commands()
     s = rospy.Service("/change_mode",MissionModeChange,c.srvCB)
-    rospy.Subscriber("state", State, c.stateCB)
+    rospy.Subscriber("pose", PoseStamped, c.stateCB)
     rospy.spin()
 
 if __name__ == '__main__':

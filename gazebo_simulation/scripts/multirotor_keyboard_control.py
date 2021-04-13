@@ -56,8 +56,7 @@ if __name__=="__main__":
 
     settings = termios.tcgetattr(sys.stdin)
 
-    multirotor_type = sys.argv[1]
-    control_type = sys.argv[2]
+    control_type = sys.argv[1]
     
     cmd= String()
     twist = Twist()   
@@ -65,12 +64,12 @@ if __name__=="__main__":
     rospy.init_node('multirotor_keyboard_multi_control')
     
     if control_type == 'vel':
-        leader_cmd_vel_flu_pub = rospy.Publisher(multirotor_type+"rc/cmd_vel_flu", Twist, queue_size=10)
-        leader_cmd_pub = rospy.Publisher(multirotor_type+"rc/cmd", String, queue_size=10)
+        leader_cmd_vel_flu_pub = rospy.Publisher("rc/cmd_vel_flu", Twist, queue_size=10)
+        leader_cmd_pub = rospy.Publisher("rc/cmd", String, queue_size=10)
  
     else:
-        leader_cmd_accel_flu_pub = rospy.Publisher(multirotor_type+"rc/cmd_accel_flu", Twist, queue_size=10)
-        leader_cmd_pub = rospy.Publisher(multirotor_type+"rc/cmd", String, queue_size=10)
+        leader_cmd_accel_flu_pub = rospy.Publisher("rc/cmd_accel_flu", Twist, queue_size=10)
+        leader_cmd_pub = rospy.Publisher("rc/cmd", String, queue_size=10)
 
     forward  = 0.0
     leftward  = 0.0
@@ -201,7 +200,7 @@ if __name__=="__main__":
         if control_type == 'vel':
             leader_cmd_vel_flu_pub.publish(twist)
         else:
-            leader_cmd_aceel_flu_pub.publish(twist)
+            leader_cmd_accel_flu_pub.publish(twist)
         leader_cmd_pub.publish(cmd)
                 
         cmd = ''

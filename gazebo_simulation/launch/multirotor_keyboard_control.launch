@@ -2,10 +2,14 @@
 
   <arg name="robot_name" default="iris"/>
   <arg name="control_method" default="vel"/>
+  <arg name="mavros_yaw_different" default="true"/>
 
-  <node name="multirotor_communication" pkg="gazebo_simulation" type="multirotor_communication.py"
-  args="$(arg robot_name)" required="true"/>
-  <node name="multirotor_keyboard_control" pkg="gazebo_simulation" type="multirotor_keyboard_control.py" output="screen"
-  args="$(arg robot_name) $(arg control_method)" required="true"/>
+  <group ns = "$(arg robot_name)"> 
+    <node name="multirotor_communication" pkg="gazebo_simulation" type="multirotor_communication.py" output="screen"
+    args="$(arg mavros_yaw_different)" required="true"/>
+
+    <node name="multirotor_keyboard_control" pkg="gazebo_simulation" type="multirotor_keyboard_control.py" output="screen"
+    args="$(arg control_method)" required="true"/>
+  </group>
 
 </launch>

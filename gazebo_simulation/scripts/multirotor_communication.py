@@ -11,13 +11,13 @@ from gazebo_msgs.srv import GetModelState
 from nav_msgs.msg import Odometry
 from std_msgs.msg import String
 from pyquaternion import Quaternion
+import math
 import sys
 
 class Communication:
 
-    def __init__(self, vehicle_type):
+    def __init__(self, is_mavros_yaw_different = False):
         
-        self.vehicle_type = vehicle_type
         self.current_position = None
         self.current_yaw = 0
         self.hover_flag = 0
@@ -26,36 +26,37 @@ class Communication:
         self.motion_type = 0
         self.flight_mode = None
         self.mission = None
+        self.is_mavros_yaw_different = True if (is_mavros_yaw_different.lower() == 'true') else False
             
         '''
         ros subscribers
         '''
-        #self.local_pose_sub = rospy.Subscriber(self.vehicle_type+"/mavros/local_position/pose", PoseStamped, self.local_pose_callback)
-        self.local_pose_sub = rospy.Subscriber(self.vehicle_type+"/pose", PoseStamped, self.local_pose_callback)
-        self.mavros_sub = rospy.Subscriber(self.vehicle_type+"/mavros/state", State, self.mavros_state_callback)
-        self.cmd_sub = rospy.Subscriber(self.vehicle_type+"rc/cmd",String,self.cmd_callback)
-        self.cmd_pose_flu_sub = rospy.Subscriber(self.vehicle_type+"rc/cmd_pose_flu", Pose, self.cmd_pose_flu_callback)
-        self.cmd_pose_enu_sub = rospy.Subscriber(self.vehicle_type+"rc/cmd_pose_enu", Pose, self.cmd_pose_enu_callback)
-        self.cmd_vel_flu_sub = rospy.Subscriber(self.vehicle_type+"rc/cmd_vel_flu", Twist, self.cmd_vel_flu_callback)
-        self.cmd_vel_enu_sub = rospy.Subscriber(self.vehicle_type+"rc/cmd_vel_enu", Twist, self.cmd_vel_enu_callback)
-        self.cmd_accel_flu_sub = rospy.Subscriber(self.vehicle_type+"rc/cmd_accel_flu", Twist, self.cmd_accel_flu_callback)
-        self.cmd_accel_enu_sub = rospy.Subscriber(self.vehicle_type+"rc/cmd_accel_enu", Twist, self.cmd_accel_enu_callback)
+        #self.local_pose_sub = rospy.Subscriber("mavros/local_position/pose", PoseStamped, self.local_pose_callback)
+        self.local_pose_sub = rospy.Subscriber("pose", PoseStamped, self.local_pose_callback)
+        self.mavros_sub = rospy.Subscriber("mavros/state", State, self.mavros_state_callback)
+        self.cmd_sub = rospy.Subscriber("rc/cmd",String,self.cmd_callback)
+        self.cmd_pose_flu_sub = rospy.Subscriber("rc/cmd_pose_flu", Pose, self.cmd_pose_flu_callback)
+        self.cmd_pose_enu_sub = rospy.Subscriber("rc/cmd_pose_enu", Pose, self.cmd_pose_enu_callback)
+        self.cmd_vel_flu_sub = rospy.Subscriber("rc/cmd_vel_flu", Twist, self.cmd_vel_flu_callback)
+        self.cmd_vel_enu_sub = rospy.Subscriber("rc/cmd_vel_enu", Twist, self.cmd_vel_enu_callback)
+        self.cmd_accel_flu_sub = rospy.Subscriber("rc/cmd_accel_flu", Twist, self.cmd_accel_flu_callback)
+        self.cmd_accel_enu_sub = rospy.Subscriber("rc/cmd_accel_enu", Twist, self.cmd_accel_enu_callback)
             
         ''' 
         ros publishers
         '''
-        self.target_motion_pub = rospy.Publisher(self.vehicle_type+"/mavros/setpoint_raw/local", PositionTarget, queue_size=10)
+        self.target_motion_pub = rospy.Publisher("mavros/setpoint_raw/local", PositionTarget, queue_size=10)
 
         '''
         ros services
         '''
-        self.armService = rospy.ServiceProxy(self.vehicle_type+"/mavros/cmd/arming", CommandBool)
-        self.flightModeService = rospy.ServiceProxy(self.vehicle_type+"/mavros/set_mode", SetMode)
+        self.armService = rospy.ServiceProxy("mavros/cmd/arming", CommandBool)
+        self.flightModeService = rospy.ServiceProxy("mavros/set_mode", SetMode)
 
-        print(self.vehicle_type+": "+"communication initialized")
+        #print("communication initialized")
 
     def start(self):
-        rospy.init_node(self.vehicle_type+"_communication")
+        rospy.init_node("multirotor_communication")
         rate = rospy.Rate(100)
         '''
         main ROS thread
@@ -92,7 +93,10 @@ class Communication:
         target_raw_pose.acceleration_or_force.y = afy
         target_raw_pose.acceleration_or_force.z = afz
 
-        target_raw_pose.yaw = yaw
+        if self.is_mavros_yaw_different:
+            target_raw_pose.yaw = (yaw + 3*math.pi/2) if (yaw - math.pi/2 < -math.pi) else (yaw - math.pi/2)
+        else:
+            target_raw_pose.yaw = yaw
         target_raw_pose.yaw_rate = yaw_rate
 
         if(self.motion_type == 0):
@@ -113,12 +117,12 @@ class Communication:
     def cmd_pose_flu_callback(self, msg):
         self.coordinate_frame = 9
         self.motion_type = 0     
-        self.target_motion = self.construct_target(x=msg.position.x,y=msg.position.y,z=msg.position.z)
+        self.target_motion = self.construct_target(x=msg.position.x,y=msg.position.y,z=msg.position.z,yaw=self.q2yaw(msg.orientation))
  
     def cmd_pose_enu_callback(self, msg):
         self.coordinate_frame = 1
         self.motion_type = 0     
-        self.target_motion = self.construct_target(x=msg.position.x,y=msg.position.y,z=msg.position.z)
+        self.target_motion = self.construct_target(x=msg.position.x,y=msg.position.y,z=msg.position.z,yaw=self.q2yaw(msg.orientation))
         
     def cmd_vel_flu_callback(self, msg):
         self.hover_state_transition(msg.linear.x, msg.linear.y, msg.linear.z, msg.angular.z)
@@ -158,18 +162,19 @@ class Communication:
 
         elif msg.data == 'ARM':
             self.arm_state =self.arm()
-            print(self.vehicle_type+": Armed "+str(self.arm_state))
+            print("Vehicle armed "+str(self.arm_state))
 
         elif msg.data == 'DISARM':
             self.arm_state = not self.disarm()
-            print(self.vehicle_type+": Armed "+str(self.arm_state))
+            print("Vehicle armed "+str(self.arm_state))
 
         elif msg.data[:-1] == "mission" and not msg.data == self.mission:
             self.mission = msg.data
-            print(self.vehicle_type+": "+msg.data)
+            print(msg.data)
 
         elif not msg.data == self.flight_mode:
             self.flight_mode = msg.data
+            print("Flight mode: "+msg.data)
             self.flight_mode_switch()
             
 
@@ -186,14 +191,14 @@ class Communication:
         if self.armService(True):
             return True
         else:
-            print(self.vehicle_type+": arming failed!")
+            print("Vehicle arming failed!")
             return False
 
     def disarm(self):
         if self.armService(False):
             return True
         else:
-            print(self.vehicle_type+": disarming failed!")
+            print("Vehicle disarming failed!")
             return False
 
     def hover(self):
@@ -205,12 +210,12 @@ class Communication:
         if self.flight_mode == 'HOVER':
             self.hover_flag = 1
             self.hover()
-            print(self.vehicle_type+":"+self.flight_mode)
+            print(self.flight_mode)
         elif self.flightModeService(custom_mode=self.flight_mode):
-            print(self.vehicle_type+": "+self.flight_mode)
+            print(self.flight_mode)
             return True
         else:
-            print(self.vehicle_type+": "+self.flight_mode+"failed")
+            print(self.flight_mode+"failed")
             return False
 
     def takeoff_detection(self):
@@ -220,5 +225,8 @@ class Communication:
             return False
 
 if __name__ == '__main__':
-    communication = Communication(sys.argv[1])
+    if len(sys.argv) < 2:
+        communication = Communication()
+    else:
+        communication = Communication(sys.argv[1])
     communication.start()

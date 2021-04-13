@@ -1,14 +1,16 @@
 <launch>
 	<arg name="quad" default="iris"/>
 	<arg name="is_ground_robot" default="false"/>
+	<arg name="mavros_yaw_different" default="true"/>
 	
 	<!-- Start faster commands -->
 	<node ns="$(arg quad)" name="faster_commands" pkg="faster" type="faster_commands.py" output="screen">
 		<param name="is_ground_robot" type="bool" value="$(arg is_ground_robot)" />
 	</node>
 
-	<!-- Start Rviz -->
-	<node pkg="rviz" type="rviz" name="rviz" args="-d $(find faster)/rviz_cfgs/cvx_$(arg quad).rviz"/>
+	<!-- Start communication with MAVROS -->
+	<node ns="$(arg quad)" name="multirotor_communication" pkg="gazebo_simulation" type="multirotor_communication.py" output="screen"
+	args="$(arg mavros_yaw_different)" required="true"/>
 
 	<!-- Start GUI -->
 	<node pkg="rqt_gui" type="rqt_gui" name="rqt_gui" args="--perspective-file $(find faster)/rqt_cfgs/demo_interface.perspective"/>
