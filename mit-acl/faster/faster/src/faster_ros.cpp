@@ -119,7 +119,7 @@ FasterRos::FasterRos(ros::NodeHandle nh) : nh_(nh)
 
   // Publishers
   // pub_goal_jackal_ = nh_.advertise<geometry_msgs::Twist>("goal_jackal", 1);
-  pub_goal_ = nh_.advertise<geometry_msgs::Pose>("rc/cmd_pose_flu", 1);
+  pub_goal_ = nh_.advertise<geometry_msgs::Pose>("goal", 1);
   pub_traj_whole_ = nh_.advertise<nav_msgs::Path>("traj_whole", 1);
   pub_traj_safe_ = nh_.advertise<nav_msgs::Path>("traj_safe", 1);
   pub_setpoint_ = nh_.advertise<visualization_msgs::Marker>("setpoint", 1);
@@ -280,6 +280,7 @@ void FasterRos::pubCB(const ros::TimerEvent& e)
 
     pub_goal_.publish(quadGoal);
     */
+    std::cout << "Faster_ROS: publishing goal.\n";
     geometry_msgs::Vector3 pos = eigen2rosvector(next_goal.pos);
     double yaw = next_goal.yaw;
 

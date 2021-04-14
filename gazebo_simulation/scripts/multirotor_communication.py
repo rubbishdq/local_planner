@@ -93,8 +93,10 @@ class Communication:
         target_raw_pose.acceleration_or_force.y = afy
         target_raw_pose.acceleration_or_force.z = afz
 
-        if self.is_mavros_yaw_different:
+        if self.is_mavros_yaw_different:  # rotate 90 degrees
             target_raw_pose.yaw = (yaw + 3*math.pi/2) if (yaw - math.pi/2 < -math.pi) else (yaw - math.pi/2)
+            target_raw_pose.position.x = y
+            target_raw_pose.position.y = -x
         else:
             target_raw_pose.yaw = yaw
         target_raw_pose.yaw_rate = yaw_rate

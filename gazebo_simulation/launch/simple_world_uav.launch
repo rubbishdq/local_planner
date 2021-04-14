@@ -50,8 +50,8 @@
   <!-- <node pkg="tf" type="static_transform_publisher" name="tf_broadcaster2" args="0 0 0 0 0 0 1 $(arg robot_name) $(arg robot_name)/base_link $(arg tf_period)" /> -->
   <node pkg="tf" type="static_transform_publisher" name="tf_broadcaster3" args="0 0 0 -0.5 0.5 -0.5 0.5 $(arg robot_name)/base_link $(arg robot_name)/camera $(arg tf_period)" /> 
 
-  <node name="uav_tf" pkg="gazebo_simulation" type="uav_tf.py" output="$(arg output)"
-      args="$(arg robot_name) $(arg robot_name)/base_link $(arg robot_name)" required="true"/>
+  <node ns="$(arg robot_name)" name="uav_tf" pkg="gazebo_simulation" type="uav_tf.py" output="$(arg output)"
+      args="$(arg robot_name) $(arg robot_name)/base_link" required="true"/>
 
   <group ns = "$(arg robot_name)"> 
     <include file="$(find mavros)/launch/node.launch">

@@ -1,7 +1,7 @@
 <launch>
 
 	<arg name="quad" default="iris"/>
-	<arg name="goal_topic" default="goal"/>
+	<arg name="goal_topic" default="rc/cmd_pose_flu"/>
 
 
 	<node ns="$(arg quad)" name="faster" pkg="faster" type="faster_node" output="screen" clear_params="true"> 

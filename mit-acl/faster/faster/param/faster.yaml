@@ -4,14 +4,14 @@ use_ff: true # use feedforward
 visual: true #publish visualization stuff
 dc: 0.01            #(seconds) Duration for the interpolation=Value of the timer pubGoal
 goal_radius: 0.3    #[m] Drone has arrived to the goal when distance_to_goal<GOAL_RADIUS
-drone_radius: 0.3  #[m] Used for collision checking
+drone_radius: 0.5  #[m] Used for collision checking  # original 0.3
 rviz_goal_height: 1  #[m] Assumed height for clicked 2d nav goals in Rviz  (overridden for ground robots)
 
 N_whole: 6 #[-] Number of discretization points in the whole trajectory
 N_safe: 6 #[-] Number of discretization points in the safe path
 
 Ra: 4.0            # [m] Radius of the sphere S
-w_max: 1          # [rd/s] Maximum angular velocity. 0.4 for Hardware
+w_max: 0.4          # [rd/s] Maximum angular velocity. 0.4 for Hardware  # original 1
 alpha_filter_dyaw: 0 #was 0.92  #[] Filter parameter for dyaw, \in [0,1]. Higher--> More aggressive filtering
 
 z_ground: -0.2         #[m] points below this are considered ground
@@ -19,9 +19,9 @@ z_max: 2         #[m] JPS is not allowed to give a solution that goes higher tha
 inflation_jps: 0.35  #[m] The obstacles are inflated (to run JPS) by this amount
 factor_jps: 1  #[m] JPS is run with resolution=factor_jps*(resolution of the map)
 
-v_max: 5.0   #[m/s]  1.4
-a_max: 5.0   #[m/s2] 1.4
-j_max: 8.0  #[m/s3] 35
+v_max: 2.0   #[m/s]  1.4  # original 5.0
+a_max: 5.0   #[m/s2] 1.4  # original 5.0
+j_max: 8.0  #[m/s3] 35  # original 8.0
 
 #Factors for time allocation
 gamma_whole: 20       #[-]
