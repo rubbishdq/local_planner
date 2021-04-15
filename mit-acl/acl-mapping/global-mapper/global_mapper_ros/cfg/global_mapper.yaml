@@ -2,7 +2,7 @@ global_frame: world
 origin: [0.0, 0.0, 0.0]  # [m]
 world_dimensions: [15.0, 15.0, 8.0]  # [m]  16   16   4
 resolution: 0.15  # [m]   0.15
-radius_drone: 0.5 # [m] THIS SHOULD BE HIGHER THAN THE RESOLUTION!!
+radius_drone: 0.6 # [m] THIS SHOULD BE HIGHER THAN THE RESOLUTION!!
 Ra: 4.0 # [m] radius of the first sphere (Sa) in the planner. The unknown pcloud published will only contain points inside this sphere
 z_ground: 0.1 #[m] points below z_ground are not published in the known grid
 skip: 0  #[pixels] Numbers of pixels to skip in the depth map. Should be >=0

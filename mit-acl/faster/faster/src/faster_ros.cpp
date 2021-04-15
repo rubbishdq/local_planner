@@ -517,7 +517,10 @@ void FasterRos::terminalGoalCB(const geometry_msgs::PoseStamped& msg)
 {
   state G_term;
   const double height = (par_.is_ground_robot) ? 0.2 : rviz_goal_height_;
+  double roll, pitch, yaw;
+  quaternion2Euler(msg.pose.orientation, roll, pitch, yaw);
   G_term.setPos(msg.pose.position.x, msg.pose.position.y, height);
+  G_term.setYaw(yaw);
   faster_ptr_->setTerminalGoal(G_term);
 
   state G;  // projected goal

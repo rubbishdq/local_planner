@@ -144,6 +144,7 @@ void Faster::setTerminalGoal(state& term_goal)
   mtx_planner_status_.lock();
 
   G_term_.pos = term_goal.pos;
+  G_term_.yaw = term_goal.yaw;
   Eigen::Vector3d temp = state_.pos;
   G_.pos = projectPointToBox(temp, G_term_.pos, par_.wdx, par_.wdy, par_.wdz);
   if (drone_status_ == DroneStatus::GOAL_REACHED)
@@ -676,8 +677,11 @@ void Faster::getDesiredYaw(state& next_goal)
       // std::cout << "diff1= " << diff << std::endl;
       break;
     case DroneStatus::TRAVELING:
-    case DroneStatus::GOAL_SEEN:
       desired_yaw = atan2(M_.pos[1] - next_goal.pos[1], M_.pos[0] - next_goal.pos[0]);
+      diff = desired_yaw - state_.yaw;
+      break;
+    case DroneStatus::GOAL_SEEN:
+      desired_yaw = G_term_.yaw;
       diff = desired_yaw - state_.yaw;
       break;
     case DroneStatus::GOAL_REACHED:
