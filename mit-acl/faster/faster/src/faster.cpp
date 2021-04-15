@@ -26,11 +26,13 @@ typedef Timer MyTimer;
 
 Faster::Faster(parameters par) : par_(par)
 {
-  drone_status_ == DroneStatus::YAWING;
+  // drone_status_ == DroneStatus::YAWING;
+  drone_status_ == DroneStatus::GOAL_REACHED;
   // mtx_G.lock();
   G_.pos << 0, 0, 0;
   // mtx_G.unlock();
   G_term_.pos << 0, 0, 0;
+  previous_yaw_ = 0.0;
 
   mtx_initial_cond.lock();
   stateA_.setZero();

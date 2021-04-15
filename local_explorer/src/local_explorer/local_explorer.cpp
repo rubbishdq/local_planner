@@ -215,7 +215,7 @@ void LocalExplorer::UpdateTopologicalMap(std::shared_ptr<Viewpoint> viewpoint_pt
     int ind = 0, count = 0;
     for (auto old_viewpoint_ptr : viewpoint_list_)
     {
-        if (ind == viewpoint_list_.size()-1 ||
+        if (ind == int(viewpoint_list_.size())-1 ||
             (viewpoint_ptr->Distance(*old_viewpoint_ptr) <= SENSOR_RANGE && viewpoint_ptr->Visible(old_viewpoint_ptr->GetOrigin())))
         {
             viewpoint_ptr->AddNeighbor(old_viewpoint_ptr);

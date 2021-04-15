@@ -12,14 +12,34 @@ import rospy
 from std_msgs.msg import String
 from faster_msgs.msg import Mode
 from snapstack_msgs.msg import QuadGoal, State
-from geometry_msgs.msg import Pose, PoseStamped
+from geometry_msgs.msg import Pose, PoseStamped, Quaternion
 from behavior_selector.srv import MissionModeChange
 import math
 
-def quat2yaw(q):
+def quat2yaw(q, deg = False):
     yaw = math.atan2(2 * (q.w * q.z + q.x * q.y),
                      1 - 2 * (q.y * q.y + q.z * q.z))
-    return yaw
+    if deg:
+        return yaw / math.pi * 180
+    else:
+        return yaw
+
+
+def yaw2quat(yaw, deg = False):
+    if deg: 
+        yaw = yaw / 180. * math.pi
+    q = Quaternion()
+    q.x = 0.0
+    q.y = 0.0
+    q.z = math.sin(yaw/2)
+    q.w = math.cos(yaw/2)
+    return q
+
+
+def angle_norm(ang):
+    ang_norm = (ang+math.pi) % (2*math.pi) - math.pi
+    return ang_norm
+
 
 class Faster_Commands:
 
@@ -33,6 +53,7 @@ class Faster_Commands:
         self.pubClickedPoint = rospy.Publisher("/move_base_simple/goal",PoseStamped,queue_size=1,latch=True)
 
         self.is_ground_robot = False
+        self.circle = True
 
         self.alt_taken_off = 1.5 #Altitude when hovering after taking off
         self.alt_ground = 0 #Altitude of the ground
@@ -43,7 +64,7 @@ class Faster_Commands:
         self.pose = data.pose
 
         if(self.initialized==False):
-            self.pubFirstGoal()
+            #self.pubFirstGoal()
             self.initialized=True
 
     #Called when buttom pressed in the interface
@@ -87,6 +108,27 @@ class Faster_Commands:
         while(  abs(self.pose.position.z-self.alt_taken_off)>0.1  ): 
             goal.position.z = self.alt_taken_off
             self.sendGoal(goal)
+        rospy.sleep(5) 
+        # circle counterclockwise
+        goal=self.pose
+        if self.circle:
+            list_length = 4
+            ang_list = []
+            for i in range(list_length):
+                if i == list_length-1:
+                    ang_list.append(0.0)
+                else:
+                    ang_list.append(2*math.pi*(i+1)/list_length)
+            for ang in ang_list:
+                while True:
+                    yaw = quat2yaw(self.pose.orientation)
+                    if abs(angle_norm(yaw - ang)) / math.pi * 180. < 10:
+                        break
+                    goal.orientation = yaw2quat(yaw + math.pi / 30.)
+                    self.sendGoal(goal)
+                    rospy.sleep(0.02)
+            print("already circled")
+            print(ang_list)
         rospy.sleep(1.5) 
         self.mode.mode=self.mode.GO
         self.sendMode()
@@ -113,7 +155,6 @@ class Faster_Commands:
         self.sendMode()
 
     def sendGoal(self, goal):
-        print("goal sent")
         self.pubGoal.publish(goal)
 
     def pubFirstGoal(self):
