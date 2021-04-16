@@ -38,6 +38,8 @@ private:
     void RemoveRedundantBoarder(Viewpoint &viewpoint, bool last_viewpoint); // if last_viewpoint is false, last added viewpoint's boarder will not be removed
     void ProcessNewViewpoint(std::shared_ptr<Viewpoint> viewpoint_ptr);
     void UpdateTopologicalMap(std::shared_ptr<Viewpoint> viewpoint_ptr); // viewpoint_ptr should not be in this->viewpoint_list_
+    std::vector<std::shared_ptr<Viewpoint>> GetTopologicalPath(
+        std::shared_ptr<Viewpoint> start, std::shared_ptr<Viewpoint> end);
 
     void RepublishVoxelizedPoints(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr);
     void PublishInvertedCloud(ViewpointGenerator &viewpoint_generator);

@@ -7,6 +7,7 @@
 #include "local_explorer/kd_tree.h"
 
 #include <list>
+#include <cfloat>
 
 namespace local_explorer
 {
@@ -54,6 +55,8 @@ public:
     std::vector<FrontierCluster>& GetFrontierClusterList();
     int GetFrontierClusterCount();
     bool IsGenerated();
+    void InitDijkstraData();
+    bool operator <(const Viewpoint& v2);
 
 public:
     std::shared_ptr<ConvexHull> convex_hull_ptr_;
@@ -62,6 +65,12 @@ public:
     std::list<NeighborViewpoint> neighbor_list_;
     int frontier_cluster_count_;
     bool is_generated_;
+
+    // data used in Dijkstra algorithm
+    bool is_visited_;
+    float dist_;
+    std::weak_ptr<Viewpoint> last_viewpoint_;
+
 };
 
 

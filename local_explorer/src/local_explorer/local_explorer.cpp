@@ -227,6 +227,60 @@ void LocalExplorer::UpdateTopologicalMap(std::shared_ptr<Viewpoint> viewpoint_pt
     ROS_INFO("New viewpoint connected with %d viewpoints.", count);
 }
 
+// Dijkstra algorithm
+std::vector<std::shared_ptr<Viewpoint>> LocalExplorer::GetTopologicalPath(
+    std::shared_ptr<Viewpoint> start, std::shared_ptr<Viewpoint> end)
+{
+    for (auto viewpoint_ptr : viewpoint_list_)
+    {
+        viewpoint_ptr->InitDijkstraData();
+    }
+    start->dist_ = 0;
+    std::priority_queue<std::shared_ptr<Viewpoint>, 
+        std::vector<std::shared_ptr<Viewpoint>>, std::greater<std::shared_ptr<Viewpoint>>> pq;
+    pq.push(start);
+
+    std::shared_ptr<Viewpoint> node_ptr;
+    while (!pq.empty())
+    {
+        node_ptr = pq.top();
+        pq.pop();
+        if (node_ptr == end)
+        {
+            break;
+        }
+        if (node_ptr->is_visited_)
+        {
+            continue;
+        }
+        node_ptr->is_visited_ = true;
+        // update distance
+        for (NeighborViewpoint &neighbor : node_ptr->neighbor_list_)
+        {
+            auto neighbor_ptr = neighbor.viewpoint_ptr_.lock();
+            if (neighbor_ptr->is_visited_)
+            {
+                continue;
+            }
+            if (neighbor_ptr->dist_ > node_ptr->dist_ + neighbor.dist_)
+            {
+                neighbor_ptr->dist_ = node_ptr->dist_ + neighbor.dist_;
+                neighbor_ptr->last_viewpoint_ = node_ptr;
+            }
+        }
+    }
+    // read topological path
+    std::vector<std::shared_ptr<Viewpoint>> path;
+    node_ptr = end;
+    while (node_ptr != start)
+    {
+        path.push_back(node_ptr);
+        node_ptr = node_ptr->last_viewpoint_.lock();
+    }
+    path.push_back(start);
+    return path;
+}
+
 void LocalExplorer::RepublishVoxelizedPoints(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr)
 {
     sensor_msgs::PointCloud2 cloud_msg;

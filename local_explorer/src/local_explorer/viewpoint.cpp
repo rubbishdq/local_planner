@@ -412,5 +412,17 @@ bool Viewpoint::IsGenerated()
     return is_generated_;
 }
 
+void Viewpoint::InitDijkstraData()
+{
+    is_visited_ = false;
+    dist_ = FLT_MAX;
+    last_viewpoint_.reset();
+}
+
+bool Viewpoint::operator <(const Viewpoint& v2)
+{
+    return (dist_ < v2.dist_);
+}
+
 
 } // namespace local_explorer
