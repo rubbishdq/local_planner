@@ -600,9 +600,9 @@ void LocalExplorer::VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPo
         std::shared_ptr<Viewpoint> viewpoint_ptr = viewpoint_generator_ptr_->GetViewpointPtr();
         std::shared_ptr<Viewpoint> displayed_viewpoint_ptr;
         //ROS_INFO("Viewpoint successfully generated.");
-        //PublishInvertedCloud(*viewpoint_generator_ptr_);
-        //PublishConvexHull(*(viewpoint_generator_ptr_->GetViewpointPtr()->GetConvexHullPtr()));
-        //PublishColoredConvexHull(*(viewpoint_generator_ptr_->GetViewpointPtr()->GetConvexHullPtr()));
+        PublishInvertedCloud(*viewpoint_generator_ptr_);
+        PublishConvexHull(*(viewpoint_generator_ptr_->GetViewpointPtr()->GetConvexHullPtr()));
+        PublishColoredConvexHull(*(viewpoint_generator_ptr_->GetViewpointPtr()->GetConvexHullPtr()));
         PublishViewpoint(*viewpoint_ptr);
         PublishSingleFrontierCluster(*viewpoint_ptr);
 
