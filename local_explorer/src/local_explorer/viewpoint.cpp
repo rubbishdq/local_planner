@@ -52,6 +52,13 @@ bool FrontierCluster::IsEmpty()
     return is_empty_;
 }
 
+Eigen::Vector3f FrontierCluster::GetCenter()
+{
+    return Eigen::Vector3f((xyz_range_[0][0]+xyz_range_[1][0]) / 2, 
+        (xyz_range_[0][1]+xyz_range_[1][1]) / 2,
+        (xyz_range_[0][2]+xyz_range_[1][2]) / 2);
+}
+
 Viewpoint::Viewpoint(Eigen::Vector3f origin)
 {
     convex_hull_ptr_ = std::make_shared<ConvexHull>(origin);

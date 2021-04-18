@@ -138,6 +138,7 @@ FasterRos::FasterRos(ros::NodeHandle nh) : nh_(nh)
   pub_path_jps_safe_ = nh_.advertise<visualization_msgs::MarkerArray>("path_jps_safe", 1);
   poly_whole_pub_ = nh.advertise<decomp_ros_msgs::PolyhedronArray>("poly_whole", 1, true);
   poly_safe_pub_ = nh.advertise<decomp_ros_msgs::PolyhedronArray>("poly_safe", 1, true);
+  drone_status_pub_ = nh.advertise<std_msgs::Int32>("drone_status", 1, true);
   pub_jps_inters_ = nh_.advertise<geometry_msgs::PointStamped>("jps_intersection", 1);
   // pub_log_ = nh_.advertise<snapstack_msgs::Cvx>("log_topic", 1);
   pub_traj_committed_colored_ = nh_.advertise<visualization_msgs::MarkerArray>("traj_committed_colored", 1);
@@ -259,6 +260,7 @@ void FasterRos::modeCB(const faster_msgs::Mode& msg)
 
 void FasterRos::pubCB(const ros::TimerEvent& e)
 {
+  publishDroneStatus();
   state next_goal;
   if (faster_ptr_->getNextGoal(next_goal))
   {
@@ -511,6 +513,15 @@ void FasterRos::pubState(const state& data, const ros::Publisher pub)
   p.header.frame_id = world_name_;
   p.point = eigen2point(data.pos);
   pub.publish(p);
+}
+
+void FasterRos::publishDroneStatus()
+{
+  std_msgs::Int32 status;
+  int drone_status;
+  faster_ptr_->getDroneStatus(drone_status);
+  status.data = drone_status;
+  drone_status_pub_.publish(status);
 }
 
 void FasterRos::terminalGoalCB(const geometry_msgs::PoseStamped& msg)

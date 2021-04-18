@@ -20,6 +20,7 @@ public:
     void AddFacet(std::shared_ptr<Facet> facet_ptr);
     void SetFacetFlag(flag_t flag);
     bool IsEmpty();
+    Eigen::Vector3f GetCenter();
 
     int id_;  // start from 1
     std::list<std::shared_ptr<Facet>> facet_list_;

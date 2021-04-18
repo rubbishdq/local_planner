@@ -62,6 +62,7 @@ public:
   bool getNextGoal(state& next_goal);
   void getState(state& data);
   void getG(state& G);
+  void getDroneStatus(int& drone_status);
   void setTerminalGoal(state& term_goal);
   void resetInitialization();
 

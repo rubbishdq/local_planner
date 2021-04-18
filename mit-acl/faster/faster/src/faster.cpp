@@ -166,6 +166,11 @@ void Faster::getG(state& G)
   G = G_;
 }
 
+void Faster::getDroneStatus(int& drone_status)
+{
+  drone_status = drone_status_;
+}
+
 void Faster::getState(state& data)
 {
   mtx_state.lock();

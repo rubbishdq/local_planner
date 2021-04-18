@@ -136,6 +136,17 @@ float distxyf(Eigen::Vector3f v1, Eigen::Vector3f v2)
     return sqrt((v2[0]-v1[0])*(v2[0]-v1[0])+(v2[1]-v1[1])*(v2[1]-v1[1]));
 }
 
+double DirectionYaw(Eigen::Vector3f v1, Eigen::Vector3f v2)
+{
+    return double(atan2f(v2[1]-v1[1], v2[0]-v1[0]));
+}
+
+Eigen::Quaterniond DirectionQuatHorizonal(Eigen::Vector3f v1, Eigen::Vector3f v2)
+{
+    double yaw = DirectionYaw(v1, v2);
+    return Eigen::Quaterniond(cos(yaw/2), 0, 0, sin(yaw/2));
+}
+
 Eigen::Vector3d EulerAngleDiff(Eigen::Quaterniond q1, Eigen::Quaterniond q2) // q1/q2
 {
     Eigen::Quaterniond q = q1*q2.conjugate();

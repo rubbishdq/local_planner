@@ -49,6 +49,8 @@ const double NEW_VIEWPOINT_DIST_THRESHOLD = 1.0;
 const double UPDATE_VIEWPOINT_DIST_THRESHOLD = 0.05;
 const double UPDATE_VIEWPOINT_ANGLE_THRESHOLD = 30;
 
+const double NAV_COMMAND_TIMEVAL = 0.05;
+
 const float EPS_F = 2e-4;
 } // namespace local_explorer
 

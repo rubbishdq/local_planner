@@ -12,6 +12,10 @@ LocalExplorer::LocalExplorer()
     pose_init_ = false;
     last_pose_init_ = false;
     displayed_viewpoint_num_ = -1;
+    drone_status_ = -1; // not initialized
+    drone_status_updated_ = false;
+    target_fc_ = nullptr;
+    nav_state_ = NavState::REACHED_GOAL;
 
     // make_unique is a C++14 feature
     //viewpoint_generator_ptr_ = std::make_unique<ViewpointGenerator>();
@@ -27,11 +31,16 @@ LocalExplorer::LocalExplorer()
     colored_viewpoint_pub_ = n_.advertise<visualization_msgs::Marker>("local_explorer/colored_viewpoint", 1);
     single_frontier_cluster_list_pub_ = n_.advertise<visualization_msgs::Marker>("local_explorer/single_frontier_cluster_list", 1);
     frontier_pub_ = n_.advertise<visualization_msgs::Marker>("local_explorer/frontier", 1);
+    global_nav_goal_pub_ = n_.advertise<geometry_msgs::PoseStamped>("local_explorer/global_nav_goal", 1);
+    local_nav_goal_pub_ = n_.advertise<geometry_msgs::PoseStamped>("local_explorer/local_nav_goal", 1);
 
     voxelized_points_sub_ = n_.subscribe("global_mapper_ros/voxelized_points", 1, &LocalExplorer::VoxelizedPointsCallback, this, ros::TransportHints().tcpNoDelay());  
     mav_pose_sub_ = n_.subscribe("pose", 1, &LocalExplorer::UavPoseCallback, this, ros::TransportHints().tcpNoDelay());  
     record_command_sub_ = n_.subscribe("record_command", 1, &LocalExplorer::RecordCommandCallback, this, ros::TransportHints().tcpNoDelay());
     displayed_num_sub_ = n_.subscribe("displayed_num", 1, &LocalExplorer::DisplayedNumCallback, this, ros::TransportHints().tcpNoDelay());
+    drone_status_sub_ = n_.subscribe("faster/drone_status", 1, &LocalExplorer::DroneStatusCallback, this, ros::TransportHints().tcpNoDelay());
+
+    nav_command_timer_ = n_.createTimer(ros::Duration(NAV_COMMAND_TIMEVAL), &LocalExplorer::NavCommandCallback, this);
 
     ROS_INFO("Local explorer node started.");
 
@@ -101,10 +110,10 @@ void LocalExplorer::RemoveRedundantBoarder(Viewpoint &viewpoint, bool last_viewp
         pos_cam << (float)transform_stamped.transform.translation.x,
             (float)transform_stamped.transform.translation.y,
             (float)transform_stamped.transform.translation.z;
-        rot_cam = Eigen::Quaternionf((float)transform_stamped.transform.rotation.x, 
+        rot_cam = Eigen::Quaternionf((float)transform_stamped.transform.rotation.w, 
+            (float)transform_stamped.transform.rotation.x, 
             (float)transform_stamped.transform.rotation.y, 
-            (float)transform_stamped.transform.rotation.z, 
-            (float)transform_stamped.transform.rotation.w);
+            (float)transform_stamped.transform.rotation.z);
     }
     catch (tf2::TransformException& ex)
     {
@@ -210,6 +219,28 @@ void LocalExplorer::ProcessNewViewpoint(std::shared_ptr<Viewpoint> viewpoint_ptr
     }
 }
 
+bool LocalExplorer::Replan()
+{
+    Eigen::Vector3f current_pos;
+    current_pos << (float)pos_[0], pos_[1], pos_[2];
+    FrontierCluster* fc_ptr = nullptr;
+    std::shared_ptr<Viewpoint> start, end;
+    if (!GetNearestViewpoint(current_pos, start))
+    {
+        ROS_INFO("No viewpoints found.");
+        return false;
+    }
+    if (!GetNearestFrontierCluster(current_pos, fc_ptr, end))
+    {
+        ROS_INFO("No new frontier clusters found.");
+        return false;
+    }
+    target_fc_ = fc_ptr;
+    
+    topological_path_ = GetTopologicalPath(start, end);
+    return true;
+}
+
 void LocalExplorer::UpdateTopologicalMap(std::shared_ptr<Viewpoint> viewpoint_ptr)
 {
     int ind = 0, count = 0;
@@ -228,7 +259,7 @@ void LocalExplorer::UpdateTopologicalMap(std::shared_ptr<Viewpoint> viewpoint_pt
 }
 
 // Dijkstra algorithm
-std::vector<std::shared_ptr<Viewpoint>> LocalExplorer::GetTopologicalPath(
+std::deque<std::shared_ptr<Viewpoint>> LocalExplorer::GetTopologicalPath(
     std::shared_ptr<Viewpoint> start, std::shared_ptr<Viewpoint> end)
 {
     for (auto viewpoint_ptr : viewpoint_list_)
@@ -270,7 +301,7 @@ std::vector<std::shared_ptr<Viewpoint>> LocalExplorer::GetTopologicalPath(
         }
     }
     // read topological path
-    std::vector<std::shared_ptr<Viewpoint>> path;
+    std::deque<std::shared_ptr<Viewpoint>> path;
     node_ptr = end;
     while (node_ptr != start)
     {
@@ -279,6 +310,77 @@ std::vector<std::shared_ptr<Viewpoint>> LocalExplorer::GetTopologicalPath(
     }
     path.push_back(start);
     return path;
+}
+
+bool LocalExplorer::GetNearestViewpoint(Eigen::Vector3f pos, std::shared_ptr<Viewpoint> vptr)
+{
+    float min_dist = FLT_MAX;
+    std::shared_ptr<Viewpoint> nearest_viewpoint_ptr;
+    for (auto viewpoint_ptr : viewpoint_list_)
+    {
+        Eigen::Vector3f origin = viewpoint_ptr->GetOrigin();
+        float dist = (origin-pos).norm();
+        if (dist < min_dist)
+        {
+            min_dist = dist;
+            nearest_viewpoint_ptr = viewpoint_ptr;
+        }
+    }
+    vptr = nearest_viewpoint_ptr;
+    if (nearest_viewpoint_ptr)
+        return true;
+    else
+        return false;
+}
+
+// naive strategy for selecting next frontier to navigate to
+bool LocalExplorer::GetNearestFrontierCluster(Eigen::Vector3f pos, FrontierCluster* fc_ptr)
+{
+    float min_dist = FLT_MAX;
+    FrontierCluster* nearest_fc_ptr = nullptr;
+    for (auto viewpoint_ptr : viewpoint_list_)
+    {
+        for (auto &fc : viewpoint_ptr->frontier_cluster_list_)
+        {
+            if (fc.IsEmpty())
+            {
+                continue;
+            }
+            float dist = (fc.GetCenter()-pos).norm();
+            if (dist < min_dist)
+            {
+                min_dist = dist;
+                nearest_fc_ptr = &fc;
+            }
+        }
+    }
+    fc_ptr = nearest_fc_ptr;
+    return !(nearest_fc_ptr == nullptr);
+}
+
+bool LocalExplorer::GetNearestFrontierCluster(Eigen::Vector3f pos, FrontierCluster* fc_ptr, std::shared_ptr<Viewpoint> vptr)
+{
+    float min_dist = FLT_MAX;
+    FrontierCluster* nearest_fc_ptr = nullptr;
+    for (auto viewpoint_ptr : viewpoint_list_)
+    {
+        for (auto &fc : viewpoint_ptr->frontier_cluster_list_)
+        {
+            if (fc.IsEmpty())
+            {
+                continue;
+            }
+            float dist = (fc.GetCenter()-pos).norm();
+            if (dist < min_dist)
+            {
+                min_dist = dist;
+                nearest_fc_ptr = &fc;
+                vptr = viewpoint_ptr;
+            }
+        }
+    }
+    fc_ptr = nearest_fc_ptr;
+    return !(nearest_fc_ptr == nullptr);
 }
 
 void LocalExplorer::RepublishVoxelizedPoints(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr)
@@ -589,6 +691,36 @@ void LocalExplorer::PublishFrontier()
     frontier_pub_.publish(marker);
 }
 
+void LocalExplorer::PublishGlobalNavGoal(Eigen::Vector3f pos, Eigen::Quaterniond rot)
+{
+    geometry_msgs::PoseStamped msg;
+    msg.header.stamp = ros::Time::now();
+    msg.header.frame_id = "world";
+    msg.pose.position.x = double(pos[0]);
+    msg.pose.position.y = double(pos[1]);
+    msg.pose.position.z = double(pos[2]);
+    msg.pose.orientation.x = rot.x();
+    msg.pose.orientation.y = rot.y();
+    msg.pose.orientation.z = rot.z();
+    msg.pose.orientation.w = rot.w();
+    global_nav_goal_pub_.publish(msg);
+}
+
+void LocalExplorer::PublishLocalNavGoal(Eigen::Vector3f pos, Eigen::Quaterniond rot)
+{
+    geometry_msgs::PoseStamped msg;
+    msg.header.stamp = ros::Time::now();
+    msg.header.frame_id = "world";
+    msg.pose.position.x = double(pos[0]);
+    msg.pose.position.y = double(pos[1]);
+    msg.pose.position.z = double(pos[2]);
+    msg.pose.orientation.x = rot.x();
+    msg.pose.orientation.y = rot.y();
+    msg.pose.orientation.z = rot.z();
+    msg.pose.orientation.w = rot.w();
+    local_nav_goal_pub_.publish(msg);
+}
+
 void LocalExplorer::VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr)
 {
     //ROS_INFO("Voxelized points message received.");
@@ -622,12 +754,12 @@ void LocalExplorer::UavPoseCallback(const geometry_msgs::PoseStamped::ConstPtr& 
 {
     /*
     pos_ << (float)msg_ptr->pose.position.x, (float)msg_ptr->pose.position.y, (float)msg_ptr->pose.position.z;
-    rot_ = Eigen::Quaternionf((float)msg_ptr->pose.orientation.x, (float)msg_ptr->pose.orientation.y, 
-        (float)msg_ptr->pose.orientation.z, (float)msg_ptr->pose.orientation.w);
+    rot_ = Eigen::Quaternionf((float)msg_ptr->pose.orientation.w, (float)msg_ptr->pose.orientation.x, 
+        (float)msg_ptr->pose.orientation.y, (float)msg_ptr->pose.orientation.z);
     */
     pos_ << msg_ptr->pose.position.x, msg_ptr->pose.position.y, msg_ptr->pose.position.z;
-    rot_ = Eigen::Quaterniond(msg_ptr->pose.orientation.x, msg_ptr->pose.orientation.y, 
-        msg_ptr->pose.orientation.z, msg_ptr->pose.orientation.w);
+    rot_ = Eigen::Quaterniond(msg_ptr->pose.orientation.w, msg_ptr->pose.orientation.x, msg_ptr->pose.orientation.y, 
+        msg_ptr->pose.orientation.z);
     pose_init_ = true;
 }
 
@@ -639,6 +771,70 @@ void LocalExplorer::RecordCommandCallback(const std_msgs::Bool::ConstPtr& msg_pt
 void LocalExplorer::DisplayedNumCallback(const std_msgs::Int32::ConstPtr& msg_ptr)
 {
     displayed_viewpoint_num_ = msg_ptr->data;
+}
+
+void LocalExplorer::DroneStatusCallback(const std_msgs::Int32::ConstPtr& msg_ptr)
+{
+    drone_status_ = msg_ptr->data;
+    drone_status_updated_ = true;
+}
+
+// naive strategy
+void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
+{
+    Eigen::Vector3f current_pos;
+    current_pos << (float)pos_[0], (float)pos_[1], (float)pos_[2];
+    switch (nav_state_)
+    {
+        case NavState::NAV_IN_PATH:
+        {
+            if (drone_status_ == 3 && drone_status_updated_)  // REACHED_GOAL in faster
+            {
+                if (topological_path_.empty())
+                {
+                    nav_state_ = NavState::NAV_TO_LOCAL_FRONTIER;
+                    goal_pos_ = target_fc_->GetCenter();
+                    goal_rot_ = DirectionQuatHorizonal(current_pos, goal_pos_);
+                    PublishLocalNavGoal(goal_pos_, goal_rot_);
+                }
+                else
+                {
+                    auto next_vptr = topological_path_.front();
+                    topological_path_.pop_front();
+                    goal_pos_ = next_vptr->GetOrigin();
+                    goal_rot_ = DirectionQuatHorizonal(current_pos, goal_pos_);
+                    PublishLocalNavGoal(goal_pos_, goal_rot_);
+                }
+                drone_status_updated_ = false;
+            }
+            break;
+        }
+        case NavState::NAV_TO_LOCAL_FRONTIER:
+        {
+            if (drone_status_ == 3 && drone_status_updated_)  // REACHED_GOAL in faster
+            {
+                nav_state_ = NavState::REACHED_GOAL;
+                drone_status_updated_ = false;
+            }
+        }
+        case NavState::REACHED_GOAL:
+        {
+            // try replanning
+            if (Replan())
+            {
+                PublishGlobalNavGoal(target_fc_->GetCenter(), DirectionQuatHorizonal(current_pos, target_fc_->GetCenter()));
+                nav_state_ = NavState::NAV_IN_PATH;
+                auto next_vptr = topological_path_.front();
+                topological_path_.pop_front();
+                goal_pos_ = next_vptr->GetOrigin();
+                goal_rot_ = DirectionQuatHorizonal(current_pos, goal_pos_);
+                PublishLocalNavGoal(goal_pos_, goal_rot_);
+            }
+        }
+            break;
+        default:
+            break;
+    }
 }
 
 } // namespace local_explorer
