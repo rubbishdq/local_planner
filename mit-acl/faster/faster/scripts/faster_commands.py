@@ -9,7 +9,7 @@
 #  * -------------------------------------------------------------------------- */
 
 import rospy
-from std_msgs.msg import String
+from std_msgs.msg import String, Bool
 from faster_msgs.msg import Mode
 from snapstack_msgs.msg import QuadGoal, State
 from geometry_msgs.msg import Pose, PoseStamped, Quaternion
@@ -51,9 +51,11 @@ class Faster_Commands:
         self.pubGoal = rospy.Publisher("rc/cmd_pose_flu", Pose, queue_size=1)
         self.pubMode = rospy.Publisher("faster/mode",Mode,queue_size=1,latch=True) #TODO Namespace
         self.pubClickedPoint = rospy.Publisher("/move_base_simple/goal",PoseStamped,queue_size=1,latch=True)
+        self.pubRecordCommand = rospy.Publisher("record_command",Bool,queue_size=1,latch=True)
 
         self.is_ground_robot = False
         self.circle = True
+        self.start_recording = True
 
         self.alt_taken_off = 1.5 #Altitude when hovering after taking off
         self.alt_ground = 0 #Altitude of the ground
@@ -129,7 +131,11 @@ class Faster_Commands:
                     rospy.sleep(0.02)
             print("already circled")
             print(ang_list)
-        rospy.sleep(1.5) 
+        rospy.sleep(1.5)
+        if self.start_recording:
+            record_cmd_msg = Bool()
+            record_cmd_msg.data = True
+            self.pubRecordCommand.publish(record_cmd_msg)
         self.mode.mode=self.mode.GO
         self.sendMode()
 

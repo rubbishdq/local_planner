@@ -293,9 +293,9 @@ std::deque<std::shared_ptr<Viewpoint>> LocalExplorer::GetTopologicalPath(
             {
                 continue;
             }
-            if (neighbor_ptr->dist_ > node_ptr->dist_ + neighbor.dist_)
+            if (neighbor_ptr->dist_ > node_ptr->dist_ + neighbor.dist_+DIJKSTRA_PENALTY)
             {
-                neighbor_ptr->dist_ = node_ptr->dist_ + neighbor.dist_;
+                neighbor_ptr->dist_ = node_ptr->dist_ + neighbor.dist_+DIJKSTRA_PENALTY;
                 neighbor_ptr->last_viewpoint_ = node_ptr;
             }
         }
@@ -312,7 +312,7 @@ std::deque<std::shared_ptr<Viewpoint>> LocalExplorer::GetTopologicalPath(
     return path;
 }
 
-bool LocalExplorer::GetNearestViewpoint(Eigen::Vector3f pos, std::shared_ptr<Viewpoint> vptr)
+bool LocalExplorer::GetNearestViewpoint(Eigen::Vector3f pos, std::shared_ptr<Viewpoint>& vptr)
 {
     float min_dist = FLT_MAX;
     std::shared_ptr<Viewpoint> nearest_viewpoint_ptr;
@@ -334,7 +334,7 @@ bool LocalExplorer::GetNearestViewpoint(Eigen::Vector3f pos, std::shared_ptr<Vie
 }
 
 // naive strategy for selecting next frontier to navigate to
-bool LocalExplorer::GetNearestFrontierCluster(Eigen::Vector3f pos, FrontierCluster* fc_ptr)
+bool LocalExplorer::GetNearestFrontierCluster(Eigen::Vector3f pos, FrontierCluster*& fc_ptr)
 {
     float min_dist = FLT_MAX;
     FrontierCluster* nearest_fc_ptr = nullptr;
@@ -358,7 +358,7 @@ bool LocalExplorer::GetNearestFrontierCluster(Eigen::Vector3f pos, FrontierClust
     return !(nearest_fc_ptr == nullptr);
 }
 
-bool LocalExplorer::GetNearestFrontierCluster(Eigen::Vector3f pos, FrontierCluster* fc_ptr, std::shared_ptr<Viewpoint> vptr)
+bool LocalExplorer::GetNearestFrontierCluster(Eigen::Vector3f pos, FrontierCluster*& fc_ptr, std::shared_ptr<Viewpoint>& vptr)
 {
     float min_dist = FLT_MAX;
     FrontierCluster* nearest_fc_ptr = nullptr;
@@ -788,6 +788,7 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
     {
         case NavState::NAV_IN_PATH:
         {
+            ROS_INFO("Current state: NAV_IN_PATH");
             if (drone_status_ == 3 && drone_status_updated_)  // REACHED_GOAL in faster
             {
                 if (topological_path_.empty())
@@ -811,6 +812,7 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
         }
         case NavState::NAV_TO_LOCAL_FRONTIER:
         {
+            ROS_INFO("Current state: NAV_TO_LOCAL_FRONTIER");
             if (drone_status_ == 3 && drone_status_updated_)  // REACHED_GOAL in faster
             {
                 nav_state_ = NavState::REACHED_GOAL;
@@ -819,6 +821,7 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
         }
         case NavState::REACHED_GOAL:
         {
+            ROS_INFO("Current state: REACHED_GOAL");
             // try replanning
             if (Replan())
             {

@@ -20,7 +20,9 @@
     
     <group ns = "$(arg robot_name)"> 
         <!-- <node name="rviz_interface" pkg="local_explorer" type="rviz_interface"  output="screen" required="true"/> -->
-        <node name="local_explorer" pkg="local_explorer" type="local_explorer"  output="screen" required="true"/>
+        <node name="local_explorer" pkg="local_explorer" type="local_explorer"  output="screen" required="true">
+            <remap from="local_explorer/local_nav_goal" to="/move_base_simple/goal"/>
+        </node>
     </group>
 
     <group if="$(arg visualization)">
