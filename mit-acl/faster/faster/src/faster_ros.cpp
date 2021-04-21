@@ -517,11 +517,16 @@ void FasterRos::pubState(const state& data, const ros::Publisher pub)
 
 void FasterRos::publishDroneStatus()
 {
-  std_msgs::Int32 status;
-  int drone_status;
-  faster_ptr_->getDroneStatus(drone_status);
-  status.data = drone_status;
-  drone_status_pub_.publish(status);
+  // only publish when drone status is updated
+  if (faster_ptr_->isDroneStatusUpdated())
+  {
+    std_msgs::Int32 status;
+    int drone_status;
+    faster_ptr_->getDroneStatus(drone_status);
+    status.data = drone_status;
+    drone_status_pub_.publish(status);
+    faster_ptr_->setDroneStatusUpdated(false);
+  }
 }
 
 void FasterRos::terminalGoalCB(const geometry_msgs::PoseStamped& msg)

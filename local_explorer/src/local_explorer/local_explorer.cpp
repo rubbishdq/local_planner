@@ -320,6 +320,8 @@ bool LocalExplorer::GetNearestViewpoint(Eigen::Vector3f pos, std::shared_ptr<Vie
     std::shared_ptr<Viewpoint> nearest_viewpoint_ptr;
     for (auto viewpoint_ptr : viewpoint_list_)
     {
+        if (!viewpoint_ptr->Visible(pos))
+            continue;
         Eigen::Vector3f origin = viewpoint_ptr->GetOrigin();
         float dist = (origin-pos).norm();
         if (dist < min_dist)
@@ -738,6 +740,7 @@ void LocalExplorer::PublishTopologicalPath()
     visualization_msgs::Marker marker;
     geometry_msgs::Point point;
     int path_length = int(topological_path_.size());
+    ROS_INFO("Topological path size: %d", path_length);
     for (int k = 0; k <= path_length; k++)
     {
         Eigen::Vector3f path_node;
@@ -847,6 +850,7 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
             ROS_INFO("Current state: NAV_IN_PATH");
             if (drone_status_ == 3 && drone_status_updated_)  // REACHED_GOAL in faster
             {
+                std::lock_guard<std::mutex> topological_path_lock(topological_path_mutex_);
                 if (topological_path_.empty())
                 {
                     nav_state_ = NavState::NAV_TO_LOCAL_FRONTIER;
@@ -881,6 +885,7 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
             // try replanning
             if (Replan())
             {
+                std::lock_guard<std::mutex> topological_path_lock(topological_path_mutex_);
                 PublishGlobalNavGoal(target_fc_->GetCenter(), DirectionQuatHorizonal(current_pos, target_fc_->GetCenter()));
                 nav_state_ = NavState::NAV_IN_PATH;
                 auto next_vptr = topological_path_.front();
@@ -888,6 +893,7 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
                 goal_pos_ = next_vptr->GetOrigin();
                 goal_rot_ = DirectionQuatHorizonal(current_pos, goal_pos_);
                 PublishLocalNavGoal(goal_pos_, goal_rot_);
+                drone_status_updated_ = false;
             }
         }
             break;

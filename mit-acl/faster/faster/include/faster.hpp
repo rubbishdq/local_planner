@@ -63,6 +63,8 @@ public:
   void getState(state& data);
   void getG(state& G);
   void getDroneStatus(int& drone_status);
+  bool isDroneStatusUpdated();
+  void setDroneStatusUpdated(bool drone_status_update);
   void setTerminalGoal(state& term_goal);
   void resetInitialization();
 
@@ -153,6 +155,7 @@ private:
   int n_states_publised_ = 0;  // Number of goals=states published
 
   int drone_status_ = DroneStatus::TRAVELING;  // status_ can be TRAVELING, GOAL_SEEN, GOAL_REACHED
+  bool drone_status_updated_ = true;
   int planner_status_ = PlannerStatus::FIRST_PLAN;
 
   bool force_reset_to_0_ = 1;

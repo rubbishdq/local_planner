@@ -171,6 +171,16 @@ void Faster::getDroneStatus(int& drone_status)
   drone_status = drone_status_;
 }
 
+bool Faster::isDroneStatusUpdated()
+{
+  return drone_status_updated_;
+}
+
+void Faster::setDroneStatusUpdated(bool drone_status_updated)
+{
+  drone_status_updated_ = drone_status_updated;
+}
+
 void Faster::getState(state& data)
 {
   mtx_state.lock();
@@ -981,6 +991,7 @@ void Faster::changeDroneStatus(int new_status)
   std::cout << std::endl;
 
   drone_status_ = new_status;
+  drone_status_updated_ = true;
 }
 
 void Faster::print_status()
