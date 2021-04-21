@@ -52,6 +52,7 @@ const double UPDATE_VIEWPOINT_ANGLE_THRESHOLD = 30;
 const double DIJKSTRA_PENALTY = 1.0;  // avoid choosing path with too many nodes
 
 const double NAV_COMMAND_TIMEVAL = 0.05;
+const double TOPOLOGICAL_PATH_PUB_TIMEVAL = 0.25;
 
 const float EPS_F = 2e-4;
 } // namespace local_explorer

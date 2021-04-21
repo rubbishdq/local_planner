@@ -16,6 +16,8 @@
 
 #include "Eigen/Core"
 #include <sstream>
+#include <thread>
+#include <mutex>
 #include <vector>
 #include <list>
 #include <queue>
@@ -60,6 +62,7 @@ private:
     void PublishFrontier();
     void PublishGlobalNavGoal(Eigen::Vector3f pos, Eigen::Quaterniond rot);
     void PublishLocalNavGoal(Eigen::Vector3f pos, Eigen::Quaterniond rot);
+    void PublishTopologicalPath();
 
     void VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr);
     void UavPoseCallback(const geometry_msgs::PoseStamped::ConstPtr& msg_ptr);
@@ -68,6 +71,7 @@ private:
     void DroneStatusCallback(const std_msgs::Int32::ConstPtr& msg_ptr);
 
     void NavCommandCallback(const ros::TimerEvent& event);
+    void PublishTopologicalPathCallback(const ros::TimerEvent& event);
 
     bool is_record_;  // record viewpoints if true
     bool pose_init_, last_pose_init_;
@@ -99,6 +103,7 @@ private:
     ros::Publisher frontier_pub_;
     ros::Publisher global_nav_goal_pub_;
     ros::Publisher local_nav_goal_pub_;
+    ros::Publisher topological_path_pub_;
 
     ros::Subscriber voxelized_points_sub_;
     ros::Subscriber mav_pose_sub_;
@@ -107,11 +112,14 @@ private:
     ros::Subscriber drone_status_sub_;
 
     ros::Timer nav_command_timer_;
+    ros::Timer topological_path_pub_timer_;
 
     std::unique_ptr<tf2_ros::TransformListener> tf_listener_ptr_;
     tf2_ros::Buffer tf_buffer_;
 
     std::unique_ptr<ViewpointGenerator> viewpoint_generator_ptr_;
+
+    std::mutex topological_path_mutex_;
 };
 
 } // namespace local_explorer

@@ -174,9 +174,10 @@ bool InCameraRange(Eigen::Vector3f pt) // pt is in robot's frame
 {
     if (pt[0] <= 0)
         return false;
-    float u, v;
+    float u;
+    //float v;
     u = -FX*pt[1]/pt[0] + CX;
-    v = -FY*pt[1]/pt[0] + CY;
+    //v = -FY*pt[1]/pt[0] + CY;
     //return (u > 0 && u < float(CAM_RES[0]) && v > 0 && v < float(CAM_RES[1]));
     return (u > 0 && u < float(CAM_RES[0]));  // ignore v and erase frontier vertices at any height
 }

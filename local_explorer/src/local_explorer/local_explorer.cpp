@@ -33,6 +33,7 @@ LocalExplorer::LocalExplorer()
     frontier_pub_ = n_.advertise<visualization_msgs::Marker>("local_explorer/frontier", 1);
     global_nav_goal_pub_ = n_.advertise<geometry_msgs::PoseStamped>("local_explorer/global_nav_goal", 1);
     local_nav_goal_pub_ = n_.advertise<geometry_msgs::PoseStamped>("local_explorer/local_nav_goal", 1);
+    topological_path_pub_ = n_.advertise<visualization_msgs::Marker>("local_explorer/topological_path", 1);
 
     voxelized_points_sub_ = n_.subscribe("global_mapper_ros/voxelized_points", 1, &LocalExplorer::VoxelizedPointsCallback, this, ros::TransportHints().tcpNoDelay());  
     mav_pose_sub_ = n_.subscribe("pose", 1, &LocalExplorer::UavPoseCallback, this, ros::TransportHints().tcpNoDelay());  
@@ -41,6 +42,7 @@ LocalExplorer::LocalExplorer()
     drone_status_sub_ = n_.subscribe("faster/drone_status", 1, &LocalExplorer::DroneStatusCallback, this, ros::TransportHints().tcpNoDelay());
 
     nav_command_timer_ = n_.createTimer(ros::Duration(NAV_COMMAND_TIMEVAL), &LocalExplorer::NavCommandCallback, this);
+    topological_path_pub_timer_ = n_.createTimer(ros::Duration(TOPOLOGICAL_PATH_PUB_TIMEVAL), &LocalExplorer::PublishTopologicalPathCallback, this);
 
     ROS_INFO("Local explorer node started.");
 
@@ -235,8 +237,8 @@ bool LocalExplorer::Replan()
         ROS_INFO("No new frontier clusters found.");
         return false;
     }
+    std::lock_guard<std::mutex> topological_path_lock(topological_path_mutex_);
     target_fc_ = fc_ptr;
-    
     topological_path_ = GetTopologicalPath(start, end);
     return true;
 }
@@ -721,6 +723,60 @@ void LocalExplorer::PublishLocalNavGoal(Eigen::Vector3f pos, Eigen::Quaterniond 
     local_nav_goal_pub_.publish(msg);
 }
 
+void LocalExplorer::PublishTopologicalPath()
+{
+    std::lock_guard<std::mutex> topological_path_lock(topological_path_mutex_);
+    if (topological_path_.empty())
+    {
+        ROS_WARN("Topological path empty.");
+        return;
+    }
+    else
+    {
+        ROS_INFO("Publishing topological path.");
+    }
+    visualization_msgs::Marker marker;
+    geometry_msgs::Point point;
+    int path_length = int(topological_path_.size());
+    for (int k = 0; k <= path_length; k++)
+    {
+        Eigen::Vector3f path_node;
+        if (k == path_length)
+        {
+            path_node = target_fc_->GetCenter();
+        }
+        else
+        {
+            path_node = topological_path_[k]->GetOrigin();
+        }
+        point.x = path_node[0]; point.y = path_node[1]; point.z = path_node[2];
+        marker.points.push_back(point);
+    }
+
+    marker.id = 0;
+    marker.type = visualization_msgs::Marker::LINE_STRIP;
+    marker.action = visualization_msgs::Marker::ADD;
+    marker.pose.position.x = 0;
+    marker.pose.position.y = 0;
+    marker.pose.position.z = 0;
+    marker.pose.orientation.x = 0.0;
+    marker.pose.orientation.y = 0.0;
+    marker.pose.orientation.z = 0.0;
+    marker.pose.orientation.w = 1.0;
+    marker.scale.x = 0.02;
+    
+    marker.color.a = MARKER_ALPHA;
+    marker.color.r = 0.0;
+    marker.color.g = 1.0;
+    marker.color.b = 1.0;
+    
+    //marker.lifetime = ros::Duration(0.2);
+
+    marker.header.frame_id = "world";
+    marker.header.stamp = ros::Time::now();
+    topological_path_pub_.publish(marker);
+}
+
 void LocalExplorer::VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr)
 {
     //ROS_INFO("Voxelized points message received.");
@@ -838,6 +894,11 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
         default:
             break;
     }
+}
+
+void LocalExplorer::PublishTopologicalPathCallback(const ros::TimerEvent& event)
+{
+    PublishTopologicalPath();
 }
 
 } // namespace local_explorer

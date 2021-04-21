@@ -114,6 +114,14 @@ Visualization Manager:
         {}
       Queue Size: 100
       Value: false
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /iris/local_explorer/topological_path
+      Name: Marker
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -178,5 +186,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1200
-  X: 225
-  Y: 55
+  X: 348
+  Y: 112
