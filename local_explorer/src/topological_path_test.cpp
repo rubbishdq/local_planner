@@ -1,9 +1,9 @@
-#include "local_explorer/local_explorer.h"
+#include "topological_path_test.h"
 
 namespace local_explorer
 {
 
-LocalExplorer::LocalExplorer()
+TopologicalPathTest::TopologicalPathTest()
 {
     srand(time(0));
     InitFrontierColor();
@@ -14,8 +14,8 @@ LocalExplorer::LocalExplorer()
     displayed_viewpoint_num_ = -1;
     drone_status_ = -1; // not initialized
     drone_status_updated_ = false;
-    target_fc_ = nullptr;
     nav_state_ = NavState::REACHED_GOAL;
+    is_replanning_ = false;
 
     // make_unique is a C++14 feature
     //viewpoint_generator_ptr_ = std::make_unique<ViewpointGenerator>();
@@ -35,21 +35,22 @@ LocalExplorer::LocalExplorer()
     local_nav_goal_pub_ = n_.advertise<geometry_msgs::PoseStamped>("local_explorer/local_nav_goal", 1);
     topological_path_pub_ = n_.advertise<visualization_msgs::Marker>("local_explorer/topological_path", 1);
 
-    voxelized_points_sub_ = n_.subscribe("global_mapper_ros/voxelized_points", 1, &LocalExplorer::VoxelizedPointsCallback, this, ros::TransportHints().tcpNoDelay());  
-    mav_pose_sub_ = n_.subscribe("pose", 1, &LocalExplorer::UavPoseCallback, this, ros::TransportHints().tcpNoDelay());  
-    record_command_sub_ = n_.subscribe("record_command", 1, &LocalExplorer::RecordCommandCallback, this, ros::TransportHints().tcpNoDelay());
-    displayed_num_sub_ = n_.subscribe("displayed_num", 1, &LocalExplorer::DisplayedNumCallback, this, ros::TransportHints().tcpNoDelay());
-    drone_status_sub_ = n_.subscribe("faster/drone_status", 1, &LocalExplorer::DroneStatusCallback, this, ros::TransportHints().tcpNoDelay());
+    voxelized_points_sub_ = n_.subscribe("global_mapper_ros/voxelized_points", 1, &TopologicalPathTest::VoxelizedPointsCallback, this, ros::TransportHints().tcpNoDelay());  
+    mav_pose_sub_ = n_.subscribe("pose", 1, &TopologicalPathTest::UavPoseCallback, this, ros::TransportHints().tcpNoDelay());  
+    record_command_sub_ = n_.subscribe("record_command", 1, &TopologicalPathTest::RecordCommandCallback, this, ros::TransportHints().tcpNoDelay());
+    replan_command_sub_ = n_.subscribe("replan_command", 1, &TopologicalPathTest::ReplanCommandCallback, this, ros::TransportHints().tcpNoDelay());
+    displayed_num_sub_ = n_.subscribe("displayed_num", 1, &TopologicalPathTest::DisplayedNumCallback, this, ros::TransportHints().tcpNoDelay());
+    drone_status_sub_ = n_.subscribe("faster/drone_status", 1, &TopologicalPathTest::DroneStatusCallback, this, ros::TransportHints().tcpNoDelay());
 
-    nav_command_timer_ = n_.createTimer(ros::Duration(NAV_COMMAND_TIMEVAL), &LocalExplorer::NavCommandCallback, this);
-    topological_path_pub_timer_ = n_.createTimer(ros::Duration(TOPOLOGICAL_PATH_PUB_TIMEVAL), &LocalExplorer::PublishTopologicalPathCallback, this);
+    nav_command_timer_ = n_.createTimer(ros::Duration(NAV_COMMAND_TIMEVAL), &TopologicalPathTest::NavCommandCallback, this);
+    //topological_path_pub_timer_ = n_.createTimer(ros::Duration(TOPOLOGICAL_PATH_PUB_TIMEVAL), &TopologicalPathTest::PublishTopologicalPathCallback, this);
 
     ROS_INFO("Local explorer node started.");
 
     ros::spin();
 }
 
-void LocalExplorer::InitFrontierColor()
+void TopologicalPathTest::InitFrontierColor()
 {
     for (int i = 0; i < FRONTIER_COLOR_COUNT; i++)
     {
@@ -60,7 +61,7 @@ void LocalExplorer::InitFrontierColor()
     }
 }
 
-int LocalExplorer::DetermineOperation()
+int TopologicalPathTest::DetermineOperation()
 {
     if (!pose_init_)
         return 0;
@@ -99,7 +100,7 @@ int LocalExplorer::DetermineOperation()
     return operation_id;
 }
 
-void LocalExplorer::RemoveRedundantBoarder(Viewpoint &viewpoint, bool last_viewpoint = false)
+void TopologicalPathTest::RemoveRedundantBoarder(Viewpoint &viewpoint, bool last_viewpoint = false)
 {
     geometry_msgs::TransformStamped transform_stamped;
     Eigen::Vector3f pos_cam;
@@ -177,10 +178,10 @@ void LocalExplorer::RemoveRedundantBoarder(Viewpoint &viewpoint, bool last_viewp
         }
         ind++;
     }
-    printf("Erased %d frontier facets in LocalExplorer::RemoveRedundantBoarder().\n", erase_count);
+    printf("Erased %d frontier facets in TopologicalPathTest::RemoveRedundantBoarder().\n", erase_count);
 }
 
-void LocalExplorer::ProcessNewViewpoint(std::shared_ptr<Viewpoint> viewpoint_ptr)
+void TopologicalPathTest::ProcessNewViewpoint(std::shared_ptr<Viewpoint> viewpoint_ptr)
 {
     // if is_record_ == false, only execute CheckVisibility() and RemoveRedundantBoarder()
     int operation_id = DetermineOperation();
@@ -221,29 +222,24 @@ void LocalExplorer::ProcessNewViewpoint(std::shared_ptr<Viewpoint> viewpoint_ptr
     }
 }
 
-bool LocalExplorer::Replan()
+bool TopologicalPathTest::Replan()
 {
     Eigen::Vector3f current_pos;
     current_pos << (float)pos_[0], pos_[1], pos_[2];
-    FrontierCluster* fc_ptr = nullptr;
     std::shared_ptr<Viewpoint> start, end;
+    end = viewpoint_list_[0];
     if (!GetNearestViewpoint(current_pos, start))
     {
         ROS_INFO("No viewpoints found.");
         return false;
     }
-    if (!GetNearestFrontierCluster(current_pos, fc_ptr, end))
-    {
-        ROS_INFO("No new frontier clusters found.");
-        return false;
-    }
     std::lock_guard<std::mutex> topological_path_lock(topological_path_mutex_);
-    target_fc_ = fc_ptr;
     topological_path_ = GetTopologicalPath(start, end);
+    is_replanning_ = false;
     return true;
 }
 
-void LocalExplorer::UpdateTopologicalMap(std::shared_ptr<Viewpoint> viewpoint_ptr)
+void TopologicalPathTest::UpdateTopologicalMap(std::shared_ptr<Viewpoint> viewpoint_ptr)
 {
     int ind = 0, count = 0;
     for (auto old_viewpoint_ptr : viewpoint_list_)
@@ -261,7 +257,7 @@ void LocalExplorer::UpdateTopologicalMap(std::shared_ptr<Viewpoint> viewpoint_pt
 }
 
 // Dijkstra algorithm
-std::deque<std::shared_ptr<Viewpoint>> LocalExplorer::GetTopologicalPath(
+std::deque<std::shared_ptr<Viewpoint>> TopologicalPathTest::GetTopologicalPath(
     std::shared_ptr<Viewpoint> start, std::shared_ptr<Viewpoint> end)
 {
     typedef std::pair<float, std::shared_ptr<Viewpoint>> q_ele;
@@ -316,7 +312,7 @@ std::deque<std::shared_ptr<Viewpoint>> LocalExplorer::GetTopologicalPath(
     return path;
 }
 
-bool LocalExplorer::GetNearestViewpoint(Eigen::Vector3f pos, std::shared_ptr<Viewpoint>& vptr)
+bool TopologicalPathTest::GetNearestViewpoint(Eigen::Vector3f pos, std::shared_ptr<Viewpoint>& vptr)
 {
     float min_dist = FLT_MAX;
     std::shared_ptr<Viewpoint> nearest_viewpoint_ptr;
@@ -340,7 +336,7 @@ bool LocalExplorer::GetNearestViewpoint(Eigen::Vector3f pos, std::shared_ptr<Vie
 }
 
 // naive strategy for selecting next frontier to navigate to
-bool LocalExplorer::GetNearestFrontierCluster(Eigen::Vector3f pos, FrontierCluster*& fc_ptr)
+bool TopologicalPathTest::GetNearestFrontierCluster(Eigen::Vector3f pos, FrontierCluster*& fc_ptr)
 {
     float min_dist = FLT_MAX;
     FrontierCluster* nearest_fc_ptr = nullptr;
@@ -364,7 +360,7 @@ bool LocalExplorer::GetNearestFrontierCluster(Eigen::Vector3f pos, FrontierClust
     return !(nearest_fc_ptr == nullptr);
 }
 
-bool LocalExplorer::GetNearestFrontierCluster(Eigen::Vector3f pos, FrontierCluster*& fc_ptr, std::shared_ptr<Viewpoint>& vptr)
+bool TopologicalPathTest::GetNearestFrontierCluster(Eigen::Vector3f pos, FrontierCluster*& fc_ptr, std::shared_ptr<Viewpoint>& vptr)
 {
     float min_dist = FLT_MAX;
     FrontierCluster* nearest_fc_ptr = nullptr;
@@ -389,7 +385,7 @@ bool LocalExplorer::GetNearestFrontierCluster(Eigen::Vector3f pos, FrontierClust
     return !(nearest_fc_ptr == nullptr);
 }
 
-void LocalExplorer::RepublishVoxelizedPoints(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr)
+void TopologicalPathTest::RepublishVoxelizedPoints(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr)
 {
     sensor_msgs::PointCloud2 cloud_msg;
     pcl::PointCloud<pcl::PointXYZ> cloud;
@@ -403,7 +399,7 @@ void LocalExplorer::RepublishVoxelizedPoints(const global_mapper_ros::VoxelizedP
     voxelized_points_pub_.publish(cloud_msg);
 }
 
-void LocalExplorer::PublishInvertedCloud(ViewpointGenerator &viewpoint_generator)
+void TopologicalPathTest::PublishInvertedCloud(ViewpointGenerator &viewpoint_generator)
 {
     sensor_msgs::PointCloud2 cloud_msg;
     pcl::PointCloud<pcl::PointXYZ> cloud;
@@ -420,7 +416,7 @@ void LocalExplorer::PublishInvertedCloud(ViewpointGenerator &viewpoint_generator
     inverted_cloud_pub_.publish(cloud_msg);
 }
 
-void LocalExplorer::PublishConvexHull(ConvexHull &convex_hull)
+void TopologicalPathTest::PublishConvexHull(ConvexHull &convex_hull)
 {
     visualization_msgs::Marker marker;
     geometry_msgs::Point point;
@@ -465,7 +461,7 @@ void LocalExplorer::PublishConvexHull(ConvexHull &convex_hull)
     convex_hull_pub_.publish(marker);
 }
 
-void LocalExplorer::PublishColoredConvexHull(ConvexHull &convex_hull)
+void TopologicalPathTest::PublishColoredConvexHull(ConvexHull &convex_hull)
 {
     visualization_msgs::Marker marker;
     geometry_msgs::Point point;
@@ -511,7 +507,7 @@ void LocalExplorer::PublishColoredConvexHull(ConvexHull &convex_hull)
     colored_convex_hull_pub_.publish(marker);
 }
 
-void LocalExplorer::PublishViewpoint(Viewpoint &viewpoint, bool flagged_only = false)
+void TopologicalPathTest::PublishViewpoint(Viewpoint &viewpoint, bool flagged_only = false)
 {
     sensor_msgs::PointCloud2 cloud_msg;
     pcl::PointCloud<pcl::PointXYZ> cloud;
@@ -527,7 +523,7 @@ void LocalExplorer::PublishViewpoint(Viewpoint &viewpoint, bool flagged_only = f
     viewpoint_pub_.publish(cloud_msg);
 }
 
-void LocalExplorer::PublishColoredViewpoint(Viewpoint &viewpoint)
+void TopologicalPathTest::PublishColoredViewpoint(Viewpoint &viewpoint)
 {
     visualization_msgs::Marker marker;
     geometry_msgs::Point point;
@@ -588,7 +584,7 @@ void LocalExplorer::PublishColoredViewpoint(Viewpoint &viewpoint)
     colored_viewpoint_pub_.publish(marker);
 }
 
-void LocalExplorer::PublishSingleFrontierCluster(Viewpoint &viewpoint)
+void TopologicalPathTest::PublishSingleFrontierCluster(Viewpoint &viewpoint)
 {
     visualization_msgs::Marker marker;
     geometry_msgs::Point point;
@@ -639,7 +635,7 @@ void LocalExplorer::PublishSingleFrontierCluster(Viewpoint &viewpoint)
     single_frontier_cluster_list_pub_.publish(marker);
 }
 
-void LocalExplorer::PublishFrontier()
+void TopologicalPathTest::PublishFrontier()
 {
     if (viewpoint_list_.empty())
         return;
@@ -697,7 +693,7 @@ void LocalExplorer::PublishFrontier()
     frontier_pub_.publish(marker);
 }
 
-void LocalExplorer::PublishGlobalNavGoal(Eigen::Vector3f pos, Eigen::Quaterniond rot)
+void TopologicalPathTest::PublishGlobalNavGoal(Eigen::Vector3f pos, Eigen::Quaterniond rot)
 {
     geometry_msgs::PoseStamped msg;
     msg.header.stamp = ros::Time::now();
@@ -712,7 +708,7 @@ void LocalExplorer::PublishGlobalNavGoal(Eigen::Vector3f pos, Eigen::Quaterniond
     global_nav_goal_pub_.publish(msg);
 }
 
-void LocalExplorer::PublishLocalNavGoal(Eigen::Vector3f pos, Eigen::Quaterniond rot)
+void TopologicalPathTest::PublishLocalNavGoal(Eigen::Vector3f pos, Eigen::Quaterniond rot)
 {
     geometry_msgs::PoseStamped msg;
     msg.header.stamp = ros::Time::now();
@@ -727,7 +723,7 @@ void LocalExplorer::PublishLocalNavGoal(Eigen::Vector3f pos, Eigen::Quaterniond 
     local_nav_goal_pub_.publish(msg);
 }
 
-void LocalExplorer::PublishTopologicalPath()
+void TopologicalPathTest::PublishTopologicalPath()
 {
     std::lock_guard<std::mutex> topological_path_lock(topological_path_mutex_);
     if (topological_path_.empty())
@@ -743,17 +739,10 @@ void LocalExplorer::PublishTopologicalPath()
     geometry_msgs::Point point;
     int path_length = int(topological_path_.size());
     ROS_INFO("Topological path size: %d", path_length);
-    for (int k = 0; k <= path_length; k++)
+    for (int k = 0; k < path_length; k++)
     {
         Eigen::Vector3f path_node;
-        if (k == path_length)
-        {
-            path_node = target_fc_->GetCenter();
-        }
-        else
-        {
-            path_node = topological_path_[k]->GetOrigin();
-        }
+        path_node = topological_path_[k]->GetOrigin();
         point.x = path_node[0]; point.y = path_node[1]; point.z = path_node[2];
         marker.points.push_back(point);
     }
@@ -782,7 +771,7 @@ void LocalExplorer::PublishTopologicalPath()
     topological_path_pub_.publish(marker);
 }
 
-void LocalExplorer::VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr)
+void TopologicalPathTest::VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr)
 {
     //ROS_INFO("Voxelized points message received.");
     viewpoint_generator_ptr_ = std::unique_ptr<ViewpointGenerator>(new ViewpointGenerator());
@@ -811,7 +800,7 @@ void LocalExplorer::VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPo
     RepublishVoxelizedPoints(msg_ptr);
 }
 
-void LocalExplorer::UavPoseCallback(const geometry_msgs::PoseStamped::ConstPtr& msg_ptr)
+void TopologicalPathTest::UavPoseCallback(const geometry_msgs::PoseStamped::ConstPtr& msg_ptr)
 {
     /*
     pos_ << (float)msg_ptr->pose.position.x, (float)msg_ptr->pose.position.y, (float)msg_ptr->pose.position.z;
@@ -824,25 +813,34 @@ void LocalExplorer::UavPoseCallback(const geometry_msgs::PoseStamped::ConstPtr& 
     pose_init_ = true;
 }
 
-void LocalExplorer::RecordCommandCallback(const std_msgs::Bool::ConstPtr& msg_ptr)
+void TopologicalPathTest::RecordCommandCallback(const std_msgs::Bool::ConstPtr& msg_ptr)
 {
     is_record_ = msg_ptr->data;
 }
 
-void LocalExplorer::DisplayedNumCallback(const std_msgs::Int32::ConstPtr& msg_ptr)
+void TopologicalPathTest::ReplanCommandCallback(const std_msgs::Bool::ConstPtr& msg_ptr)
+{
+    is_replanning_ = msg_ptr->data;
+}
+
+void TopologicalPathTest::DisplayedNumCallback(const std_msgs::Int32::ConstPtr& msg_ptr)
 {
     displayed_viewpoint_num_ = msg_ptr->data;
 }
 
-void LocalExplorer::DroneStatusCallback(const std_msgs::Int32::ConstPtr& msg_ptr)
+void TopologicalPathTest::DroneStatusCallback(const std_msgs::Int32::ConstPtr& msg_ptr)
 {
     drone_status_ = msg_ptr->data;
     drone_status_updated_ = true;
 }
 
 // naive strategy
-void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
+void TopologicalPathTest::NavCommandCallback(const ros::TimerEvent& event)
 {
+    if (!is_replanning_)
+    {
+        return;
+    }
     Eigen::Vector3f current_pos;
     current_pos << (float)pos_[0], (float)pos_[1], (float)pos_[2];
     switch (nav_state_)
@@ -855,10 +853,7 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
                 std::lock_guard<std::mutex> topological_path_lock(topological_path_mutex_);
                 if (topological_path_.empty())
                 {
-                    nav_state_ = NavState::NAV_TO_LOCAL_FRONTIER;
-                    goal_pos_ = target_fc_->GetCenter();
-                    goal_rot_ = DirectionQuatHorizonal(current_pos, goal_pos_);
-                    PublishLocalNavGoal(goal_pos_, goal_rot_);
+                    nav_state_ = NavState::REACHED_GOAL;
                 }
                 else
                 {
@@ -872,30 +867,21 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
             }
             break;
         }
-        case NavState::NAV_TO_LOCAL_FRONTIER:
-        {
-            ROS_INFO("Current state: NAV_TO_LOCAL_FRONTIER");
-            if (drone_status_ == 3 && drone_status_updated_)  // REACHED_GOAL in faster
-            {
-                nav_state_ = NavState::REACHED_GOAL;
-                drone_status_updated_ = false;
-            }
-        }
         case NavState::REACHED_GOAL:
         {
             ROS_INFO("Current state: REACHED_GOAL");
             // try replanning
             if (Replan())
             {
-                std::lock_guard<std::mutex> topological_path_lock(topological_path_mutex_);
-                PublishGlobalNavGoal(target_fc_->GetCenter(), DirectionQuatHorizonal(current_pos, target_fc_->GetCenter()));
+                PublishGlobalNavGoal(viewpoint_list_[0]->GetOrigin(), DirectionQuatHorizonal(current_pos, viewpoint_list_[0]->GetOrigin()));
                 nav_state_ = NavState::NAV_IN_PATH;
+                PublishTopologicalPath();
                 auto next_vptr = topological_path_.front();
                 topological_path_.pop_front();
                 goal_pos_ = next_vptr->GetOrigin();
                 goal_rot_ = DirectionQuatHorizonal(current_pos, goal_pos_);
                 PublishLocalNavGoal(goal_pos_, goal_rot_);
-                drone_status_updated_ = false;
+                //drone_status_updated_ = false;
             }
         }
             break;
@@ -904,7 +890,7 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
     }
 }
 
-void LocalExplorer::PublishTopologicalPathCallback(const ros::TimerEvent& event)
+void TopologicalPathTest::PublishTopologicalPathCallback(const ros::TimerEvent& event)
 {
     PublishTopologicalPath();
 }
@@ -914,6 +900,6 @@ void LocalExplorer::PublishTopologicalPathCallback(const ros::TimerEvent& event)
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "local_explorer_node");
-    local_explorer::LocalExplorer len;
+    local_explorer::TopologicalPathTest len;
     return 0;
 }

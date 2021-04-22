@@ -64,7 +64,7 @@ public:
   void getG(state& G);
   void getDroneStatus(int& drone_status);
   bool isDroneStatusUpdated();
-  void setDroneStatusUpdated(bool drone_status_update);
+  void setDroneStatusUpdated(bool drone_status_updated);
   void setTerminalGoal(state& term_goal);
   void resetInitialization();
 
