@@ -26,7 +26,6 @@ public:
     std::list<std::shared_ptr<Facet>> facet_list_;
     float xyz_range_[2][3];
     float area_;
-    bool is_empty_;
 };
 
 // topological map's node are based on Viewpoint, edge are based on NeighborViewpoint

@@ -532,7 +532,12 @@ void FasterRos::publishDroneStatus()
 void FasterRos::terminalGoalCB(const geometry_msgs::PoseStamped& msg)
 {
   state G_term;
-  const double height = (par_.is_ground_robot) ? 0.2 : rviz_goal_height_;
+  //const double height = (par_.is_ground_robot) ? 0.2 : rviz_goal_height_;
+  double height = msg.pose.position.z;
+  if (height > 2.0)
+    height = 2.0;
+  else if (height < 1.0)
+    height = 1.0;
   double roll, pitch, yaw;
   quaternion2Euler(msg.pose.orientation, roll, pitch, yaw);
   G_term.setPos(msg.pose.position.x, msg.pose.position.y, height);

@@ -29,7 +29,8 @@ LocalExplorer::LocalExplorer()
     colored_convex_hull_pub_ = n_.advertise<visualization_msgs::Marker>("local_explorer/colored_convex_hull", 1);
     viewpoint_pub_ = n_.advertise<sensor_msgs::PointCloud2>("local_explorer/viewpoint", 1);
     colored_viewpoint_pub_ = n_.advertise<visualization_msgs::Marker>("local_explorer/colored_viewpoint", 1);
-    single_frontier_cluster_list_pub_ = n_.advertise<visualization_msgs::Marker>("local_explorer/single_frontier_cluster_list", 1);
+    single_frontier_cluster_pub_ = n_.advertise<visualization_msgs::Marker>("local_explorer/single_frontier_cluster", 1);
+    single_viewpoint_frontier_pub_ = n_.advertise<visualization_msgs::Marker>("local_explorer/single_viewpoint_frontier", 1);
     frontier_pub_ = n_.advertise<visualization_msgs::Marker>("local_explorer/frontier", 1);
     global_nav_goal_pub_ = n_.advertise<geometry_msgs::PoseStamped>("local_explorer/global_nav_goal", 1);
     local_nav_goal_pub_ = n_.advertise<geometry_msgs::PoseStamped>("local_explorer/local_nav_goal", 1);
@@ -42,7 +43,7 @@ LocalExplorer::LocalExplorer()
     drone_status_sub_ = n_.subscribe("faster/drone_status", 1, &LocalExplorer::DroneStatusCallback, this, ros::TransportHints().tcpNoDelay());
 
     nav_command_timer_ = n_.createTimer(ros::Duration(NAV_COMMAND_TIMEVAL), &LocalExplorer::NavCommandCallback, this);
-    topological_path_pub_timer_ = n_.createTimer(ros::Duration(TOPOLOGICAL_PATH_PUB_TIMEVAL), &LocalExplorer::PublishTopologicalPathCallback, this);
+    //topological_path_pub_timer_ = n_.createTimer(ros::Duration(TOPOLOGICAL_PATH_PUB_TIMEVAL), &LocalExplorer::PublishTopologicalPathCallback, this);
 
     ROS_INFO("Local explorer node started.");
 
@@ -342,6 +343,7 @@ bool LocalExplorer::GetNearestViewpoint(Eigen::Vector3f pos, std::shared_ptr<Vie
 // naive strategy for selecting next frontier to navigate to
 bool LocalExplorer::GetNearestFrontierCluster(Eigen::Vector3f pos, FrontierCluster*& fc_ptr)
 {
+    int empty_count = 0;
     float min_dist = FLT_MAX;
     FrontierCluster* nearest_fc_ptr = nullptr;
     for (auto viewpoint_ptr : viewpoint_list_)
@@ -350,6 +352,7 @@ bool LocalExplorer::GetNearestFrontierCluster(Eigen::Vector3f pos, FrontierClust
         {
             if (fc.IsEmpty())
             {
+                empty_count++;
                 continue;
             }
             float dist = (fc.GetCenter()-pos).norm();
@@ -360,6 +363,7 @@ bool LocalExplorer::GetNearestFrontierCluster(Eigen::Vector3f pos, FrontierClust
             }
         }
     }
+    ROS_INFO("Empty frontier cluster count: %d", empty_count);
     fc_ptr = nearest_fc_ptr;
     return !(nearest_fc_ptr == nullptr);
 }
@@ -588,7 +592,57 @@ void LocalExplorer::PublishColoredViewpoint(Viewpoint &viewpoint)
     colored_viewpoint_pub_.publish(marker);
 }
 
-void LocalExplorer::PublishSingleFrontierCluster(Viewpoint &viewpoint)
+void LocalExplorer::PublishSingleFrontierCluster(FrontierCluster &fc)
+{
+    if (target_fc_ == nullptr)
+    {
+        return;
+    }
+    visualization_msgs::Marker marker;
+    geometry_msgs::Point point;
+    std_msgs::ColorRGBA color_rgba;
+    //ROS_INFO("FrontierClusterCount: %d", viewpoint.GetFrontierClusterCount());
+    for (auto facet_ptr : fc.facet_list_)
+    {
+        color_rgba.r = 1.0;
+        color_rgba.g = 1.0;
+        color_rgba.b = 1.0;
+        color_rgba.a = MARKER_ALPHA;
+        marker.colors.push_back(color_rgba);
+        for (int i = 0; i < 3; i++)
+        {
+            auto vertex_ptr = facet_ptr->vertices_[i];
+            point.x = vertex_ptr->pos_[0]; point.y = vertex_ptr->pos_[1]; point.z = vertex_ptr->pos_[2];
+            marker.points.push_back(point);
+        }
+    }
+    marker.id = 0;
+    marker.type = visualization_msgs::Marker::TRIANGLE_LIST;
+    marker.action = visualization_msgs::Marker::ADD;
+    marker.pose.position.x = 0;
+    marker.pose.position.y = 0;
+    marker.pose.position.z = 0;
+    marker.pose.orientation.x = 0.0;
+    marker.pose.orientation.y = 0.0;
+    marker.pose.orientation.z = 0.0;
+    marker.pose.orientation.w = 1.0;
+    marker.scale.x = 1;
+    marker.scale.y = 1;
+    marker.scale.z = 1;
+    
+    marker.color.a = MARKER_ALPHA;
+    marker.color.r = 0.0;
+    marker.color.g = 1.0;
+    marker.color.b = 1.0;
+    
+    //marker.lifetime = ros::Duration(0.2);
+
+    marker.header.frame_id = "world";
+    marker.header.stamp = ros::Time::now();
+    single_frontier_cluster_pub_.publish(marker);
+}
+
+void LocalExplorer::PublishSingleViewpointFrontier(Viewpoint &viewpoint)
 {
     visualization_msgs::Marker marker;
     geometry_msgs::Point point;
@@ -636,7 +690,7 @@ void LocalExplorer::PublishSingleFrontierCluster(Viewpoint &viewpoint)
 
     marker.header.frame_id = "world";
     marker.header.stamp = ros::Time::now();
-    single_frontier_cluster_list_pub_.publish(marker);
+    single_viewpoint_frontier_pub_.publish(marker);
 }
 
 void LocalExplorer::PublishFrontier()
@@ -729,7 +783,7 @@ void LocalExplorer::PublishLocalNavGoal(Eigen::Vector3f pos, Eigen::Quaterniond 
 
 void LocalExplorer::PublishTopologicalPath()
 {
-    std::lock_guard<std::mutex> topological_path_lock(topological_path_mutex_);
+    //std::lock_guard<std::mutex> topological_path_lock(topological_path_mutex_);
     if (topological_path_.empty())
     {
         ROS_WARN("Topological path empty.");
@@ -797,7 +851,8 @@ void LocalExplorer::VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPo
         PublishConvexHull(*(viewpoint_generator_ptr_->GetViewpointPtr()->GetConvexHullPtr()));
         PublishColoredConvexHull(*(viewpoint_generator_ptr_->GetViewpointPtr()->GetConvexHullPtr()));
         PublishViewpoint(*viewpoint_ptr);
-        PublishSingleFrontierCluster(*viewpoint_ptr);
+        PublishSingleFrontierCluster(*target_fc_);
+        PublishSingleViewpointFrontier(*viewpoint_ptr);
 
         if (displayed_viewpoint_num_ >= 0 && displayed_viewpoint_num_ < int(viewpoint_list_.size()))
         {
@@ -852,23 +907,30 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
             ROS_INFO("Current state: NAV_IN_PATH");
             if (drone_status_ == 3 && drone_status_updated_)  // REACHED_GOAL in faster
             {
-                std::lock_guard<std::mutex> topological_path_lock(topological_path_mutex_);
-                if (topological_path_.empty())
+                if (target_fc_->IsEmpty())
                 {
-                    nav_state_ = NavState::NAV_TO_LOCAL_FRONTIER;
-                    goal_pos_ = target_fc_->GetCenter();
-                    goal_rot_ = DirectionQuatHorizonal(current_pos, goal_pos_);
-                    PublishLocalNavGoal(goal_pos_, goal_rot_);
+                    nav_state_ = NavState::REACHED_GOAL;  // stop navigation and replan
                 }
                 else
                 {
-                    auto next_vptr = topological_path_.front();
-                    topological_path_.pop_front();
-                    goal_pos_ = next_vptr->GetOrigin();
-                    goal_rot_ = DirectionQuatHorizonal(current_pos, goal_pos_);
-                    PublishLocalNavGoal(goal_pos_, goal_rot_);
+                    std::lock_guard<std::mutex> topological_path_lock(topological_path_mutex_);
+                    if (topological_path_.empty())
+                    {
+                        nav_state_ = NavState::NAV_TO_LOCAL_FRONTIER;
+                        goal_pos_ = target_fc_->GetCenter();
+                        goal_rot_ = DirectionQuatHorizonal(current_pos, goal_pos_);
+                        PublishLocalNavGoal(goal_pos_, goal_rot_);
+                    }
+                    else
+                    {
+                        auto next_vptr = topological_path_.front();
+                        topological_path_.pop_front();
+                        goal_pos_ = next_vptr->GetOrigin();
+                        goal_rot_ = DirectionQuatHorizonal(current_pos, goal_pos_);
+                        PublishLocalNavGoal(goal_pos_, goal_rot_);
+                    }
+                    drone_status_updated_ = false;
                 }
-                drone_status_updated_ = false;
             }
             break;
         }
@@ -889,6 +951,7 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
             {
                 std::lock_guard<std::mutex> topological_path_lock(topological_path_mutex_);
                 PublishGlobalNavGoal(target_fc_->GetCenter(), DirectionQuatHorizonal(current_pos, target_fc_->GetCenter()));
+                PublishTopologicalPath();
                 nav_state_ = NavState::NAV_IN_PATH;
                 auto next_vptr = topological_path_.front();
                 topological_path_.pop_front();

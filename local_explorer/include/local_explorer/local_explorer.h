@@ -58,7 +58,8 @@ private:
     void PublishColoredConvexHull(ConvexHull &convex_hull);  // inverted
     void PublishViewpoint(Viewpoint &viewpoint, bool flagged_only);
     void PublishColoredViewpoint(Viewpoint &viewpoint);
-    void PublishSingleFrontierCluster(Viewpoint &viewpoint);
+    void PublishSingleFrontierCluster(FrontierCluster &fc);
+    void PublishSingleViewpointFrontier(Viewpoint &viewpoint);
     void PublishFrontier();
     void PublishGlobalNavGoal(Eigen::Vector3f pos, Eigen::Quaterniond rot);
     void PublishLocalNavGoal(Eigen::Vector3f pos, Eigen::Quaterniond rot);
@@ -99,7 +100,8 @@ private:
     ros::Publisher colored_convex_hull_pub_;
     ros::Publisher viewpoint_pub_;
     ros::Publisher colored_viewpoint_pub_;
-    ros::Publisher single_frontier_cluster_list_pub_;
+    ros::Publisher single_frontier_cluster_pub_;
+    ros::Publisher single_viewpoint_frontier_pub_;
     ros::Publisher frontier_pub_;
     ros::Publisher global_nav_goal_pub_;
     ros::Publisher local_nav_goal_pub_;

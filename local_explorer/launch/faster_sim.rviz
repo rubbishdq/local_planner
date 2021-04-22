@@ -103,7 +103,7 @@ Visualization Manager:
       Marker Topic: /iris/local_explorer/single_frontier_cluster_list
       Name: Single frontier
       Namespaces:
-        "": true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -151,6 +151,14 @@ Visualization Manager:
       Shape: Arrow
       Topic: /move_base_simple/goal
       Unreliable: false
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /iris/local_explorer/single_frontier_cluster
+      Name: Target frontier cluster
+      Namespaces:
+        {}
+      Queue Size: 100
       Value: true
   Enabled: true
   Global Options:
@@ -217,4 +225,4 @@ Window Geometry:
     collapsed: true
   Width: 1200
   X: 348
-  Y: 82
+  Y: 52

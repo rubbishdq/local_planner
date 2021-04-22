@@ -7,7 +7,6 @@ FrontierCluster::FrontierCluster(int id)
 {
     id_ = id;
     area_ = 0.0;
-    is_empty_ = true;
 }
 
 void FrontierCluster::AddFacet(std::shared_ptr<Facet> facet_ptr)
@@ -15,14 +14,13 @@ void FrontierCluster::AddFacet(std::shared_ptr<Facet> facet_ptr)
     for (int i = 0; i < 3; i++)
     {
         Eigen::Vector3f p = facet_ptr->vertices_[i]->pos_;
-        if (is_empty_)
+        if (IsEmpty())
         {
             for (int j = 0; j < 3; j++)
             {
                 xyz_range_[0][j] = p[j];
                 xyz_range_[1][j] = p[j];
             }
-            is_empty_ = false;
         }
         else
         {
@@ -49,7 +47,7 @@ void FrontierCluster::SetFacetFlag(flag_t flag)
 
 bool FrontierCluster::IsEmpty()
 {
-    return is_empty_;
+    return facet_list_.empty();
 }
 
 Eigen::Vector3f FrontierCluster::GetCenter()
