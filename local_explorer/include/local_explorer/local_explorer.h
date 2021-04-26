@@ -88,6 +88,7 @@ private:
 
     std::vector<std::shared_ptr<Viewpoint>> viewpoint_list_;
     FrontierCluster* target_fc_;
+    bool navigated_to_target_viewpoint_;
 
     float frontier_color_[FRONTIER_COLOR_COUNT][3];  // used to visualize frontier clusters
     int displayed_viewpoint_num_;

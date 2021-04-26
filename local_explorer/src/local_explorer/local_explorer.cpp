@@ -16,6 +16,7 @@ LocalExplorer::LocalExplorer()
     drone_status_updated_ = false;
     target_fc_ = nullptr;
     nav_state_ = NavState::REACHED_GOAL;
+    navigated_to_target_viewpoint_ = false;
 
     // make_unique is a C++14 feature
     //viewpoint_generator_ptr_ = std::make_unique<ViewpointGenerator>();
@@ -241,6 +242,7 @@ bool LocalExplorer::Replan()
     std::lock_guard<std::mutex> topological_path_lock(topological_path_mutex_);
     target_fc_ = fc_ptr;
     topological_path_ = GetTopologicalPath(start, end);
+    navigated_to_target_viewpoint_ = false;
     return true;
 }
 
@@ -916,9 +918,17 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
                     std::lock_guard<std::mutex> topological_path_lock(topological_path_mutex_);
                     if (topological_path_.empty())
                     {
-                        nav_state_ = NavState::NAV_TO_LOCAL_FRONTIER;
-                        goal_pos_ = target_fc_->GetCenter();
-                        goal_rot_ = DirectionQuatHorizonal(current_pos, goal_pos_);
+                        if (!navigated_to_target_viewpoint_ && target_fc_->is_boarder_) // yaw first
+                        {
+                            goal_pos_ = current_pos + 0.01*(target_fc_->GetCenter()-goal_pos_);
+                            goal_rot_ = DirectionQuatHorizonal(current_pos, target_fc_->GetCenter());
+                        }
+                        else
+                        {
+                            nav_state_ = NavState::NAV_TO_LOCAL_FRONTIER;
+                            goal_pos_ = target_fc_->GetCenter();
+                            goal_rot_ = DirectionQuatHorizonal(current_pos, goal_pos_);
+                        }
                         PublishLocalNavGoal(goal_pos_, goal_rot_);
                     }
                     else

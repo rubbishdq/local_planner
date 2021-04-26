@@ -16,7 +16,7 @@ class Viewpoint;
 class FrontierCluster
 {
 public:
-    FrontierCluster(int id = 0);
+    FrontierCluster(int id = 0, bool is_boarder_ = false);
     void AddFacet(std::shared_ptr<Facet> facet_ptr);
     void SetFacetFlag(flag_t flag);
     bool IsEmpty();
@@ -26,6 +26,7 @@ public:
     std::list<std::shared_ptr<Facet>> facet_list_;
     float xyz_range_[2][3];
     float area_;
+    bool is_boarder_;
 };
 
 // topological map's node are based on Viewpoint, edge are based on NeighborViewpoint

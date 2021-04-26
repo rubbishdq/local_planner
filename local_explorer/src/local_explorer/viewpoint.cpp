@@ -3,10 +3,11 @@
 namespace local_explorer
 {
 
-FrontierCluster::FrontierCluster(int id)
+FrontierCluster::FrontierCluster(int id, bool is_boarder)
 {
     id_ = id;
     area_ = 0.0;
+    is_boarder_ = is_boarder;
 }
 
 void FrontierCluster::AddFacet(std::shared_ptr<Facet> facet_ptr)
@@ -166,7 +167,8 @@ void Viewpoint::GenerateViewpoint(std::vector<LabeledPoint> &cloud, std::vector<
         {
             if (facet_ptr->flag_ < 0)
             {
-                frontier_cluster_list_.push_back(FrontierCluster(frontier_cluster_count_));
+                bool is_boarder = (facet_ptr->flag_ == -2);
+                frontier_cluster_list_.push_back(FrontierCluster(frontier_cluster_count_, is_boarder));
                 frontier_cluster_count_++;
                 ClusterSingleFacet(facet_ptr, frontier_cluster_count_, facet_ptr->flag_);
             }
