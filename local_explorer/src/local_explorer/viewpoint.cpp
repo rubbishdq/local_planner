@@ -146,7 +146,7 @@ void Viewpoint::GenerateViewpoint(std::vector<LabeledPoint> &cloud, std::vector<
             {
                 if (vertex_ptr->flag_ != 0)
                 {
-                    vertex_ptr->flag_ = 2;
+                    vertex_ptr->flag_ = 2;  // marked as boarder
                 }
             }
         }
@@ -155,19 +155,20 @@ void Viewpoint::GenerateViewpoint(std::vector<LabeledPoint> &cloud, std::vector<
         convex_hull_ptr_->ClearFacetFlag();
         for (auto facet_ptr : convex_hull_ptr_->facet_list_)
         {
-            if (facet_ptr->IsFlaggedFacet())
+            int facet_type = facet_ptr->FacetType();
+            if (facet_type > 0)
             {
-                facet_ptr->flag_ = -1;  // labeled as frontier facet
+                facet_ptr->flag_ = -facet_type;  // labeled as unclustered frontier facet (<0)
             }
         }
         // cluster frontier facets
         for (auto facet_ptr : convex_hull_ptr_->facet_list_)
         {
-            if (facet_ptr->flag_ == -1)
+            if (facet_ptr->flag_ < 0)
             {
                 frontier_cluster_list_.push_back(FrontierCluster(frontier_cluster_count_));
                 frontier_cluster_count_++;
-                ClusterSingleFacet(facet_ptr, frontier_cluster_count_);
+                ClusterSingleFacet(facet_ptr, frontier_cluster_count_, facet_ptr->flag_);
             }
         }
         /*
@@ -267,14 +268,14 @@ void Viewpoint::Points2Array(std::vector<LabeledPoint> &pts, double* arr)
     }
 }
 
-void Viewpoint::ClusterSingleFacet(std::shared_ptr<Facet> facet_ptr, int cluster_id)
+void Viewpoint::ClusterSingleFacet(std::shared_ptr<Facet> facet_ptr, int cluster_id, int clustering_flag)
 {
     facet_ptr->flag_ = cluster_id;
     frontier_cluster_list_[cluster_id-1].AddFacet(facet_ptr);
     for (int k = 0; k < 3; k++)
     {
         auto next_facet_ptr = facet_ptr->neighbors_[k].lock();
-        if (next_facet_ptr->flag_ < 0)
+        if (next_facet_ptr->flag_ == clustering_flag)
         {
             // check if adding this facet will exceed frontier cluster size limit
             bool loop_flag = true;  // if loop_flag == false, next_facet_ptr will not be added to this cluster
@@ -292,7 +293,7 @@ void Viewpoint::ClusterSingleFacet(std::shared_ptr<Facet> facet_ptr, int cluster
             }
             if (loop_flag)
             {
-                ClusterSingleFacet(next_facet_ptr, cluster_id);
+                ClusterSingleFacet(next_facet_ptr, cluster_id, clustering_flag);
             }
         }
     }

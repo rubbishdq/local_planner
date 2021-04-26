@@ -41,7 +41,7 @@ public:
     int id_;
     Eigen::Vector3f pos_inverted_;
     Eigen::Vector3f pos_;  // non-inverted position
-    flag_t flag_;
+    flag_t flag_;  // in most cases flag_ refers to type of vertex. 0: non-frontier 1: discontinuity frontier 2: boarder frontier
 };
 
 class Facet
@@ -57,7 +57,8 @@ public:
     std::shared_ptr<Vertex> FindLastVertex(std::shared_ptr<Vertex> v1, std::shared_ptr<Vertex> v2);
     std::shared_ptr<Facet> FindNeighborFacet(std::shared_ptr<Vertex> v1, std::shared_ptr<Vertex> v2); // find neighbor facet that contains v1 but doesn't contains v2
     std::shared_ptr<Ridge> FindOtherRidge(std::shared_ptr<Vertex> v1, std::shared_ptr<Vertex> v2); // find ridge that contains v1 but doesn't contains v2
-    bool IsFlaggedFacet(); // return false position of facet is out of range, return true if some of its vertices' are frontier vertices, otherwise return false
+    int FacetType(); 
+    // return -1: if position of facet is out of range, return 0: non-frontier facet, 1: discontinuity frontier facet, 2: boarder frontier facet(if not less than one of its vertices are boarder frontier vertices)
 
     void CheckRidgeStatus(); // only used for debug
 

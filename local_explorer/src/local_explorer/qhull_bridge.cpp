@@ -133,7 +133,7 @@ std::shared_ptr<Ridge> Facet::FindOtherRidge(std::shared_ptr<Vertex> v1, std::sh
     return std::shared_ptr<Ridge>();
 }
 
-bool Facet::IsFlaggedFacet()
+int Facet::FacetType()
 {
     if (USE_HEIGHT_DIFF_THRESHOLD)
     {
@@ -143,18 +143,30 @@ bool Facet::IsFlaggedFacet()
             if ((p[2]-BOARDER_Z_RANGE[0]) < HEIGHT_DIFF_THRESHOLD || 
                 (-p[2]+BOARDER_Z_RANGE[1]) < HEIGHT_DIFF_THRESHOLD)
             {
-                return false;
+                return -1;
             }
         }
     }
+    bool is_frontier = false;
     for (int i = 0; i < 3; i++)
     {
-        if (vertices_[i]->flag_)
+        if (vertices_[i]->flag_ == 2)
         {
-            return true;
+            return 2;  // boarder frontier
+        }
+        else if (vertices_[i]->flag_ == 1)
+        {
+            is_frontier = true;
         }
     }
-    return false;
+    if (is_frontier)
+    {
+        return 1; //discontinuity frontier
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 // only used for debug

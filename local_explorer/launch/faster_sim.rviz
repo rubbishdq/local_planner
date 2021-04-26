@@ -6,7 +6,7 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /Single frontier1
+        - /Single viewpoint frontier1
       Splitter Ratio: 0.5
     Tree Height: 549
   - Class: rviz/Selection
@@ -100,10 +100,10 @@ Visualization Manager:
       Value: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /iris/local_explorer/single_frontier_cluster_list
-      Name: Single frontier
+      Marker Topic: /iris/local_explorer/single_viewpoint_frontier
+      Name: Single viewpoint frontier
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -225,4 +225,4 @@ Window Geometry:
     collapsed: true
   Width: 1200
   X: 348
-  Y: 52
+  Y: 27

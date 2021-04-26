@@ -42,7 +42,7 @@ public:
     void GenerateViewpoint(std::vector<LabeledPoint> &cloud, std::vector<LabeledPoint> &inverted_cloud, Eigen::Vector3f origin);
     void Points2Str(std::vector<LabeledPoint> &pts, char* str, int int_num, int dec_num); // convert std::vector<LabeledPoint> to qhull's input format
     void Points2Array(std::vector<LabeledPoint> &pts, double* arr);
-    void ClusterSingleFacet(std::shared_ptr<Facet> facet_ptr, int cluster_id);
+    void ClusterSingleFacet(std::shared_ptr<Facet> facet_ptr, int cluster_id, int clustering_flag);
     bool Visible(Eigen::Vector3f pt);
     void CheckVisibility(Viewpoint &v2); // removed frontier points visible in v2
     void PrintFrontierData(int id);
