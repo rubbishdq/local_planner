@@ -920,7 +920,7 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
                     {
                         if (!navigated_to_target_viewpoint_ && target_fc_->is_boarder_) // yaw first
                         {
-                            goal_pos_ = current_pos + 0.01*(target_fc_->GetCenter()-goal_pos_);
+                            goal_pos_ = current_pos + 0.01*(target_fc_->GetCenter()-current_pos);
                             goal_rot_ = DirectionQuatHorizonal(current_pos, target_fc_->GetCenter());
                         }
                         else

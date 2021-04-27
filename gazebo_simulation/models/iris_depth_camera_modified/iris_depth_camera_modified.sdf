@@ -2,7 +2,7 @@
 <sdf version="1.5">
   <model name='iris_depth_camera_modified'>
     <include>
-      <uri>model://iris</uri>
+      <uri>model://iris_modified</uri>
     </include>
 
     <include>
