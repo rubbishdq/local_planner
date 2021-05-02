@@ -343,7 +343,8 @@ void Faster::replan(vec_Vecf<3>& JPS_safe_out, vec_Vecf<3>& JPS_whole_out, vec_E
 
   // Check if we have reached the goal
   double dist_to_goal = (G_term.pos - state_local.pos).norm();
-  if (dist_to_goal < par_.goal_radius)
+  double angle_diff = ang_diff(G_term.yaw, state_local.yaw);
+  if (dist_to_goal < par_.goal_radius && abs(angle_diff) < M_PI/180*15)
   {
     changeDroneStatus(DroneStatus::GOAL_REACHED);
   }

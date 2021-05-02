@@ -163,6 +163,8 @@ vec_Vecf<3> getPointsBw2Spheres(vec_Vecf<3> path, double ra, double rb, Eigen::V
 
 vec_Vecf<3> copyJPS(vec_Vecf<3> path);
 
+double ang_diff(double ang1, double ang2);
+
 // Overload to be able to print a std::vector
 template <typename T>
 std::ostream& operator<<(std::ostream& out, const std::vector<T>& v)

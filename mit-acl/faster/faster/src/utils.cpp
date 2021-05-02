@@ -1122,3 +1122,13 @@ void deleteVertexes(vec_Vecf<3>& JPS_path, int max_value)
                    JPS_path.end());  // Force JPS to have less than max_value elements
   }
 }
+
+double ang_diff(double ang1, double ang2)
+{
+  double diff = ang1 - ang2;
+  if (diff < -M_PI)
+    diff += 2*M_PI;
+  else if (diff > M_PI)
+    diff -= 2*M_PI;
+  return diff;
+}
