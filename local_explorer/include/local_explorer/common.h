@@ -1,7 +1,7 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
 
-//#define __DEBUG__
+#define __DEBUG__
 namespace local_explorer
 {
 typedef int flag_t;
@@ -44,6 +44,8 @@ const float MARKER_ALPHA = 0.8;
 const int KD_TREE_MAX_DEPTH = 10;
 const int KD_TREE_MIN_OBJ_COUNT = 50;
 const float KD_TREE_IN_THRESHOLD = 0.5;
+const int KD_TREE_RT_MAX_DEPTH = 10;
+const int KD_TREE_RT_MIN_OBJ_COUNT = 50;
 
 const double NEW_VIEWPOINT_DIST_THRESHOLD = 1.0;
 const double UPDATE_VIEWPOINT_DIST_THRESHOLD = 0.05;

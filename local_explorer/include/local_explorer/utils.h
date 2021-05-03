@@ -182,6 +182,40 @@ bool InCameraRange(Eigen::Vector3f pt) // pt is in robot's frame
     return (u > 0 && u < float(CAM_RES[0]));  // ignore v and erase frontier vertices at any height
 }
 
+// functions for plucker coordinate
+void GetPlucker(Eigen::Vector3f a, Eigen::Vector3f b, float* L)
+{
+    L[0] = a[0] * b[1] - b[0] * a[1];
+    L[1] = a[0] * b[2] - b[0] * a[2];
+    L[2] = a[0] - b[0];
+    L[3] = a[1] * b[2] - b[1] * a[2];
+    L[4] = a[2] - b[2];
+    L[5] = b[1] - a[1];
+}
+
+float SideOp(float* L1, float* L2)
+{
+    return L1[0] * L2[4] + L1[1] * L2[5] + L1[2] * L2[3] + L1[3] * L2[2] + L1[4] * L2[0] + L1[5] * L2[1];
+}
+// end of functions for plucker coordinate
+
+// check if a line segment intersects with a triangle
+// https://members.loria.fr/SLazard/ARC-Visi3D/Pant-project/files/Line_Segment_Triangle.html
+bool IsLineSegIntersectTri(Eigen::Vector3f p1, Eigen::Vector3f p2, Eigen::Vector3f p3, Eigen::Vector3f start, Eigen::Vector3f end)
+{
+    float *L2 = new float[6];
+    float *L3 = new float[6];
+    float *L4 = new float[6];
+    GetPlucker(start, p1, L2);
+    GetPlucker(p1, end, L3);
+    GetPlucker(p2, p3, L3);
+    float s1 = SideOp(L4, L2), s2 = SideOp(L4, L3);
+    delete []L2;
+    delete []L3;
+    delete []L4;
+    return (s1*s2 > 0);
+}
+
 } // namespace local_explorer
 
 #endif

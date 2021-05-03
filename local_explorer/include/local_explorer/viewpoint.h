@@ -62,6 +62,7 @@ public:
 public:
     std::shared_ptr<ConvexHull> convex_hull_ptr_;
     std::shared_ptr<KdTree> kd_tree_ptr_;
+    std::shared_ptr<KdTreeRT> kd_tree_rt_ptr_;  // kd-tree used for raytracing, will be released soon after viewpoint is constructed
     std::vector<FrontierCluster> frontier_cluster_list_;  // candidate frontier
     std::list<NeighborViewpoint> neighbor_list_;
     int frontier_cluster_count_;
