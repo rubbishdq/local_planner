@@ -116,6 +116,13 @@ void Viewpoint::GenerateViewpoint(std::vector<LabeledPoint> &cloud, std::vector<
                     is_frontier = true;
                     break;
                 }
+                // ridge data is not released yet, can be used here
+                auto ridge_ptr = facet_ptr->ridges_[i].lock();
+                if (ridge_ptr->GetLength() >= MIN_FRONTIER_RIDGE_LENGTH)
+                {
+                    is_frontier = true;
+                    break;
+                }
             }
             if (is_frontier)
                 continue;
@@ -332,6 +339,13 @@ bool Viewpoint::Visible(Eigen::Vector3f pt)
     return !kd_tree_ptr_->In(pt_inverted);
 }
 
+bool Viewpoint::IntersectWithObstacle(Eigen::Vector3f start, Eigen::Vector3f end)
+{
+    if (!kd_tree_rt_ptr_)
+        return false;
+    return kd_tree_rt_ptr_->Intersect(start, end);
+}
+
 void Viewpoint::CheckVisibility(Viewpoint &v2)
 {
     int erase_count = 0;
@@ -445,6 +459,11 @@ void Viewpoint::InitDijkstraData()
     is_visited_ = false;
     dist_ = FLT_MAX;
     last_viewpoint_.reset();
+}
+
+void Viewpoint::ResetKdTreeRT()
+{
+    kd_tree_rt_ptr_.reset();
 }
 
 bool Viewpoint::operator <(const Viewpoint& v2)

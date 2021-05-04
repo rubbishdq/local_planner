@@ -45,6 +45,7 @@ public:
     void Points2Array(std::vector<LabeledPoint> &pts, double* arr);
     void ClusterSingleFacet(std::shared_ptr<Facet> facet_ptr, int cluster_id, int clustering_flag);
     bool Visible(Eigen::Vector3f pt);
+    bool IntersectWithObstacle(Eigen::Vector3f start, Eigen::Vector3f end);
     void CheckVisibility(Viewpoint &v2); // removed frontier points visible in v2
     void PrintFrontierData(int id);
     void AddNeighbor(std::shared_ptr<Viewpoint> viewpoint_ptr);
@@ -57,6 +58,7 @@ public:
     int GetFrontierClusterCount();
     bool IsGenerated();
     void InitDijkstraData();
+    void ResetKdTreeRT();
     bool operator <(const Viewpoint& v2);
 
 public:

@@ -125,6 +125,10 @@ void LocalExplorer::RemoveRedundantBoarder(Viewpoint &viewpoint, bool last_viewp
         return;
     }
 
+    // strategy 1: remove a boarder frontier if it is in camera's FoV && current position is visible by the viewpoint it belongs to 
+    // (to ensure that current position is not too far from this viewpoint)
+    // to naive, often remove frontiers that should not be removed
+    /*
     int ind = 0;
     for (auto viewpoint_iter = viewpoint_list_.begin(); viewpoint_iter != viewpoint_list_.end(); viewpoint_iter++)
     {
@@ -179,6 +183,53 @@ void LocalExplorer::RemoveRedundantBoarder(Viewpoint &viewpoint, bool last_viewp
         }
         ind++;
     }
+    */
+
+   // strategy 2: use current viewpoint's kd_tree_rt_ptr to check if there is any obstacle between an old viewpoint and its boarder frontiers
+   // if so, remove the boarder frontier that is covered by obstacles
+    int ind = 0;
+    for (auto viewpoint_iter = viewpoint_list_.begin(); viewpoint_iter != viewpoint_list_.end(); viewpoint_iter++)
+    {
+        if (!last_viewpoint && ind == int(viewpoint_list_.size())-1)
+        {
+            break;
+        }
+        auto old_viewpoint_ptr = *viewpoint_iter;
+        Eigen::Vector3f old_origin = old_viewpoint_ptr->GetOrigin();
+        for (auto &fc : old_viewpoint_ptr->frontier_cluster_list_)
+        {
+            auto facet_iter = fc.facet_list_.begin();
+            while (facet_iter != fc.facet_list_.end())
+            {
+                bool is_frontier = false;
+                for (auto vertex_ptr : (*facet_iter)->vertices_)
+                {
+                    if (vertex_ptr->flag_ == 2)
+                    {
+                        if (viewpoint.IntersectWithObstacle(old_origin, vertex_ptr->pos_))
+                        {
+                            vertex_ptr->flag_ = 0;
+                        }
+                    }
+                    if (vertex_ptr->flag_ != 0)
+                    {
+                        is_frontier = true;
+                    }
+                }
+                if (!is_frontier)
+                {
+                    facet_iter = fc.facet_list_.erase(facet_iter);
+                    erase_count++;
+                }
+                else
+                {
+                    facet_iter++;
+                }
+            }
+        }
+        ind++;
+    }
+
     printf("Erased %d frontier facets in LocalExplorer::RemoveRedundantBoarder().\n", erase_count);
 }
 
@@ -862,6 +913,7 @@ void LocalExplorer::VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPo
         }
 
         ProcessNewViewpoint(viewpoint_ptr);
+        viewpoint_ptr->ResetKdTreeRT();
 
         PublishFrontier();
     }
