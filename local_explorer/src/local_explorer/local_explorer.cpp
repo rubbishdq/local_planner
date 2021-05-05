@@ -959,34 +959,6 @@ void LocalExplorer::VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPo
         }
 
         ProcessNewViewpoint(viewpoint_ptr);
-        Eigen::Vector3f x, y;
-        x << 0,2,1.51; y << 0,5,1.51;
-        if (viewpoint_ptr->IntersectWithObstacle(x, y))
-        {
-            std::cout << "Intersect\n";
-        }
-        else
-        {
-            std::cout << "Not intersect\n";
-        }
-        x << 3,5,1.51; y << 0,5,1.51;
-        if (viewpoint_ptr->IntersectWithObstacle(x, y))
-        {
-            std::cout << "Intersect\n";
-        }
-        else
-        {
-            std::cout << "Not intersect\n";
-        }
-        x << 3,5,1.51; y << 3,7,1.51;
-        if (viewpoint_ptr->IntersectWithObstacle(x, y))
-        {
-            std::cout << "Intersect\n";
-        }
-        else
-        {
-            std::cout << "Not intersect\n";
-        }
         viewpoint_ptr->ResetKdTreeRT();
 
         PublishFrontier();
