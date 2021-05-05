@@ -57,15 +57,15 @@ bool AABB::Intersect(Eigen::Vector3f start, Eigen::Vector3f end)
         {1,5,6}, {5,6,7}, 
         {3,4,5}, {4,5,7}, 
         {2,4,6}, {4,6,7}};
-    vertices[0] = start;
-    vertices[1] << end[0], start[1], start[2];
-    vertices[2] << start[0], end[1], start[2];
-    vertices[3] << start[0], start[1], end[2];
-    vertices[4] << start[0], end[1], end[2];
-    vertices[5] << end[0], start[1], end[2];
-    vertices[6] << end[0], end[1], start[2];
-    vertices[7] = end;
-    for (int i = 0; i < 10; i++) // no need for running all 12 triangles
+    vertices[0] << min_[0], min_[1], min_[2];
+    vertices[1] << max_[0], min_[1], min_[2];
+    vertices[2] << min_[0], max_[1], min_[2];
+    vertices[3] << min_[0], min_[1], max_[2];
+    vertices[4] << min_[0], max_[1], max_[2];
+    vertices[5] << max_[0], min_[1], max_[2];
+    vertices[6] << max_[0], max_[1], min_[2];
+    vertices[7] << max_[0], max_[1], max_[2];
+    for (int i = 0; i < 12; i++)
     {
         if (IsLineSegIntersectTri(vertices[index[i][0]], vertices[index[i][1]], vertices[index[i][2]], start, end))
         {
@@ -668,6 +668,10 @@ KdTreeRTNode* KdTreeRT::Build(std::vector<FacetBoxRT*> &fb_list, AABB box, int d
 
 bool KdTreeRT::Intersect(Eigen::Vector3f start, Eigen::Vector3f end)
 {
+    if (!root_)
+        return false;
+    if (!root_->aabb_.Intersect(start, end))
+        return false;
     return root_->Intersect(start, end);
 }
 

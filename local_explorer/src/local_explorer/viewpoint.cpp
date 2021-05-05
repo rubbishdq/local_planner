@@ -91,7 +91,19 @@ void Viewpoint::GenerateViewpoint(std::vector<LabeledPoint> &cloud, std::vector<
         {
             vertex_ptr->pos_ = cloud[vertex_ptr->flag_].mu_;
             if (cloud[vertex_ptr->flag_].type_ == BOARDER)
-                vertex_ptr->flag_ = 2;
+            {
+                // mark boarder points not satisfying height constraints as "discontinuity frontier" (actually they are not)
+                // this is to avoid some real discontinuity frontier points to be marked as boarder frontier points in DivideLongRidge()
+                Eigen::Vector3f p = vertex_ptr->pos_;
+                if (!IsHeightBetweenLimit(p))
+                {
+                    vertex_ptr->flag_ = 1;
+                }
+                else
+                {
+                    vertex_ptr->flag_ = 2;
+                }
+            }
             else
                 vertex_ptr->flag_ = 0;
             // now vertex_ptr->flag_ represents if this vertex is a frontier vertex
@@ -377,6 +389,7 @@ void Viewpoint::CheckVisibility(Viewpoint &v2)
             }
             if (!is_frontier)
             {
+                fc.area_ -= (*facet_iter)->area_;
                 facet_iter = fc.facet_list_.erase(facet_iter);
                 erase_count++;
             }

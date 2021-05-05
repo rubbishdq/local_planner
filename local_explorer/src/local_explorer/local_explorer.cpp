@@ -30,6 +30,7 @@ LocalExplorer::LocalExplorer()
     colored_convex_hull_pub_ = n_.advertise<visualization_msgs::Marker>("local_explorer/colored_convex_hull", 1);
     viewpoint_pub_ = n_.advertise<sensor_msgs::PointCloud2>("local_explorer/viewpoint", 1);
     colored_viewpoint_pub_ = n_.advertise<visualization_msgs::Marker>("local_explorer/colored_viewpoint", 1);
+    kd_tree_rt_pub_ = n_.advertise<visualization_msgs::Marker>("local_explorer/kd_tree_rt", 1);
     single_frontier_cluster_pub_ = n_.advertise<visualization_msgs::Marker>("local_explorer/single_frontier_cluster", 1);
     single_viewpoint_frontier_pub_ = n_.advertise<visualization_msgs::Marker>("local_explorer/single_viewpoint_frontier", 1);
     frontier_pub_ = n_.advertise<visualization_msgs::Marker>("local_explorer/frontier", 1);
@@ -172,6 +173,7 @@ void LocalExplorer::RemoveRedundantBoarder(Viewpoint &viewpoint, bool last_viewp
                 }
                 if (!is_frontier)
                 {
+                    fc.area_ -= (*facet_iter)->area_;
                     facet_iter = fc.facet_list_.erase(facet_iter);
                     erase_count++;
                 }
@@ -218,6 +220,7 @@ void LocalExplorer::RemoveRedundantBoarder(Viewpoint &viewpoint, bool last_viewp
                 }
                 if (!is_frontier)
                 {
+                    fc.area_ -= (*facet_iter)->area_;
                     facet_iter = fc.facet_list_.erase(facet_iter);
                     erase_count++;
                 }
@@ -230,7 +233,8 @@ void LocalExplorer::RemoveRedundantBoarder(Viewpoint &viewpoint, bool last_viewp
         ind++;
     }
 
-    printf("Erased %d frontier facets in LocalExplorer::RemoveRedundantBoarder().\n", erase_count);
+    if (erase_count > 0)
+        printf("Erased %d frontier facets in LocalExplorer::RemoveRedundantBoarder().\n", erase_count);
 }
 
 void LocalExplorer::ProcessNewViewpoint(std::shared_ptr<Viewpoint> viewpoint_ptr)
@@ -258,7 +262,7 @@ void LocalExplorer::ProcessNewViewpoint(std::shared_ptr<Viewpoint> viewpoint_ptr
     }
     else
     {
-        RemoveRedundantBoarder(*viewpoint_ptr, false);
+        //RemoveRedundantBoarder(*viewpoint_ptr, false);
     }
     if (is_record_)
     {
@@ -645,6 +649,47 @@ void LocalExplorer::PublishColoredViewpoint(Viewpoint &viewpoint)
     colored_viewpoint_pub_.publish(marker);
 }
 
+void LocalExplorer::PublishKdTreeRT(Viewpoint &viewpoint)
+{
+    if (!viewpoint.kd_tree_rt_ptr_)
+        return;
+    visualization_msgs::Marker marker;
+    geometry_msgs::Point point;
+    for (auto fb_ptr : viewpoint.kd_tree_rt_ptr_->fb_list_)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            auto vertex = fb_ptr->vertices_[i];
+            point.x = vertex[0]; 
+            point.y = vertex[1]; 
+            point.z = vertex[2];
+            marker.points.push_back(point);
+        }
+    }
+    marker.id = 0;
+    marker.type = visualization_msgs::Marker::TRIANGLE_LIST;
+    marker.action = visualization_msgs::Marker::ADD;
+    marker.pose.position.x = 0;
+    marker.pose.position.y = 0;
+    marker.pose.position.z = 0;
+    marker.pose.orientation.x = 0.0;
+    marker.pose.orientation.y = 0.0;
+    marker.pose.orientation.z = 0.0;
+    marker.pose.orientation.w = 1.0;
+    marker.scale.x = 1;
+    marker.scale.y = 1;
+    marker.scale.z = 1;
+    
+    marker.color.a = MARKER_ALPHA;
+    marker.color.r = 1.0;
+    marker.color.g = 1.0;
+    marker.color.b = 0.0;
+
+    marker.header.frame_id = "world";
+    marker.header.stamp = ros::Time::now();
+    kd_tree_rt_pub_.publish(marker);
+}
+
 void LocalExplorer::PublishSingleFrontierCluster(FrontierCluster &fc)
 {
     if (target_fc_ == nullptr)
@@ -906,6 +951,7 @@ void LocalExplorer::VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPo
         PublishViewpoint(*viewpoint_ptr);
         PublishSingleFrontierCluster(*target_fc_);
         PublishSingleViewpointFrontier(*viewpoint_ptr);
+        PublishKdTreeRT(*viewpoint_ptr);
 
         if (displayed_viewpoint_num_ >= 0 && displayed_viewpoint_num_ < int(viewpoint_list_.size()))
         {
@@ -913,6 +959,34 @@ void LocalExplorer::VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPo
         }
 
         ProcessNewViewpoint(viewpoint_ptr);
+        Eigen::Vector3f x, y;
+        x << 0,2,1.51; y << 0,5,1.51;
+        if (viewpoint_ptr->IntersectWithObstacle(x, y))
+        {
+            std::cout << "Intersect\n";
+        }
+        else
+        {
+            std::cout << "Not intersect\n";
+        }
+        x << 3,5,1.51; y << 0,5,1.51;
+        if (viewpoint_ptr->IntersectWithObstacle(x, y))
+        {
+            std::cout << "Intersect\n";
+        }
+        else
+        {
+            std::cout << "Not intersect\n";
+        }
+        x << 3,5,1.51; y << 3,7,1.51;
+        if (viewpoint_ptr->IntersectWithObstacle(x, y))
+        {
+            std::cout << "Intersect\n";
+        }
+        else
+        {
+            std::cout << "Not intersect\n";
+        }
         viewpoint_ptr->ResetKdTreeRT();
 
         PublishFrontier();

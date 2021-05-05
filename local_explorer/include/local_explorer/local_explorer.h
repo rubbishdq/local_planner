@@ -58,6 +58,7 @@ private:
     void PublishColoredConvexHull(ConvexHull &convex_hull);  // inverted
     void PublishViewpoint(Viewpoint &viewpoint, bool flagged_only);
     void PublishColoredViewpoint(Viewpoint &viewpoint);
+    void PublishKdTreeRT(Viewpoint &viewpoint);
     void PublishSingleFrontierCluster(FrontierCluster &fc);
     void PublishSingleViewpointFrontier(Viewpoint &viewpoint);
     void PublishFrontier();
@@ -101,6 +102,7 @@ private:
     ros::Publisher colored_convex_hull_pub_;
     ros::Publisher viewpoint_pub_;
     ros::Publisher colored_viewpoint_pub_;
+    ros::Publisher kd_tree_rt_pub_;
     ros::Publisher single_frontier_cluster_pub_;
     ros::Publisher single_viewpoint_frontier_pub_;
     ros::Publisher frontier_pub_;

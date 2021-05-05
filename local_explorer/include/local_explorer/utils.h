@@ -203,17 +203,43 @@ float SideOp(float* L1, float* L2)
 // https://members.loria.fr/SLazard/ARC-Visi3D/Pant-project/files/Line_Segment_Triangle.html
 bool IsLineSegIntersectTri(Eigen::Vector3f p1, Eigen::Vector3f p2, Eigen::Vector3f p3, Eigen::Vector3f start, Eigen::Vector3f end)
 {
+    float s1, s2, s3;
+    float *L1 = new float[6];
+    float *e1 = new float[6];
+    float *e2 = new float[6];
+    float *e3 = new float[6];
+    GetPlucker(start, end, L1);
+    GetPlucker(p1, p2, e1);
+    GetPlucker(p2, p3, e2);
+    GetPlucker(p3, p1, e3);
+    s1 = SideOp(L1, e1);
+    s2 = SideOp(L1, e2);
+    s3 = SideOp(L1, e3);
+    delete []L1;
+    delete []e2;
+    delete []e3;
+    if (!(s1*s2 >= 0 && s1*s3 >= 0))
+    {
+        delete []e1;
+        return false;
+    }
+
     float *L2 = new float[6];
     float *L3 = new float[6];
-    float *L4 = new float[6];
-    GetPlucker(start, p1, L2);
-    GetPlucker(p1, end, L3);
-    GetPlucker(p2, p3, L3);
-    float s1 = SideOp(L4, L2), s2 = SideOp(L4, L3);
+    GetPlucker(start, p3, L2);
+    GetPlucker(p3, end, L3);
+    s1 = SideOp(e1, L2);
+    s2 = SideOp(e1, L3);
+    delete []e1;
     delete []L2;
     delete []L3;
-    delete []L4;
     return (s1*s2 > 0);
+}
+
+bool IsHeightBetweenLimit(Eigen::Vector3f pt)
+{
+    return !((pt[2]-BOARDER_Z_RANGE[0]) < HEIGHT_DIFF_THRESHOLD || 
+                    (-pt[2]+BOARDER_Z_RANGE[1]) < HEIGHT_DIFF_THRESHOLD);
 }
 
 } // namespace local_explorer
