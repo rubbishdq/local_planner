@@ -7,6 +7,7 @@
 #include "local_explorer/kd_tree.h"
 
 #include <list>
+#include <iterator>
 #include <cfloat>
 
 namespace local_explorer
@@ -20,7 +21,9 @@ public:
     void AddFacet(std::shared_ptr<Facet> facet_ptr);
     void SetFacetFlag(flag_t flag);
     bool IsEmpty();
+    void SetEmpty();
     Eigen::Vector3f GetCenter();
+    void RemoveFacet(std::list<std::shared_ptr<Facet>>::iterator &iter);
 
     int id_;  // start from 1
     std::list<std::shared_ptr<Facet>> facet_list_;
@@ -49,6 +52,7 @@ public:
     void CheckVisibility(Viewpoint &v2); // removed frontier points visible in v2
     void PrintFrontierData(int id);
     void AddNeighbor(std::shared_ptr<Viewpoint> viewpoint_ptr);
+    void RemoveSmallFrontierCluster(float min_area);
 
     float Distance(Viewpoint &v2);
     void SetOrigin(Eigen::Vector3f origin);

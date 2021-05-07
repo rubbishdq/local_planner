@@ -173,8 +173,7 @@ void LocalExplorer::RemoveRedundantBoarder(Viewpoint &viewpoint, bool last_viewp
                 }
                 if (!is_frontier)
                 {
-                    fc.area_ -= (*facet_iter)->area_;
-                    facet_iter = fc.facet_list_.erase(facet_iter);
+                    fc.RemoveFacet(facet_iter);
                     erase_count++;
                 }
                 else
@@ -220,8 +219,7 @@ void LocalExplorer::RemoveRedundantBoarder(Viewpoint &viewpoint, bool last_viewp
                 }
                 if (!is_frontier)
                 {
-                    fc.area_ -= (*facet_iter)->area_;
-                    facet_iter = fc.facet_list_.erase(facet_iter);
+                    fc.RemoveFacet(facet_iter);
                     erase_count++;
                 }
                 else
@@ -275,6 +273,11 @@ void LocalExplorer::ProcessNewViewpoint(std::shared_ptr<Viewpoint> viewpoint_ptr
             //viewpoint_list_[0]->PrintFrontierData(0);
             ROS_INFO("Operation ID: %d", operation_id);
         }
+    }
+    // remove small frontier clusters
+    for (auto old_viewpoint_ptr : viewpoint_list_)  // Note: viewpoint_ptr has been added to viewpoint_list_
+    {
+        old_viewpoint_ptr->RemoveSmallFrontierCluster(MIN_FRONTIER_CLUSTER_AREA);  // parameter used in this function can be better adjusted
     }
 }
 

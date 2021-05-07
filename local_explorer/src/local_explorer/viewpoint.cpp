@@ -51,11 +51,25 @@ bool FrontierCluster::IsEmpty()
     return facet_list_.empty();
 }
 
+void FrontierCluster::SetEmpty()
+{
+    area_ = 0.0;
+    is_boarder_ = false;
+    std::list<std::shared_ptr<Facet>> list_temp;
+    facet_list_.swap(list_temp);
+}
+
 Eigen::Vector3f FrontierCluster::GetCenter()
 {
     return Eigen::Vector3f((xyz_range_[0][0]+xyz_range_[1][0]) / 2, 
         (xyz_range_[0][1]+xyz_range_[1][1]) / 2,
         (xyz_range_[0][2]+xyz_range_[1][2]) / 2);
+}
+
+void FrontierCluster::RemoveFacet(std::list<std::shared_ptr<Facet>>::iterator &iter)
+{
+    area_ -= (*iter)->area_;
+    iter = facet_list_.erase(iter);
 }
 
 Viewpoint::Viewpoint(Eigen::Vector3f origin)
@@ -223,20 +237,7 @@ void Viewpoint::GenerateViewpoint(std::vector<LabeledPoint> &cloud, std::vector<
         }
         */
         // remove facet cluster that is too small
-        auto fc_iter = frontier_cluster_list_.begin();
-        while (fc_iter != frontier_cluster_list_.end())
-        {
-            if (fc_iter->area_ < MIN_FRONTIER_CLUSTER_AREA)
-            {
-                fc_iter->SetFacetFlag(0);
-                fc_iter = frontier_cluster_list_.erase(fc_iter);
-                frontier_cluster_count_--;
-            }
-            else
-            {
-                fc_iter++;
-            }
-        }
+        RemoveSmallFrontierCluster(MIN_FRONTIER_CLUSTER_AREA);
 
         is_generated_ = true;
     }
@@ -361,6 +362,7 @@ bool Viewpoint::IntersectWithObstacle(Eigen::Vector3f start, Eigen::Vector3f end
 void Viewpoint::CheckVisibility(Viewpoint &v2)
 {
     int erase_count = 0;
+    Eigen::Vector3f v2_origin = v2.GetOrigin();
     for (auto &fc : frontier_cluster_list_)
     {
         auto facet_iter = fc.facet_list_.begin();
@@ -373,14 +375,13 @@ void Viewpoint::CheckVisibility(Viewpoint &v2)
                 {
                     continue;
                 }
-                Eigen::Vector3f pos = vertex_ptr->pos_, v2_origin = v2.GetOrigin();
-                if (!InBoxRange(pos-v2_origin))
+                Eigen::Vector3f pos = vertex_ptr->pos_;
+                if (InBoxRange(pos-v2_origin))
                 {
-                    continue;
-                }
-                if (v2.Visible(pos))
-                {
-                    vertex_ptr->flag_ = 0;
+                    if (v2.Visible(pos))
+                    {
+                        vertex_ptr->flag_ = 0;
+                    }
                 }
                 if (vertex_ptr->flag_ != 0)
                 {
@@ -389,8 +390,7 @@ void Viewpoint::CheckVisibility(Viewpoint &v2)
             }
             if (!is_frontier)
             {
-                fc.area_ -= (*facet_iter)->area_;
-                facet_iter = fc.facet_list_.erase(facet_iter);
+                fc.RemoveFacet(facet_iter);
                 erase_count++;
             }
             else
@@ -399,7 +399,8 @@ void Viewpoint::CheckVisibility(Viewpoint &v2)
             }
         }
     }
-    //printf("Erased %d frontier facets in Viewpoint::CheckVisibility().\n", erase_count);
+    if (erase_count > 0)
+        printf("Erased %d frontier facets in Viewpoint::CheckVisibility().\n", erase_count);
 }
 
 void Viewpoint::PrintFrontierData(int id = 0)
@@ -428,6 +429,24 @@ void Viewpoint::AddNeighbor(std::shared_ptr<Viewpoint> viewpoint_ptr)
     nv.viewpoint_ptr_ = viewpoint_ptr;
     nv.dist_ = Distance(*viewpoint_ptr);
     neighbor_list_.push_back(nv);
+}
+
+void Viewpoint::RemoveSmallFrontierCluster(float min_area)
+{
+    auto fc_iter = frontier_cluster_list_.begin();
+    while (fc_iter != frontier_cluster_list_.end())
+    {
+        if (fc_iter->IsEmpty() || fc_iter->area_ < min_area)
+        {
+            fc_iter->SetFacetFlag(0);
+            fc_iter = frontier_cluster_list_.erase(fc_iter);
+            frontier_cluster_count_--;
+        }
+        else
+        {
+            fc_iter++;
+        }
+    }
 }
 
 float Viewpoint::Distance(Viewpoint &v2)
