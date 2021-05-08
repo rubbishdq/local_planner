@@ -47,7 +47,7 @@ private:
     bool Replan();
     void UpdateTopologicalMap(std::shared_ptr<Viewpoint> viewpoint_ptr); // viewpoint_ptr should not be in this->viewpoint_list_
     std::deque<std::shared_ptr<Viewpoint>> GetTopologicalPath(
-        std::shared_ptr<Viewpoint> start, std::shared_ptr<Viewpoint> end);
+        std::shared_ptr<Viewpoint> start, std::shared_ptr<Viewpoint> end, float* cost);
     bool GetNearestViewpoint(Eigen::Vector3f pos, std::shared_ptr<Viewpoint>& viewpoint_ptr);  // return false if no available viewpoints found
     bool GetNearestFrontierCluster(Eigen::Vector3f pos, FrontierCluster*& fc_ptr);  // return false if no available frontiers found
     bool GetNearestFrontierCluster(Eigen::Vector3f pos, FrontierCluster*& fc_ptr, std::shared_ptr<Viewpoint>& vptr);  // also gets the viewpoint this fc belongs to

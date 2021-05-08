@@ -299,7 +299,7 @@ bool LocalExplorer::Replan()
     }
     std::lock_guard<std::mutex> topological_path_lock(topological_path_mutex_);
     target_fc_ = fc_ptr;
-    topological_path_ = GetTopologicalPath(start, end);
+    topological_path_ = GetTopologicalPath(start, end, nullptr);
     navigated_to_target_viewpoint_ = false;
     return true;
 }
@@ -309,8 +309,12 @@ void LocalExplorer::UpdateTopologicalMap(std::shared_ptr<Viewpoint> viewpoint_pt
     int ind = 0, count = 0;
     for (auto old_viewpoint_ptr : viewpoint_list_)
     {
+        // connect new viewpoint with last viewpoint in the array
+        // for other old viewpoints, connect if they are visible to each other
         if (ind == int(viewpoint_list_.size())-1 ||
-            (viewpoint_ptr->Distance(*old_viewpoint_ptr) <= SENSOR_RANGE && viewpoint_ptr->Visible(old_viewpoint_ptr->GetOrigin())))
+            (viewpoint_ptr->Distance(*old_viewpoint_ptr) <= SENSOR_RANGE && 
+            viewpoint_ptr->Visible(old_viewpoint_ptr->GetOrigin()) &&
+            old_viewpoint_ptr->Visible(viewpoint_ptr->GetOrigin())))
         {
             viewpoint_ptr->AddNeighbor(old_viewpoint_ptr);
             old_viewpoint_ptr->AddNeighbor(viewpoint_ptr);
@@ -323,7 +327,7 @@ void LocalExplorer::UpdateTopologicalMap(std::shared_ptr<Viewpoint> viewpoint_pt
 
 // Dijkstra algorithm
 std::deque<std::shared_ptr<Viewpoint>> LocalExplorer::GetTopologicalPath(
-    std::shared_ptr<Viewpoint> start, std::shared_ptr<Viewpoint> end)
+    std::shared_ptr<Viewpoint> start, std::shared_ptr<Viewpoint> end, float* cost)
 {
     typedef std::pair<float, std::shared_ptr<Viewpoint>> q_ele;
     for (auto viewpoint_ptr : viewpoint_list_)
@@ -341,6 +345,10 @@ std::deque<std::shared_ptr<Viewpoint>> LocalExplorer::GetTopologicalPath(
         pq.pop();
         if (node_ptr == end)
         {
+            if (cost != nullptr)
+            {
+                *cost = node_ptr->dist_;
+            }
             break;
         }
         if (node_ptr->is_visited_)
