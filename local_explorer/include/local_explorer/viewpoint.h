@@ -19,6 +19,7 @@ class FrontierCluster
 public:
     FrontierCluster(int id = 0, bool is_boarder_ = false);
     void AddFacet(std::shared_ptr<Facet> facet_ptr);
+    void CalcXYZRange();
     void SetFacetFlag(flag_t flag);
     bool IsEmpty();
     void SetEmpty();
@@ -39,7 +40,7 @@ struct NeighborViewpoint
     float dist_;
 };
 
-class Viewpoint
+class Viewpoint : public std::enable_shared_from_this<Viewpoint>
 {
 public:
     Viewpoint(Eigen::Vector3f origin = Eigen::Vector3f::Zero());
@@ -52,7 +53,9 @@ public:
     void CheckVisibility(Viewpoint &v2); // removed frontier points visible in v2
     void PrintFrontierData(int id);
     void AddNeighbor(std::shared_ptr<Viewpoint> viewpoint_ptr);
+    void ResetNeighbor();
     void RemoveSmallFrontierCluster(float min_area);
+    void RecalcFrontierClusterRange();
 
     float Distance(Viewpoint &v2);
     void SetOrigin(Eigen::Vector3f origin);

@@ -38,6 +38,46 @@ void FrontierCluster::AddFacet(std::shared_ptr<Facet> facet_ptr)
     area_ += facet_ptr->area_;
 }
 
+void FrontierCluster::CalcXYZRange()
+{
+    if (IsEmpty())
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            xyz_range_[0][j] = 0.0;
+            xyz_range_[1][j] = 0.0;
+        }
+        return;
+    }
+    int ind = 0;
+    for (auto facet_ptr : facet_list_)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            Eigen::Vector3f p = facet_ptr->vertices_[i]->pos_;
+            if (ind == 0)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    xyz_range_[0][j] = p[j];
+                    xyz_range_[1][j] = p[j];
+                }
+            }
+            else
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    if (xyz_range_[0][j] > p[j])
+                        xyz_range_[0][j] = p[j];
+                    if (xyz_range_[1][j] < p[j])
+                        xyz_range_[1][j] = p[j];
+                }
+            }
+            ind++;
+        }
+    }
+}
+
 void FrontierCluster::SetFacetFlag(flag_t flag)
 {
     for (auto facet_ptr : facet_list_)
@@ -431,6 +471,30 @@ void Viewpoint::AddNeighbor(std::shared_ptr<Viewpoint> viewpoint_ptr)
     neighbor_list_.push_back(nv);
 }
 
+// *this will usually be destructed after ResetNeighbor()
+// this function only reset neighbor's neighbor_list
+void Viewpoint::ResetNeighbor()
+{
+    for (auto neighbor : neighbor_list_)
+    {
+        auto neighbor_ptr = neighbor.viewpoint_ptr_.lock();
+        auto nn_iter = neighbor_ptr->neighbor_list_.begin();
+        while (nn_iter != neighbor_ptr->neighbor_list_.end())
+        {
+            auto nn_ptr = nn_iter->viewpoint_ptr_.lock();
+            if (nn_ptr == this->shared_from_this())
+            {
+                neighbor_ptr->neighbor_list_.erase(nn_iter);
+                break;
+            }
+            else
+            {
+                nn_iter++;
+            }
+        }
+    }
+}
+
 void Viewpoint::RemoveSmallFrontierCluster(float min_area)
 {
     auto fc_iter = frontier_cluster_list_.begin();
@@ -446,6 +510,14 @@ void Viewpoint::RemoveSmallFrontierCluster(float min_area)
         {
             fc_iter++;
         }
+    }
+}
+
+void Viewpoint::RecalcFrontierClusterRange()
+{
+    for (auto fc : frontier_cluster_list_)
+    {
+        fc.CalcXYZRange();
     }
 }
 

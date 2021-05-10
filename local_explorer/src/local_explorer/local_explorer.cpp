@@ -247,6 +247,7 @@ void LocalExplorer::ProcessNewViewpoint(std::shared_ptr<Viewpoint> viewpoint_ptr
             {
                 auto iter = viewpoint_list_.end();
                 iter--;
+                (*iter)->ResetNeighbor();
                 viewpoint_list_.erase(iter);
             }
         }
@@ -281,27 +282,36 @@ void LocalExplorer::ProcessNewViewpoint(std::shared_ptr<Viewpoint> viewpoint_ptr
     }
 }
 
-bool LocalExplorer::Replan()
+ReplanResult LocalExplorer::Replan(Eigen::Vector3f current_pos)
 {
-    Eigen::Vector3f current_pos;
-    current_pos << (float)pos_[0], pos_[1], pos_[2];
+    ReplanResult result;
     FrontierCluster* fc_ptr = nullptr;
     std::shared_ptr<Viewpoint> start, end;
     if (!GetNearestViewpoint(current_pos, start))
     {
         ROS_INFO("No viewpoints found.");
-        return false;
+        result.value = 0;
+        return result;
     }
     if (!GetNearestFrontierCluster(current_pos, fc_ptr, end))
     {
         ROS_INFO("No new frontier clusters found.");
-        return false;
+        result.value = 0;
+        return result;
+    }
+    target_fc_ = fc_ptr;
+    // if current position is visible by "end", navigate to target_fc directly
+    if (end->Visible(current_pos))
+    {
+        result.value = 1;
+        result.common_vptr = end;
+        return result;
     }
     std::lock_guard<std::mutex> topological_path_lock(topological_path_mutex_);
-    target_fc_ = fc_ptr;
     topological_path_ = GetTopologicalPath(start, end, nullptr);
     navigated_to_target_viewpoint_ = false;
-    return true;
+    result.value = 2;
+    return result;
 }
 
 void LocalExplorer::UpdateTopologicalMap(std::shared_ptr<Viewpoint> viewpoint_ptr)
@@ -1066,18 +1076,36 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
         {
             ROS_INFO("Current state: REACHED_GOAL");
             // try replanning
-            if (Replan())
+            ReplanResult replan_result = Replan(current_pos);
+            switch (replan_result.value)
             {
-                std::lock_guard<std::mutex> topological_path_lock(topological_path_mutex_);
-                PublishGlobalNavGoal(target_fc_->GetCenter(), DirectionQuatHorizonal(current_pos, target_fc_->GetCenter()));
-                PublishTopologicalPath();
-                nav_state_ = NavState::NAV_IN_PATH;
-                auto next_vptr = topological_path_.front();
-                topological_path_.pop_front();
-                goal_pos_ = next_vptr->GetOrigin();
-                goal_rot_ = DirectionQuatHorizonal(current_pos, goal_pos_);
-                PublishLocalNavGoal(goal_pos_, goal_rot_);
-                drone_status_updated_ = false;
+                case 1:
+                {
+                    nav_state_ = NavState::NAV_TO_LOCAL_FRONTIER;
+                    goal_pos_ = goal_pos_ = target_fc_->GetCenter();
+                    goal_rot_ = DirectionQuatHorizonal(replan_result.common_vptr->GetOrigin(), goal_pos_);
+                    PublishLocalNavGoal(goal_pos_, goal_rot_);
+                    drone_status_updated_ = false;
+                    break;
+                }
+                case 2:
+                {
+                    std::lock_guard<std::mutex> topological_path_lock(topological_path_mutex_);
+                    PublishGlobalNavGoal(target_fc_->GetCenter(), DirectionQuatHorizonal(current_pos, target_fc_->GetCenter()));
+                    PublishTopologicalPath();
+                    nav_state_ = NavState::NAV_IN_PATH;
+                    auto next_vptr = topological_path_.front();
+                    topological_path_.pop_front();
+                    goal_pos_ = next_vptr->GetOrigin();
+                    goal_rot_ = DirectionQuatHorizonal(current_pos, goal_pos_);
+                    PublishLocalNavGoal(goal_pos_, goal_rot_);
+                    drone_status_updated_ = false;
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
             }
         }
             break;

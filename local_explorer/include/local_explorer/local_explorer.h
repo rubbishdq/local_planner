@@ -34,6 +34,13 @@ enum NavState
     NAV_IN_PATH, NAV_TO_LOCAL_FRONTIER, REACHED_GOAL
 };
 
+struct ReplanResult
+{
+    int value;
+    // variables below can be put into a union
+    std::shared_ptr<Viewpoint> common_vptr;  // used when value == 1
+};
+
 class LocalExplorer
 {
 public:
@@ -44,7 +51,7 @@ private:
     int DetermineOperation();
     void RemoveRedundantBoarder(Viewpoint &viewpoint, bool last_viewpoint); // if last_viewpoint is false, last added viewpoint's boarder will not be removed
     void ProcessNewViewpoint(std::shared_ptr<Viewpoint> viewpoint_ptr);
-    bool Replan();
+    ReplanResult Replan(Eigen::Vector3f current_pos);
     void UpdateTopologicalMap(std::shared_ptr<Viewpoint> viewpoint_ptr); // viewpoint_ptr should not be in this->viewpoint_list_
     std::deque<std::shared_ptr<Viewpoint>> GetTopologicalPath(
         std::shared_ptr<Viewpoint> start, std::shared_ptr<Viewpoint> end, float* cost);
