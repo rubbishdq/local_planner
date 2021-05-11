@@ -14,6 +14,8 @@ LocalExplorer::LocalExplorer()
     displayed_viewpoint_num_ = -1;
     drone_status_ = -1; // not initialized
     drone_status_updated_ = false;
+    faster_nav_status_ = -1; // not initialized
+    faster_nav_status_updated_ = false;
     target_fc_ = nullptr;
     nav_state_ = NavState::REACHED_GOAL;
     navigated_to_target_viewpoint_ = false;
@@ -43,6 +45,7 @@ LocalExplorer::LocalExplorer()
     record_command_sub_ = n_.subscribe("record_command", 1, &LocalExplorer::RecordCommandCallback, this, ros::TransportHints().tcpNoDelay());
     displayed_num_sub_ = n_.subscribe("displayed_num", 1, &LocalExplorer::DisplayedNumCallback, this, ros::TransportHints().tcpNoDelay());
     drone_status_sub_ = n_.subscribe("faster/drone_status", 1, &LocalExplorer::DroneStatusCallback, this, ros::TransportHints().tcpNoDelay());
+    faster_nav_status_sub_ = n_.subscribe("faster/nav_status", 1, &LocalExplorer::FasterNavStatusCallback, this, ros::TransportHints().tcpNoDelay());
 
     nav_command_timer_ = n_.createTimer(ros::Duration(NAV_COMMAND_TIMEVAL), &LocalExplorer::NavCommandCallback, this);
     //topological_path_pub_timer_ = n_.createTimer(ros::Duration(TOPOLOGICAL_PATH_PUB_TIMEVAL), &LocalExplorer::PublishTopologicalPathCallback, this);
@@ -300,6 +303,7 @@ ReplanResult LocalExplorer::Replan(Eigen::Vector3f current_pos)
         return result;
     }
     target_fc_ = fc_ptr;
+    target_viewpoint_ = end;
     // if current position is visible by "end", navigate to target_fc directly
     if (end->Visible(current_pos))
     {
@@ -388,10 +392,10 @@ std::deque<std::shared_ptr<Viewpoint>> LocalExplorer::GetTopologicalPath(
     node_ptr = end;
     while (node_ptr != start)
     {
-        path.push_back(node_ptr);
+        path.push_front(node_ptr);
         node_ptr = node_ptr->last_viewpoint_.lock();
     }
-    path.push_back(start);
+    path.push_front(start);
     return path;
 }
 
@@ -469,6 +473,14 @@ bool LocalExplorer::GetNearestFrontierCluster(Eigen::Vector3f pos, FrontierClust
     }
     fc_ptr = nearest_fc_ptr;
     return !(nearest_fc_ptr == nullptr);
+}
+
+void LocalExplorer::RemoveCurrentTarget()
+{
+    if (target_fc_ != nullptr)
+    {
+        target_fc_->SetEmpty();
+    }
 }
 
 void LocalExplorer::RepublishVoxelizedPoints(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr)
@@ -713,10 +725,6 @@ void LocalExplorer::PublishKdTreeRT(Viewpoint &viewpoint)
 
 void LocalExplorer::PublishSingleFrontierCluster(FrontierCluster &fc)
 {
-    if (target_fc_ == nullptr)
-    {
-        return;
-    }
     visualization_msgs::Marker marker;
     geometry_msgs::Point point;
     std_msgs::ColorRGBA color_rgba;
@@ -908,6 +916,11 @@ void LocalExplorer::PublishTopologicalPath()
         ROS_WARN("Topological path empty.");
         return;
     }
+    if (target_fc_ == nullptr)
+    {
+        ROS_WARN("No target frontier cluster selected.");
+        return;
+    }
     else
     {
         ROS_INFO("Publishing topological path.");
@@ -970,7 +983,10 @@ void LocalExplorer::VoxelizedPointsCallback(const global_mapper_ros::VoxelizedPo
         PublishConvexHull(*(viewpoint_generator_ptr_->GetViewpointPtr()->GetConvexHullPtr()));
         PublishColoredConvexHull(*(viewpoint_generator_ptr_->GetViewpointPtr()->GetConvexHullPtr()));
         PublishViewpoint(*viewpoint_ptr);
-        PublishSingleFrontierCluster(*target_fc_);
+        if (target_fc_ != nullptr)
+        {
+            PublishSingleFrontierCluster(*target_fc_);
+        }
         PublishSingleViewpointFrontier(*viewpoint_ptr);
         PublishKdTreeRT(*viewpoint_ptr);
 
@@ -1016,6 +1032,12 @@ void LocalExplorer::DroneStatusCallback(const std_msgs::Int32::ConstPtr& msg_ptr
     drone_status_updated_ = true;
 }
 
+void LocalExplorer::FasterNavStatusCallback(const std_msgs::Int32::ConstPtr& msg_ptr)
+{
+    faster_nav_status_ = msg_ptr->data;
+    faster_nav_status_updated_ = true;
+}
+
 // naive strategy
 void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
 {
@@ -1028,7 +1050,7 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
             ROS_INFO("Current state: NAV_IN_PATH");
             if (drone_status_ == 3 && drone_status_updated_)  // REACHED_GOAL in faster
             {
-                if (target_fc_->IsEmpty())
+                if (target_fc_ == nullptr || target_fc_->IsEmpty())
                 {
                     nav_state_ = NavState::REACHED_GOAL;  // stop navigation and replan
                 }
@@ -1070,6 +1092,7 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
             {
                 nav_state_ = NavState::REACHED_GOAL;
                 drone_status_updated_ = false;
+                RemoveCurrentTarget();
             }
         }
         case NavState::REACHED_GOAL:

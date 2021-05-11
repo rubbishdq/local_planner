@@ -58,6 +58,7 @@ private:
     bool GetNearestViewpoint(Eigen::Vector3f pos, std::shared_ptr<Viewpoint>& viewpoint_ptr);  // return false if no available viewpoints found
     bool GetNearestFrontierCluster(Eigen::Vector3f pos, FrontierCluster*& fc_ptr);  // return false if no available frontiers found
     bool GetNearestFrontierCluster(Eigen::Vector3f pos, FrontierCluster*& fc_ptr, std::shared_ptr<Viewpoint>& vptr);  // also gets the viewpoint this fc belongs to
+    void RemoveCurrentTarget();
 
     void RepublishVoxelizedPoints(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr);
     void PublishInvertedCloud(ViewpointGenerator &viewpoint_generator);
@@ -78,6 +79,7 @@ private:
     void RecordCommandCallback(const std_msgs::Bool::ConstPtr& msg_ptr);
     void DisplayedNumCallback(const std_msgs::Int32::ConstPtr& msg_ptr);
     void DroneStatusCallback(const std_msgs::Int32::ConstPtr& msg_ptr);
+    void FasterNavStatusCallback(const std_msgs::Int32::ConstPtr& msg_ptr);
 
     void NavCommandCallback(const ros::TimerEvent& event);
     void PublishTopologicalPathCallback(const ros::TimerEvent& event);
@@ -86,6 +88,8 @@ private:
     bool pose_init_, last_pose_init_;
     int drone_status_;
     bool drone_status_updated_;
+    int faster_nav_status_;
+    bool faster_nav_status_updated_;
     NavState nav_state_;
 
     std::deque<std::shared_ptr<Viewpoint>> topological_path_;
@@ -96,6 +100,7 @@ private:
 
     std::vector<std::shared_ptr<Viewpoint>> viewpoint_list_;
     FrontierCluster* target_fc_;
+    std::shared_ptr<Viewpoint> target_viewpoint_;
     bool navigated_to_target_viewpoint_;
 
     float frontier_color_[FRONTIER_COLOR_COUNT][3];  // used to visualize frontier clusters
@@ -122,6 +127,7 @@ private:
     ros::Subscriber record_command_sub_;
     ros::Subscriber displayed_num_sub_;
     ros::Subscriber drone_status_sub_;
+    ros::Subscriber faster_nav_status_sub_;
 
     ros::Timer nav_command_timer_;
     ros::Timer topological_path_pub_timer_;
@@ -132,6 +138,7 @@ private:
     std::unique_ptr<ViewpointGenerator> viewpoint_generator_ptr_;
 
     std::mutex topological_path_mutex_;
+    //std::mutex target_fc_mutex_;
 };
 
 } // namespace local_explorer

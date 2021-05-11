@@ -139,6 +139,7 @@ FasterRos::FasterRos(ros::NodeHandle nh) : nh_(nh)
   poly_whole_pub_ = nh.advertise<decomp_ros_msgs::PolyhedronArray>("poly_whole", 1, true);
   poly_safe_pub_ = nh.advertise<decomp_ros_msgs::PolyhedronArray>("poly_safe", 1, true);
   drone_status_pub_ = nh.advertise<std_msgs::Int32>("drone_status", 1, true);
+  nav_status_pub_ = nh.advertise<std_msgs::Int32>("nav_status", 1, true);
   pub_jps_inters_ = nh_.advertise<geometry_msgs::PointStamped>("jps_intersection", 1);
   // pub_log_ = nh_.advertise<snapstack_msgs::Cvx>("log_topic", 1);
   pub_traj_committed_colored_ = nh_.advertise<visualization_msgs::MarkerArray>("traj_committed_colored", 1);
@@ -192,10 +193,11 @@ void FasterRos::replanCB(const ros::TimerEvent& e)
     std::vector<state> X_safe;
     std::vector<state> X_whole;
 
-    faster_ptr_->replan(JPS_safe, JPS_whole, poly_safe, poly_whole, X_safe, X_whole);
+    int nav_status = faster_ptr_->replan(JPS_safe, JPS_whole, poly_safe, poly_whole, X_safe, X_whole);
     clearJPSPathVisualization(2);
     publishJPSPath(JPS_safe, JPS_SAFE);
     publishJPSPath(JPS_whole, JPS_WHOLE);
+    publishNavStatus(nav_status);
 
     publishPoly(poly_safe, SAFE);
     publishPoly(poly_whole, WHOLE);
@@ -527,6 +529,13 @@ void FasterRos::publishDroneStatus()
     drone_status_pub_.publish(status);
     faster_ptr_->setDroneStatusUpdated(false);
   }
+}
+
+void FasterRos::publishNavStatus(int nav_status)
+{
+  std_msgs::Int32 status;
+  status.data = nav_status;
+  nav_status_pub_.publish(status);
 }
 
 void FasterRos::terminalGoalCB(const geometry_msgs::PoseStamped& msg)

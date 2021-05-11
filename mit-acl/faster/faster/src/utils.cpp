@@ -710,7 +710,7 @@ void reduceJPSbyDistance(vec_Vecf<3>& path, double d)
 }
 // given 2 points (A inside and B outside the sphere) it computes the intersection of the lines between
 // that 2 points and the sphere
-Eigen::Vector3d getIntersectionWithSphere(Eigen::Vector3d& A, Eigen::Vector3d& B, double r, Eigen::Vector3d& center)
+Eigen::Vector3d getIntersectionWithSphere(Eigen::Vector3d& A, Eigen::Vector3d& B, double r, Eigen::Vector3d& center, bool* intersect)
 {
   // http://www.ambrsoft.com/TrigoCalc/Sphere/SpherLineIntersection_.htm
   /*  std::cout << "Center=" << std::endl << center << std::endl;
@@ -736,6 +736,8 @@ Eigen::Vector3d getIntersectionWithSphere(Eigen::Vector3d& A, Eigen::Vector3d& B
   float discrim = b * b - 4 * a * c;
   if (discrim <= 0)
   {
+    if (intersect != nullptr)
+      *intersect = false;
     printf("The line is tangent or doesn't intersect, returning the intersection with the center and the first "
            "point\n");
 
@@ -765,6 +767,8 @@ Eigen::Vector3d getIntersectionWithSphere(Eigen::Vector3d& A, Eigen::Vector3d& B
   }
   else
   {
+    if (intersect != nullptr)
+      *intersect = true;
     float t = (-b + sqrt(b * b - 4 * a * c)) / (2 * a);
     float x_int = x1 + (x2 - x1) * t;
     float y_int = y1 + (y2 - y1) * t;
@@ -780,7 +784,7 @@ Eigen::Vector3d getIntersectionWithSphere(Eigen::Vector3d& A, Eigen::Vector3d& B
 // the center is added as the first point of the path to ensure that the first element of the path is inside the sphere
 // (to avoid issues with the first point of JPS2)
 Eigen::Vector3d getFirstIntersectionWithSphere(vec_Vecf<3>& path, double r, Eigen::Vector3d& center,
-                                               int* last_index_inside_sphere, bool* noPointsOutsideSphere)
+                                               int* last_index_inside_sphere, bool* noPointsOutsideSphere, bool* intersect)
 {
   // printf("Utils: In getFirstIntersectionWithSphere\n");
   // printElementsOfJPS(path);
@@ -826,7 +830,7 @@ Eigen::Vector3d getFirstIntersectionWithSphere(vec_Vecf<3>& path, double r, Eige
         *noPointsOutsideSphere = true;
       }
       // std::cout << "Calling intersecion1 with A=" << A.transpose() << "  and B=" << B.transpose() << std::endl;
-      intersection = getIntersectionWithSphere(A, B, r, center);
+      intersection = getIntersectionWithSphere(A, B, r, center, intersect);
 
       // intersection = path[path.size() - 1];
 
@@ -852,7 +856,7 @@ Eigen::Vector3d getFirstIntersectionWithSphere(vec_Vecf<3>& path, double r, Eige
       B = path[index];
       // std::cout << "Utils: calling intersecion2 with A=" << A.transpose() << "  and B=" << B.transpose() <<
       // std::endl;
-      intersection = getIntersectionWithSphere(A, B, r, center);
+      intersection = getIntersectionWithSphere(A, B, r, center, intersect);
       // printf("index-1=%d\n", index - 1);
       if (last_index_inside_sphere != NULL)
       {
@@ -867,7 +871,7 @@ Eigen::Vector3d getFirstIntersectionWithSphere(vec_Vecf<3>& path, double r, Eige
 
 // Given a path (starting inside the sphere and finishing outside of it) expressed by a vector of 3D-vectors (points),
 // it returns its first intersection with a sphere of radius=r and center=center
-Eigen::Vector3d getLastIntersectionWithSphere(vec_Vecf<3> path, double r, Eigen::Vector3d center)
+Eigen::Vector3d getLastIntersectionWithSphere(vec_Vecf<3> path, double r, Eigen::Vector3d center, bool* intersect)
 {
   // printf("In getLastIntersectionWithSphere\n");
   int index = -1;
@@ -895,7 +899,7 @@ Eigen::Vector3d getLastIntersectionWithSphere(vec_Vecf<3> path, double r, Eigen:
   Eigen::Vector3d A = path[index];
   Eigen::Vector3d B = path[index + 1];
 
-  Eigen::Vector3d intersection = getIntersectionWithSphere(A, B, r, center);
+  Eigen::Vector3d intersection = getIntersectionWithSphere(A, B, r, center, intersect);
   // printf("returning intersection=\n");
   // std::cout << intersection.transpose() << std::endl;
   return intersection;
@@ -913,7 +917,7 @@ double getDistancePath(vec_Vecf<3>& path)
 
 // Same as the previous one, but also returns dist = the distance form the last intersection to the goal (following
 // the path)
-Eigen::Vector3d getLastIntersectionWithSphere(vec_Vecf<3> path, double r, Eigen::Vector3d center, double* Jdist)
+Eigen::Vector3d getLastIntersectionWithSphere(vec_Vecf<3> path, double r, Eigen::Vector3d center, double* Jdist, bool* intersect)
 {
   /*  printf("********************In getLastIntersectionWithSphere\n");
 
@@ -949,7 +953,7 @@ Eigen::Vector3d getLastIntersectionWithSphere(vec_Vecf<3> path, double r, Eigen:
   Eigen::Vector3d A = path[index];      // point inside the sphere
   Eigen::Vector3d B = path[index + 1];  // point outside the sphere
 
-  Eigen::Vector3d intersection = getIntersectionWithSphere(A, B, r, center);
+  Eigen::Vector3d intersection = getIntersectionWithSphere(A, B, r, center, intersect);
 
   // std::cout << "B\n " << B.transpose() << std::endl;
   // std::cout << "intersection\n " << intersection.transpose() << std::endl;

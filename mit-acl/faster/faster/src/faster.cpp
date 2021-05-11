@@ -311,14 +311,19 @@ bool Faster::initialized()
   return true;
 }
 
-void Faster::replan(vec_Vecf<3>& JPS_safe_out, vec_Vecf<3>& JPS_whole_out, vec_E<Polyhedron<3>>& poly_safe_out,
+// return state of planning
+// 0: successful / no exception
+// 1: no valid solution for JPS or trajectory
+// 2: "JPS path segment does'nt intersect with sphere"
+// 3: other exception (e.g. not initialized)
+int Faster::replan(vec_Vecf<3>& JPS_safe_out, vec_Vecf<3>& JPS_whole_out, vec_E<Polyhedron<3>>& poly_safe_out,
                     vec_E<Polyhedron<3>>& poly_whole_out, std::vector<state>& X_safe_out,
                     std::vector<state>& X_whole_out)
 {
   MyTimer replanCB_t(true);
   if (initializedAllExceptPlanner() == false)
   {
-    return;
+    return 3;
   }
 
   sg_whole_.ResetToNormalState();
@@ -354,7 +359,7 @@ void Faster::replan(vec_Vecf<3>& JPS_safe_out, vec_Vecf<3>& JPS_whole_out, vec_E
   {
     std::cout << "No replanning needed because" << std::endl;
     print_status();
-    return;
+    return 0;
   }
 
   std::cout << bold << on_red << "************IN REPLAN CB*********" << reset << std::endl;
@@ -382,7 +387,7 @@ void Faster::replan(vec_Vecf<3>& JPS_safe_out, vec_Vecf<3>& JPS_whole_out, vec_E
   if (solvedjps == false)
   {
     std::cout << bold << red << "JPS didn't find a solution" << std::endl;
-    return;
+    return 1;
   }
 
   //////////////////////////////////////////////////////////////////////////
@@ -390,10 +395,10 @@ void Faster::replan(vec_Vecf<3>& JPS_safe_out, vec_Vecf<3>& JPS_whole_out, vec_E
   //////////////////////////////////////////////////////////////////////////
 
   double ra = std::min((dist_to_goal - 0.001), par_.Ra);  // radius of the sphere S
-  bool noPointsOutsideS;
+  bool noPointsOutsideS, intersect;
   int li1;  // last index inside the sphere of JPSk
   state E;
-  E.pos = getFirstIntersectionWithSphere(JPSk, ra, JPSk[0], &li1, &noPointsOutsideS);
+  E.pos = getFirstIntersectionWithSphere(JPSk, ra, JPSk[0], &li1, &noPointsOutsideS, &intersect);
   vec_Vecf<3> JPS_in(JPSk.begin(), JPSk.begin() + li1 + 1);
   if (noPointsOutsideS == false)
   {
@@ -439,7 +444,7 @@ void Faster::replan(vec_Vecf<3>& JPS_safe_out, vec_Vecf<3>& JPS_whole_out, vec_E
     if (solved_whole == false)
     {
       std::cout << bold << red << "No solution found for the whole trajectory" << reset << std::endl;
-      return;
+      return 1;
     }
 
     // Get Results
@@ -498,7 +503,7 @@ void Faster::replan(vec_Vecf<3>& JPS_safe_out, vec_Vecf<3>& JPS_whole_out, vec_E
     /*    if (ARisInFreeSpace(indexR_) == false and takeoff_done_ == true)
         {
           std::cout << red << bold << "The piece A-->R is not in Free Space" << std::endl;
-          return;
+          return 3;
         }*/
 
     JPSk_inside_sphere_tmp[0] = R.pos;
@@ -548,7 +553,7 @@ void Faster::replan(vec_Vecf<3>& JPS_safe_out, vec_Vecf<3>& JPS_whole_out, vec_E
     if (solved_safe == false)
     {
       std::cout << red << "No solution found for the safe path" << reset << std::endl;
-      return;
+      return 1;
     }
 
     // Get the solution
@@ -566,7 +571,7 @@ void Faster::replan(vec_Vecf<3>& JPS_safe_out, vec_Vecf<3>& JPS_whole_out, vec_E
 
   if (appendToPlan(k_end_whole, sg_whole_.X_temp_, k_safe, sg_safe_.X_temp_) != true)
   {
-    return;
+    return 0;
   }
 
   /*  mtx_plan_.lock();
@@ -610,7 +615,7 @@ void Faster::replan(vec_Vecf<3>& JPS_safe_out, vec_Vecf<3>& JPS_whole_out, vec_E
 
   std::cout << bold << blue << "Replanning took " << replanCB_t.ElapsedMs() << " ms" << reset << std::endl;
 
-  return;
+  return 0;
 }
 
 void Faster::resetInitialization()
@@ -896,11 +901,11 @@ Eigen::Vector3d Faster::getFirstCollisionJPS(vec_Vecf<3>& path, bool* thereIsInt
         break;  // Leave the while loop
       }
 
-      bool no_points_outside_sphere = false;
+      bool no_points_outside_sphere = false, intersect = false;
 
-      inters = getFirstIntersectionWithSphere(path, r, path[0], &last_id, &no_points_outside_sphere);
+      inters = getFirstIntersectionWithSphere(path, r, path[0], &last_id, &no_points_outside_sphere, &intersect);
       // printf("**********Found it*****************\n");
-      if (no_points_outside_sphere == true)
+      if (no_points_outside_sphere == true || intersect == false)
       {  // JPS doesn't intersect with any obstacle
         *thereIsIntersection = false;
         /*        std::cout << "JPS provided doesn't intersect any obstacles, returning the first element of the path

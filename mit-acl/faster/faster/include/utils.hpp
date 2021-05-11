@@ -135,7 +135,7 @@ void reduceJPSbyDistance(vec_Vecf<3>& path, double d);
 
 // given 2 points (A inside and B outside the sphere) it computes the intersection of the lines between
 // that 2 points and the sphere
-Eigen::Vector3d getIntersectionWithSphere(Eigen::Vector3d& A, Eigen::Vector3d& B, double r, Eigen::Vector3d& center);
+Eigen::Vector3d getIntersectionWithSphere(Eigen::Vector3d& A, Eigen::Vector3d& B, double r, Eigen::Vector3d& center, bool* intersect = nullptr);
 
 // Given a path (starting inside the sphere and finishing outside of it) expressed by a vector of 3D-vectors (points),
 // it returns its first intersection with a sphere of radius=r and center=center
@@ -143,17 +143,18 @@ Eigen::Vector3d getIntersectionWithSphere(Eigen::Vector3d& A, Eigen::Vector3d& B
 // (to avoid issues with the first point of JPS2)
 Eigen::Vector3d getFirstIntersectionWithSphere(vec_Vecf<3>& path, double r, Eigen::Vector3d& center,
                                                int* last_index_inside_sphere = NULL,
-                                               bool* noPointsOutsideSphere = NULL);
+                                               bool* noPointsOutsideSphere = NULL, 
+                                               bool* intersect = NULL);
 
 // Given a path (starting inside the sphere and finishing outside of it) expressed by a vector of 3D-vectors (points),
 // it returns its first intersection with a sphere of radius=r and center=center
-Eigen::Vector3d getLastIntersectionWithSphere(vec_Vecf<3> path, double r, Eigen::Vector3d center);
+Eigen::Vector3d getLastIntersectionWithSphere(vec_Vecf<3> path, double r, Eigen::Vector3d center, bool* intersect = NULL);
 
 double getDistancePath(vec_Vecf<3>& path);
 
 // Same as the previous one, but also returns dist = the distance form the last intersection to the goal (following
 // the path)
-Eigen::Vector3d getLastIntersectionWithSphere(vec_Vecf<3> path, double r, Eigen::Vector3d center, double* Jdist);
+Eigen::Vector3d getLastIntersectionWithSphere(vec_Vecf<3> path, double r, Eigen::Vector3d center, double* Jdist, bool* intersect = NULL);
 
 // returns the point placed between two concentric spheres with radii ra, rb, and center=center
 // If the path goes out from the 1st sphere, and then enters again, these points are also considered!
