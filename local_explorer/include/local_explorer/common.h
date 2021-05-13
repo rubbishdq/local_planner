@@ -26,7 +26,7 @@ const double BOARDER_DIMENSION[3] = {10.0, 10.0, 6.0};
 const double MAP_RESOLUTION = 0.15;
 const double BOARDER_RESOLUTION = 0.3;
 const double BOARDER_Z_RANGE[2] = {-0.05, 3.05};
-const double HEIGHT_DIFF_THRESHOLD = 0.71;
+const double HEIGHT_DIFF_THRESHOLD = 1.05;
 const double RAND_ERROR = 1e-2;  // avoid computational error of qhull
 
 const double INVERT_PARAM = 1.018;
@@ -36,7 +36,7 @@ const double ALLOWED_BOARDER_ERROR = 1e-5;
 const float MIN_FRONTIER_RIDGE_LENGTH = 1.0;
 const float MIN_FRONTIER_CLUSTER_AREA = 1.0;
 //const float FRONTIER_CLUSTER_SIZE_LIMIT[3] = {3.0, 3.0, 1.5};
-const float FRONTIER_CLUSTER_SIZE_LIMIT[3] = {2.0, 2.0, 6.0};
+const float FRONTIER_CLUSTER_SIZE_LIMIT[3] = {3.5, 3.5, 6.0};
 
 const int FRONTIER_COLOR_COUNT = 4096;  // used to visualize frontier clusters
 const float MARKER_ALPHA = 0.8;

@@ -283,6 +283,10 @@ void LocalExplorer::ProcessNewViewpoint(std::shared_ptr<Viewpoint> viewpoint_ptr
     {
         old_viewpoint_ptr->RemoveSmallFrontierCluster(MIN_FRONTIER_CLUSTER_AREA);  // parameter used in this function can be better adjusted
     }
+    for (auto old_viewpoint_ptr : viewpoint_list_)
+    {
+        old_viewpoint_ptr->RecalcFrontierClusterRange();
+    }
 }
 
 ReplanResult LocalExplorer::Replan(Eigen::Vector3f current_pos)
@@ -1047,6 +1051,13 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
     {
         case NavState::NAV_IN_PATH:
         {
+            if (faster_nav_status_ > 0 && faster_nav_status_updated_)  // navigation exception in faster
+            {
+                RemoveCurrentTarget();
+                nav_state_ = NavState::REACHED_GOAL;  // stop navigation and replan
+                faster_nav_status_updated_ = false;
+                break;
+            }
             ROS_INFO("Current state: NAV_IN_PATH");
             if (drone_status_ == 3 && drone_status_updated_)  // REACHED_GOAL in faster
             {
@@ -1087,6 +1098,13 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
         }
         case NavState::NAV_TO_LOCAL_FRONTIER:
         {
+            if (faster_nav_status_ > 0 && faster_nav_status_updated_)  // navigation exception in faster
+            {
+                RemoveCurrentTarget();
+                nav_state_ = NavState::REACHED_GOAL;  // stop navigation and replan
+                faster_nav_status_updated_ = false;
+                break;
+            }
             ROS_INFO("Current state: NAV_TO_LOCAL_FRONTIER");
             if (drone_status_ == 3 && drone_status_updated_)  // REACHED_GOAL in faster
             {
@@ -1131,9 +1149,6 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
                 }
             }
         }
-            break;
-        default:
-            break;
     }
 }
 
