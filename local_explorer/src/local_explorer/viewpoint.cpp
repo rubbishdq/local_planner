@@ -381,15 +381,29 @@ void Viewpoint::ClusterSingleFacet(std::shared_ptr<Facet> facet_ptr, int cluster
     }
 }
 
-bool Viewpoint::Visible(Eigen::Vector3f pt)
+bool Viewpoint::Visible(Eigen::Vector3f pt, float offset)
 {
     Eigen::Vector3f diff = pt - GetOrigin();
-    if (diff.norm() > KD_TREE_IN_THRESHOLD)
+    if (diff.norm() > offset)
     {
-        pt = pt - (diff/diff.norm())*KD_TREE_IN_THRESHOLD;
+        pt = pt - (diff/diff.norm())*offset;
     }
     Eigen::Vector3f pt_inverted = Invert(pt, GetOrigin());
     return !kd_tree_ptr_->In(pt_inverted);
+}
+
+bool Viewpoint::IsCloseToBoarder(Eigen::Vector3f pt, float dist_th)
+{
+    Eigen::Vector3f diff;
+    for (auto vertex_ptr : convex_hull_ptr_->vertex_list_)
+    {
+        diff = pt - vertex_ptr->pos_;
+        if (diff.norm() < dist_th)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool Viewpoint::IntersectWithObstacle(Eigen::Vector3f start, Eigen::Vector3f end)

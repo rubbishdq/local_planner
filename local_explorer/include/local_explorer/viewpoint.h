@@ -48,7 +48,8 @@ public:
     void Points2Str(std::vector<LabeledPoint> &pts, char* str, int int_num, int dec_num); // convert std::vector<LabeledPoint> to qhull's input format
     void Points2Array(std::vector<LabeledPoint> &pts, double* arr);
     void ClusterSingleFacet(std::shared_ptr<Facet> facet_ptr, int cluster_id, int clustering_flag);
-    bool Visible(Eigen::Vector3f pt);
+    bool Visible(Eigen::Vector3f pt, float offset = KD_TREE_IN_THRESHOLD);
+    bool IsCloseToBoarder(Eigen::Vector3f pt, float dist_th= VIEWPOINT_CLOSE_THRESHOLD); // check if a point is too close to viewpoint's boarder, O(n) naive algorithm
     bool IntersectWithObstacle(Eigen::Vector3f start, Eigen::Vector3f end);
     void CheckVisibility(Viewpoint &v2); // removed frontier points visible in v2
     void PrintFrontierData(int id);

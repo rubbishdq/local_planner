@@ -48,6 +48,7 @@ const int KD_TREE_RT_MAX_DEPTH = 10;
 const int KD_TREE_RT_MIN_OBJ_COUNT = 50;
 
 const double NEW_VIEWPOINT_DIST_THRESHOLD = 1.0;
+const float VIEWPOINT_CLOSE_THRESHOLD = 0.2;  // used to check if a point is too close to a viewpoint's boarder
 const double UPDATE_VIEWPOINT_DIST_THRESHOLD = 0.05;
 const double UPDATE_VIEWPOINT_ANGLE_THRESHOLD = 30;
 

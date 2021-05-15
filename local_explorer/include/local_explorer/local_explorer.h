@@ -48,7 +48,7 @@ public:
 
 private:
     void InitFrontierColor();
-    int DetermineOperation();
+    int DetermineOperation(std::shared_ptr<Viewpoint> viewpoint_ptr);
     void RemoveRedundantBoarder(Viewpoint &viewpoint, bool last_viewpoint); // if last_viewpoint is false, last added viewpoint's boarder will not be removed
     void ProcessNewViewpoint(std::shared_ptr<Viewpoint> viewpoint_ptr);
     ReplanResult Replan(Eigen::Vector3f current_pos);

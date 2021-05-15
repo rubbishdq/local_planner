@@ -66,15 +66,20 @@ void LocalExplorer::InitFrontierColor()
     }
 }
 
-int LocalExplorer::DetermineOperation()
+int LocalExplorer::DetermineOperation(std::shared_ptr<Viewpoint> viewpoint_ptr)
 {
     if (!pose_init_)
         return 0;
+    //Eigen::Vector3f current_pos(float(pos_[0]), float(pos_[1]), float(pos_[2]));
     int operation_id; // 0: do nothing; 1: push back viewpoint; 2: erase last viewpoint data and push back viewpoint
     if (!last_pose_init_)
     {
         operation_id = 0;
         last_pose_init_ = true;
+    }
+    else if (viewpoint_ptr->IsCloseToBoarder(viewpoint_ptr->GetOrigin()))
+    {
+        operation_id = 0;
     }
     else
     {
@@ -241,7 +246,7 @@ void LocalExplorer::RemoveRedundantBoarder(Viewpoint &viewpoint, bool last_viewp
 void LocalExplorer::ProcessNewViewpoint(std::shared_ptr<Viewpoint> viewpoint_ptr)
 {
     // if is_record_ == false, only execute CheckVisibility() and RemoveRedundantBoarder()
-    int operation_id = DetermineOperation();
+    int operation_id = DetermineOperation(viewpoint_ptr);
     if (operation_id != 0)
     {
         if (is_record_)
