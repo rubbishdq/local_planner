@@ -19,7 +19,11 @@ void ViewpointGenerator::PreprocessVoxelizedPoints(const global_mapper_ros::Voxe
     for (auto &point : msg_ptr->points)
     {
         n = point.n;
-        mu << point.mu[0], point.mu[1], point.mu[2];
+        //mu << point.mu[0], point.mu[1], point.mu[2];
+        // avoid computational error of qhull
+        mu << (float)(point.mu[0]+Random(-RAND_ERROR, RAND_ERROR)), 
+            (float)(point.mu[1]+Random(-RAND_ERROR, RAND_ERROR)), 
+            (float)(point.mu[2]+Random(-RAND_ERROR, RAND_ERROR));
         sigma << point.sigma[0], point.sigma[1], point.sigma[2], 
             point.sigma[1], point.sigma[3], point.sigma[4], 
             point.sigma[2], point.sigma[4], point.sigma[5];
