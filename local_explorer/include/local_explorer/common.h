@@ -58,6 +58,13 @@ const double NAV_COMMAND_TIMEVAL = 0.25;
 const double TOPOLOGICAL_PATH_PUB_TIMEVAL = 0.25;
 
 const float EPS_F = 2e-4;
+
+// parameters for finding next frontier cluster to navigate to
+const float NEXTFC_MAX_AREA = 5.0;
+const float NEXTFC_MIN_DIST = 2.0;
+const float NEXTFC_K_A = 0.12;
+const float NEXTFC_K_D = 1.0;
+const float NEXTFC_K_V = 0.3;
 } // namespace local_explorer
 
 #endif

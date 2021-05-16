@@ -41,7 +41,8 @@ LocalExplorer::LocalExplorer()
     topological_path_pub_ = n_.advertise<visualization_msgs::Marker>("local_explorer/topological_path", 1);
 
     voxelized_points_sub_ = n_.subscribe("global_mapper_ros/voxelized_points", 1, &LocalExplorer::VoxelizedPointsCallback, this, ros::TransportHints().tcpNoDelay());  
-    mav_pose_sub_ = n_.subscribe("pose", 1, &LocalExplorer::UavPoseCallback, this, ros::TransportHints().tcpNoDelay());  
+    //mav_pose_sub_ = n_.subscribe("pose", 1, &LocalExplorer::UavPoseCallback, this, ros::TransportHints().tcpNoDelay());  
+    mav_state_sub_ = n_.subscribe("state", 1, &LocalExplorer::UavStateCallback, this, ros::TransportHints().tcpNoDelay());  
     record_command_sub_ = n_.subscribe("record_command", 1, &LocalExplorer::RecordCommandCallback, this, ros::TransportHints().tcpNoDelay());
     displayed_num_sub_ = n_.subscribe("displayed_num", 1, &LocalExplorer::DisplayedNumCallback, this, ros::TransportHints().tcpNoDelay());
     drone_status_sub_ = n_.subscribe("faster/drone_status", 1, &LocalExplorer::DroneStatusCallback, this, ros::TransportHints().tcpNoDelay());
@@ -294,7 +295,7 @@ void LocalExplorer::ProcessNewViewpoint(std::shared_ptr<Viewpoint> viewpoint_ptr
     }
 }
 
-ReplanResult LocalExplorer::Replan(Eigen::Vector3f current_pos)
+ReplanResult LocalExplorer::Replan(Eigen::Vector3f current_pos, Eigen::Vector3f current_vel)
 {
     ReplanResult result;
     FrontierCluster* fc_ptr = nullptr;
@@ -305,7 +306,7 @@ ReplanResult LocalExplorer::Replan(Eigen::Vector3f current_pos)
         result.value = 0;
         return result;
     }
-    if (!GetNearestFrontierCluster(current_pos, fc_ptr, end))
+    if (!GetNextFrontierCluster(current_pos, current_vel, fc_ptr, end))
     {
         ROS_INFO("No new frontier clusters found.");
         result.value = 0;
@@ -482,6 +483,40 @@ bool LocalExplorer::GetNearestFrontierCluster(Eigen::Vector3f pos, FrontierClust
     }
     fc_ptr = nearest_fc_ptr;
     return !(nearest_fc_ptr == nullptr);
+}
+
+bool LocalExplorer::GetNextFrontierCluster(Eigen::Vector3f pos, Eigen::Vector3f vel, FrontierCluster*& fc_ptr, std::shared_ptr<Viewpoint>& vptr)
+{
+    // Strategy 1: find nearest frontier cluster
+    //return GetNearestFrontierCluster(pos, fc_ptr, vptr);
+
+    // Strategy 2:depending on UAV's current position and velocity, as well as some properties of frontier clusters
+    float max_score = -FLT_MAX;
+    FrontierCluster* next_fc_ptr = nullptr;
+    for (auto viewpoint_ptr : viewpoint_list_)
+    {
+        for (auto &fc : viewpoint_ptr->frontier_cluster_list_)
+        {
+            if (fc.IsEmpty())
+            {
+                continue;
+            }
+            float score = 0;
+            score += NEXTFC_K_A * std::min(fc.area_, NEXTFC_MAX_AREA);
+            Eigen::Vector3f pos_diff = fc.GetCenter()-pos;
+            score += NEXTFC_K_D * std::max(pos_diff.norm(), NEXTFC_MIN_DIST);
+            Eigen::Vector3f pos_diff_unit = pos_diff / pos_diff.norm(), vel_unit = vel / vel.norm();
+            score += NEXTFC_K_V * (pos_diff_unit.dot(vel_unit));
+            if (score > max_score)
+            {
+                score = max_score;
+                next_fc_ptr = &fc;
+                vptr = viewpoint_ptr;
+            }
+        }
+    }
+    fc_ptr = next_fc_ptr;
+    return !(next_fc_ptr == nullptr);
 }
 
 void LocalExplorer::RemoveCurrentTarget()
@@ -1025,6 +1060,15 @@ void LocalExplorer::UavPoseCallback(const geometry_msgs::PoseStamped::ConstPtr& 
     pose_init_ = true;
 }
 
+void LocalExplorer::UavStateCallback(const snapstack_msgs::State::ConstPtr& msg_ptr)
+{
+    pos_ << msg_ptr->pos.x, msg_ptr->pos.y, msg_ptr->pos.z;
+    rot_ = Eigen::Quaterniond(msg_ptr->quat.w, msg_ptr->quat.x, msg_ptr->quat.y, 
+        msg_ptr->quat.z);
+    vel_ << msg_ptr->vel.x, msg_ptr->vel.y, msg_ptr->vel.z;
+    pose_init_ = true;
+}
+
 void LocalExplorer::RecordCommandCallback(const std_msgs::Bool::ConstPtr& msg_ptr)
 {
     is_record_ = msg_ptr->data;
@@ -1050,8 +1094,9 @@ void LocalExplorer::FasterNavStatusCallback(const std_msgs::Int32::ConstPtr& msg
 // naive strategy
 void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
 {
-    Eigen::Vector3f current_pos;
+    Eigen::Vector3f current_pos, current_vel;
     current_pos << (float)pos_[0], (float)pos_[1], (float)pos_[2];
+    current_vel << (float)vel_[0], (float)vel_[1], (float)vel_[2];
     switch (nav_state_)
     {
         case NavState::NAV_IN_PATH:
@@ -1122,7 +1167,7 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
         {
             ROS_INFO("Current state: REACHED_GOAL");
             // try replanning
-            ReplanResult replan_result = Replan(current_pos);
+            ReplanResult replan_result = Replan(current_pos, current_vel);
             switch (replan_result.value)
             {
                 case 1:

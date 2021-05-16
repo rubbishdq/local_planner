@@ -4,6 +4,7 @@
 #include "local_explorer/common.h"
 #include "Eigen/Core"
 #include "Eigen/Dense"
+#include <algorithm>
 #include <cstdio>
 #include <cstring>
 
