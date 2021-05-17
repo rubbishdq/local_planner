@@ -52,14 +52,14 @@ private:
     int DetermineOperation(std::shared_ptr<Viewpoint> viewpoint_ptr);
     void RemoveRedundantBoarder(Viewpoint &viewpoint, bool last_viewpoint); // if last_viewpoint is false, last added viewpoint's boarder will not be removed
     void ProcessNewViewpoint(std::shared_ptr<Viewpoint> viewpoint_ptr);
-    ReplanResult Replan(Eigen::Vector3f current_pos, Eigen::Vector3f current_vel);
+    ReplanResult Replan(Eigen::Vector3f current_pos, Eigen::Vector3f current_vel,  Eigen::Quaterniond current_rot);
     void UpdateTopologicalMap(std::shared_ptr<Viewpoint> viewpoint_ptr); // viewpoint_ptr should not be in this->viewpoint_list_
     std::deque<std::shared_ptr<Viewpoint>> GetTopologicalPath(
         std::shared_ptr<Viewpoint> start, std::shared_ptr<Viewpoint> end, float* cost);
     bool GetNearestViewpoint(Eigen::Vector3f pos, std::shared_ptr<Viewpoint>& viewpoint_ptr);  // return false if no available viewpoints found
     bool GetNearestFrontierCluster(Eigen::Vector3f pos, FrontierCluster*& fc_ptr);  // return false if no available frontiers found
     bool GetNearestFrontierCluster(Eigen::Vector3f pos, FrontierCluster*& fc_ptr, std::shared_ptr<Viewpoint>& vptr);  // also gets the viewpoint this fc belongs to
-    bool GetNextFrontierCluster(Eigen::Vector3f pos, Eigen::Vector3f vel, FrontierCluster*& fc_ptr, std::shared_ptr<Viewpoint>& vptr);
+    bool GetNextFrontierCluster(Eigen::Vector3f pos, Eigen::Vector3f vel,  Eigen::Quaterniond rot, FrontierCluster*& fc_ptr, std::shared_ptr<Viewpoint>& vptr);
     void RemoveCurrentTarget();
 
     void RepublishVoxelizedPoints(const global_mapper_ros::VoxelizedPoints::ConstPtr& msg_ptr);
@@ -105,6 +105,9 @@ private:
     FrontierCluster* target_fc_;
     std::shared_ptr<Viewpoint> target_viewpoint_;
     bool navigated_to_target_viewpoint_;
+
+    ros::Time le_timer_; // timer recording time of FASTER navigator last exception
+    bool is_le_timer_on_;
 
     float frontier_color_[FRONTIER_COLOR_COUNT][3];  // used to visualize frontier clusters
     int displayed_viewpoint_num_;

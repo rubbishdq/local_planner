@@ -15,7 +15,7 @@ const float CX = 320.5;
 const float CY = 180.5;
 const int CAM_RES[2] = {640, 360};
 
-const double MIN_RANGE_FOR_IGNORANCE = 0.15;
+const double MIN_RANGE_FOR_IGNORANCE = 0.0;  // useless
 const double MIN_RANGE_FOR_EXTENSION = 1.0;
 const int EXTENSION_COUNT = 1;
 const double EXTENSION_LENGTH_THRESHOLD = 5e-3;
@@ -34,7 +34,7 @@ const double INVERT_CLOUD_VISUALIZE_PARAM = 8.0;
 const double ALLOWED_BOARDER_ERROR = 1e-5;
 
 const float MIN_FRONTIER_RIDGE_LENGTH = 1.0;
-const float MIN_FRONTIER_CLUSTER_AREA = 1.0;
+const float MIN_FRONTIER_CLUSTER_AREA = 0.8;
 //const float FRONTIER_CLUSTER_SIZE_LIMIT[3] = {3.0, 3.0, 1.5};
 const float FRONTIER_CLUSTER_SIZE_LIMIT[3] = {3.5, 3.5, 6.0};
 
@@ -59,12 +59,15 @@ const double TOPOLOGICAL_PATH_PUB_TIMEVAL = 0.25;
 
 const float EPS_F = 2e-4;
 
+const double LRG_TIMER_MAX_DURATION = 0.5;
+
 // parameters for finding next frontier cluster to navigate to
 const float NEXTFC_MAX_AREA = 5.0;
 const float NEXTFC_MIN_DIST = 2.0;
 const float NEXTFC_K_A = 0.12;
-const float NEXTFC_K_D = 1.0;
-const float NEXTFC_K_V = 0.3;
+const float NEXTFC_K_D = -0.75;
+const float NEXTFC_K_V = 0.7;
+const float NEXTFC_K_R = 1.5;
 } // namespace local_explorer
 
 #endif

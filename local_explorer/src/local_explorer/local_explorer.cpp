@@ -19,6 +19,7 @@ LocalExplorer::LocalExplorer()
     target_fc_ = nullptr;
     nav_state_ = NavState::REACHED_GOAL;
     navigated_to_target_viewpoint_ = false;
+    is_le_timer_on_ = false;
 
     // make_unique is a C++14 feature
     //viewpoint_generator_ptr_ = std::make_unique<ViewpointGenerator>();
@@ -295,7 +296,7 @@ void LocalExplorer::ProcessNewViewpoint(std::shared_ptr<Viewpoint> viewpoint_ptr
     }
 }
 
-ReplanResult LocalExplorer::Replan(Eigen::Vector3f current_pos, Eigen::Vector3f current_vel)
+ReplanResult LocalExplorer::Replan(Eigen::Vector3f current_pos, Eigen::Vector3f current_vel, Eigen::Quaterniond current_rot)
 {
     ReplanResult result;
     FrontierCluster* fc_ptr = nullptr;
@@ -306,7 +307,7 @@ ReplanResult LocalExplorer::Replan(Eigen::Vector3f current_pos, Eigen::Vector3f 
         result.value = 0;
         return result;
     }
-    if (!GetNextFrontierCluster(current_pos, current_vel, fc_ptr, end))
+    if (!GetNextFrontierCluster(current_pos, current_vel, current_rot, fc_ptr, end))
     {
         ROS_INFO("No new frontier clusters found.");
         result.value = 0;
@@ -485,12 +486,12 @@ bool LocalExplorer::GetNearestFrontierCluster(Eigen::Vector3f pos, FrontierClust
     return !(nearest_fc_ptr == nullptr);
 }
 
-bool LocalExplorer::GetNextFrontierCluster(Eigen::Vector3f pos, Eigen::Vector3f vel, FrontierCluster*& fc_ptr, std::shared_ptr<Viewpoint>& vptr)
+bool LocalExplorer::GetNextFrontierCluster(Eigen::Vector3f pos, Eigen::Vector3f vel, Eigen::Quaterniond rot, FrontierCluster*& fc_ptr, std::shared_ptr<Viewpoint>& vptr)
 {
     // Strategy 1: find nearest frontier cluster
     //return GetNearestFrontierCluster(pos, fc_ptr, vptr);
 
-    // Strategy 2:depending on UAV's current position and velocity, as well as some properties of frontier clusters
+    // Strategy 2:depending on UAV's current position, rotation and velocity, as well as some properties of frontier clusters
     float max_score = -FLT_MAX;
     FrontierCluster* next_fc_ptr = nullptr;
     for (auto viewpoint_ptr : viewpoint_list_)
@@ -505,8 +506,10 @@ bool LocalExplorer::GetNextFrontierCluster(Eigen::Vector3f pos, Eigen::Vector3f 
             score += NEXTFC_K_A * std::min(fc.area_, NEXTFC_MAX_AREA);
             Eigen::Vector3f pos_diff = fc.GetCenter()-pos;
             score += NEXTFC_K_D * std::max(pos_diff.norm(), NEXTFC_MIN_DIST);
-            Eigen::Vector3f pos_diff_unit = pos_diff / pos_diff.norm(), vel_unit = vel / vel.norm();
-            score += NEXTFC_K_V * (pos_diff_unit.dot(vel_unit));
+            Eigen::Vector3f pos_diff_unit = pos_diff / pos_diff.norm();
+            score += NEXTFC_K_V * (pos_diff_unit.dot(vel));
+            Eigen::Vector3d euler_angle_diff = EulerAngleDiff(rot, DirectionQuatHorizonal(pos, fc.GetCenter()));
+            score += NEXTFC_K_R * cos(euler_angle_diff[2]);
             if (score > max_score)
             {
                 score = max_score;
@@ -1095,18 +1098,29 @@ void LocalExplorer::FasterNavStatusCallback(const std_msgs::Int32::ConstPtr& msg
 void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
 {
     Eigen::Vector3f current_pos, current_vel;
+    Eigen::Quaterniond current_rot;
     current_pos << (float)pos_[0], (float)pos_[1], (float)pos_[2];
     current_vel << (float)vel_[0], (float)vel_[1], (float)vel_[2];
+    current_rot = rot_;
     switch (nav_state_)
     {
         case NavState::NAV_IN_PATH:
         {
             if (faster_nav_status_ > 0 && faster_nav_status_updated_)  // navigation exception in faster
             {
-                RemoveCurrentTarget();
-                nav_state_ = NavState::REACHED_GOAL;  // stop navigation and replan
-                faster_nav_status_updated_ = false;
-                break;
+                if (!is_le_timer_on_)
+                {
+                    le_timer_ = ros::Time::now();
+                    is_le_timer_on_ = true;
+                }
+                else if (ros::Time::now() - le_timer_ > ros::Duration(LRG_TIMER_MAX_DURATION))
+                {
+                    is_le_timer_on_ = false;
+                    RemoveCurrentTarget();
+                    nav_state_ = NavState::REACHED_GOAL;  // stop navigation and replan
+                    faster_nav_status_updated_ = false;
+                    break;
+                }
             }
             ROS_INFO("Current state: NAV_IN_PATH");
             if (drone_status_ == 3 && drone_status_updated_)  // REACHED_GOAL in faster
@@ -1120,10 +1134,12 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
                     std::lock_guard<std::mutex> topological_path_lock(topological_path_mutex_);
                     if (topological_path_.empty())
                     {
-                        if (!navigated_to_target_viewpoint_ && target_fc_->is_boarder_) // yaw first
+                        //if (!navigated_to_target_viewpoint_ && target_fc_->is_boarder_) // yaw first
+                        if (false)
                         {
                             goal_pos_ = current_pos + 0.01*(target_fc_->GetCenter()-current_pos);
                             goal_rot_ = DirectionQuatHorizonal(current_pos, target_fc_->GetCenter());
+                            navigated_to_target_viewpoint_ = true;
                         }
                         else
                         {
@@ -1138,7 +1154,16 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
                         auto next_vptr = topological_path_.front();
                         topological_path_.pop_front();
                         goal_pos_ = next_vptr->GetOrigin();
-                        goal_rot_ = DirectionQuatHorizonal(current_pos, goal_pos_);
+                        //goal_rot_ = DirectionQuatHorizonal(current_pos, goal_pos_);
+                        if (!topological_path_.empty())
+                        {
+                            auto next_vptr_2 = topological_path_.front();
+                            goal_rot_ = DirectionQuatHorizonal(goal_pos_, next_vptr_2->GetOrigin());
+                        }
+                        else
+                        {
+                            goal_rot_ = DirectionQuatHorizonal(goal_pos_, target_fc_->GetCenter());
+                        }
                         PublishLocalNavGoal(goal_pos_, goal_rot_);
                     }
                     drone_status_updated_ = false;
@@ -1150,10 +1175,19 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
         {
             if (faster_nav_status_ > 0 && faster_nav_status_updated_)  // navigation exception in faster
             {
-                RemoveCurrentTarget();
-                nav_state_ = NavState::REACHED_GOAL;  // stop navigation and replan
-                faster_nav_status_updated_ = false;
-                break;
+                if (!is_le_timer_on_)
+                {
+                    le_timer_ = ros::Time::now();
+                    is_le_timer_on_ = true;
+                }
+                else if (ros::Time::now() - le_timer_ > ros::Duration(LRG_TIMER_MAX_DURATION))
+                {
+                    is_le_timer_on_ = false;
+                    RemoveCurrentTarget();
+                    nav_state_ = NavState::REACHED_GOAL;  // stop navigation and replan
+                    faster_nav_status_updated_ = false;
+                    break;
+                }
             }
             ROS_INFO("Current state: NAV_TO_LOCAL_FRONTIER");
             if (drone_status_ == 3 && drone_status_updated_)  // REACHED_GOAL in faster
@@ -1167,7 +1201,7 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
         {
             ROS_INFO("Current state: REACHED_GOAL");
             // try replanning
-            ReplanResult replan_result = Replan(current_pos, current_vel);
+            ReplanResult replan_result = Replan(current_pos, current_vel, current_rot);
             switch (replan_result.value)
             {
                 case 1:
@@ -1188,7 +1222,16 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
                     auto next_vptr = topological_path_.front();
                     topological_path_.pop_front();
                     goal_pos_ = next_vptr->GetOrigin();
-                    goal_rot_ = DirectionQuatHorizonal(current_pos, goal_pos_);
+                    //goal_rot_ = DirectionQuatHorizonal(current_pos, goal_pos_);
+                    if (!topological_path_.empty())
+                    {
+                        auto next_vptr_2 = topological_path_.front();
+                        goal_rot_ = DirectionQuatHorizonal(goal_pos_, next_vptr_2->GetOrigin());
+                    }
+                    else
+                    {
+                        goal_rot_ = DirectionQuatHorizonal(goal_pos_, target_fc_->GetCenter());
+                    }
                     PublishLocalNavGoal(goal_pos_, goal_rot_);
                     drone_status_updated_ = false;
                     break;
