@@ -1,0 +1,42 @@
+global_frame: world
+origin: [0.0, 0.0, 0.0]  # [m]
+world_dimensions: [31.0, 61.0, 8.0]  # [m]  16   16   4
+resolution: 0.15  # [m]   0.15
+radius_drone: 0.2 # [m] THIS SHOULD BE HIGHER THAN THE RESOLUTION!!
+Ra: 20.0 # [m] radius of the first sphere (Sa) in the planner. The unknown pcloud published will only contain points inside this sphere
+z_ground: 0.1 #[m] points below z_ground are not published in the known grid
+skip: 0  #[pixels] Numbers of pixels to skip in the depth map. Should be >=0
+depth_max: 5.0 #[m] In the depth image, points farther than depth_max, are treated as inf (i.e. along its ray (and up to that point) only unknown voxels are cleared. If doing simulation, this should be 5 (actually it should be the clipping distance of the depth image, but somehow it's always clipped at 5 meters)
+r1: 0.8 #[m] Points in the sphere centerd in the drone with r>r1 and r<r2 are published as unkown space
+r2: 20.0 #[m] See above
+z_min_unknown: 0.1 #[m] points below z_min_unknown are not published in the unknown/known grid
+z_max_unknown: 4.0 #[m] points above z_max_unknown are not published in the unknown/known grid
+publish_interval: 0.25
+
+
+occupancy_grid:
+  init_value: -1.0
+  hit_inc: 0.5 #Was 0.4  
+  miss_inc: -0.01
+  occupancy_threshold: 0.6  # [0.0, 1.0]
+  publish_occupancy_grid: true
+  publish_unknown_grid: false
+  publish_known_grid: true
+  clear_unknown_distance: 5.0  # [m]  #Nan ¿and inf? --> Clear the unkown voxels up to this distance
+
+distance_grid:
+  truncation_distance: 6  # [voxels]
+  publish_distance_grid: false
+
+cost_grid:
+  publish_cost_grid: false
+  publish_path: false
+  inflation_distance: 4  # inflate obstacles by this many squared voxels
+  altitude_weight: 20
+  inflation_weight: 0
+  unknown_weight: 20
+  obstacle_weight: 10000
+  target_altitude: 2  # target altitude [m]
+
+voxelized_points:
+  publish_voxelized_points: false

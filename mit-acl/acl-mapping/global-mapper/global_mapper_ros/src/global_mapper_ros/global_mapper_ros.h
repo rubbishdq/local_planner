@@ -40,6 +40,8 @@ private:
   void InitPublishers();
   void PopulateUnknownPointCloudMsg(const occupancy_grid::OccupancyGrid& occupancy_grid,
                                     sensor_msgs::PointCloud2* pointcloud);
+  void PopulateKnownPointCloudMsg(const occupancy_grid::OccupancyGrid& occupancy_grid,
+                                    sensor_msgs::PointCloud2* pointcloud);
   void PopulateOccupancyPointCloudMsg(const occupancy_grid::OccupancyGrid& occupancy_grid,
                                       sensor_msgs::PointCloud2* pointcloud);
   void PopulateDistancePointCloudMsg(const voxel_grid::VoxelGrid<int>& distance_grid,
@@ -76,6 +78,7 @@ private:
   // publishers
   ros::Publisher occ_grid_pub_;
   ros::Publisher unknown_grid_pub_;
+  ros::Publisher known_grid_pub_;
   ros::Publisher frontier_grid_pub_;
   ros::Publisher dist_grid_pub_;
   ros::Publisher cost_grid_pub_;
@@ -99,6 +102,7 @@ private:
   global_mapper::Params params_;
   bool publish_occupancy_grid_;
   bool publish_unknown_grid_;
+  bool publish_known_grid_;
   bool publish_distance_grid_;
   bool publish_cost_grid_;
   bool publish_path_;

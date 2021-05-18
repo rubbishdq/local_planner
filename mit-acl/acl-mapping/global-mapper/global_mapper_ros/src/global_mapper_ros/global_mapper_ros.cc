@@ -71,6 +71,7 @@ void GlobalMapperRos::GetParams()
   fla_utils::SafeGetParam(pnh_, "occupancy_grid/miss_inc", params_.miss_inc);
   fla_utils::SafeGetParam(pnh_, "occupancy_grid/occupancy_threshold", params_.occupancy_threshold);
   fla_utils::SafeGetParam(pnh_, "occupancy_grid/publish_unknown_grid", publish_unknown_grid_);
+  fla_utils::SafeGetParam(pnh_, "occupancy_grid/publish_known_grid", publish_known_grid_);
   fla_utils::SafeGetParam(pnh_, "occupancy_grid/publish_occupancy_grid", publish_occupancy_grid_);
   fla_utils::SafeGetParam(pnh_, "occupancy_grid/clear_unknown_distance", clear_unknown_distance_);
 
@@ -111,6 +112,11 @@ void GlobalMapperRos::InitPublishers()
   {
     unknown_grid_pub_ = pnh_.advertise<sensor_msgs::PointCloud2>("unknown_grid_topic", 1);
     // frontier_grid_pub_ = pnh_.advertise<sensor_msgs::PointCloud2>("frontier_grid_topic", 1);
+  }
+
+  if (publish_known_grid_)
+  {
+    known_grid_pub_ = pnh_.advertise<sensor_msgs::PointCloud2>("known_grid_topic", 1);
   }
 
   if (publish_distance_grid_)
@@ -250,6 +256,83 @@ void GlobalMapperRos::PopulateUnknownPointCloudMsg(const occupancy_grid::Occupan
   /*  pcl::toROSMsg(cloud_frontier, *pointcloud_frontier);
     pointcloud_frontier->header.frame_id = "world";
     pointcloud_frontier->header.stamp = tstampLastPclFused_;*/
+
+  pcl::toROSMsg(cloud, *pointcloud);
+  pointcloud->header.frame_id = "world";
+  pointcloud->header.stamp = tstampLastPclFused_;
+}
+
+void GlobalMapperRos::PopulateKnownPointCloudMsg(const occupancy_grid::OccupancyGrid& occupancy_grid,
+                                                   sensor_msgs::PointCloud2* pointcloud)
+{
+  // check for bad input
+  if (pointcloud == nullptr)
+  {
+    return;
+  }
+
+  geometry_msgs::TransformStamped transform_stamped;
+  Eigen::Vector3d transform;
+
+  try
+  {
+    transform_stamped = tf_buffer_.lookupTransform("world", name_drone, ros::Time(0), ros::Duration(0.02));
+    transform(0) = transform_stamped.transform.translation.x;
+    transform(1) = transform_stamped.transform.translation.y;
+    transform(2) = transform_stamped.transform.translation.z;
+  }
+  catch (tf2::TransformException& ex)
+  {
+    ROS_WARN("[world_database_master_ros] OnGetTransform failed with %s", ex.what());
+
+    transform(0) = std::numeric_limits<double>::quiet_NaN();
+    transform(1) = std::numeric_limits<double>::quiet_NaN();
+    transform(2) = std::numeric_limits<double>::quiet_NaN();
+  }
+
+  double xyz[3] = { transform(0), transform(1), transform(2) };
+  int slice_ixyz[3];
+  occupancy_grid.WorldToGrid(xyz, slice_ixyz);
+
+  int grid_dimensions[3];
+  occupancy_grid.GetGridDimensions(grid_dimensions);
+
+  // printf("Ra=%f\n", params_.Ra);
+  // If you want all the unknown grid, and cropped to be inside the sphere Sa
+  pcl::PointCloud<pcl::PointXYZ> cloud;
+  // pcl::PointCloud<pcl::PointXYZ> cloud_frontier;
+  double origin[3];
+  occupancy_grid.GetOrigin(origin);
+  int counter = 0;
+  std::cout << "In PopulateKnownPointCloudMsg, origin=" << origin[0] << ", " << origin[1] << ", " << origin[2]
+            << std::endl;
+  for (int x = 0; x < grid_dimensions[0]; x = x + 1)
+  {
+    for (int y = 0; y < grid_dimensions[1]; y = y + 1)
+    {
+      for (int z = 0; z < grid_dimensions[2]; z = z + 1)
+      {
+        int ixyz[3] = { x, y, z };
+        float occupancy_value = occupancy_grid.ReadValue(ixyz);
+        if (!global_mapper_ptr_->occupancy_grid_.IsUnknown(occupancy_value))
+        {
+          occupancy_grid.GridToWorld(ixyz, xyz);
+          if (xyz[2] < params_.z_max_unknown && xyz[2] > params_.z_min_unknown)  // only publish points above the ground
+          {
+            double dist2_to_map_origin =
+                pow(xyz[0] - origin[0], 2) + pow(xyz[1] - origin[1], 2) + pow(xyz[2] - origin[2], 2);
+
+            if (sqrt(dist2_to_map_origin) < params_.r2 &&
+                sqrt(dist2_to_map_origin) > params_.r1)  // 2 *
+                                                         // params_.radius_drone
+            {
+              cloud.push_back(pcl::PointXYZ(xyz[0], xyz[1], xyz[2]));
+            }
+          }
+        }
+      }
+    }
+  }
 
   pcl::toROSMsg(cloud, *pointcloud);
   pointcloud->header.frame_id = "world";
@@ -569,6 +652,14 @@ void GlobalMapperRos::Publish(const ros::TimerEvent& event)
 
     unknown_grid_pub_.publish(unknown_pointcloud_msg);
     // frontier_grid_pub_.publish(frontier_pointcloud_msg);
+  }
+
+  if (publish_known_grid_)
+  {
+    sensor_msgs::PointCloud2 known_pointcloud_msg;
+    PopulateKnownPointCloudMsg(occupancy_grid, &known_pointcloud_msg);
+
+    known_grid_pub_.publish(known_pointcloud_msg);
   }
 
   if (publish_distance_grid_)

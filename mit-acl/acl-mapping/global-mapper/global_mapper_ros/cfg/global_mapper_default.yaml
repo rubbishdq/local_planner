@@ -9,8 +9,8 @@ skip: 0  #[pixels] Numbers of pixels to skip in the depth map. Should be >=0
 depth_max: 5.0 #[m] In the depth image, points farther than depth_max, are treated as inf (i.e. along its ray (and up to that point) only unknown voxels are cleared. If doing simulation, this should be 5 (actually it should be the clipping distance of the depth image, but somehow it's always clipped at 5 meters)
 r1: 0.8 #[m] Points in the sphere centerd in the drone with r>r1 and r<r2 are published as unkown space
 r2: 8.0 #[m] See above
-z_min_unknown: 0.1 #[m] points below z_min_unkown are not published in the unkown grid
-z_max_unknown: 5 #[m] points above z_max_unkown are not published in the unkown grid
+z_min_unknown: 0.1 #[m] points below z_min_unknown are not published in the unknown/known grid
+z_max_unknown: 5 #[m] points above z_max_unknown are not published in the unknown/known grid
 publish_interval: 0.2
 
 
@@ -21,6 +21,7 @@ occupancy_grid:
   occupancy_threshold: 0.6  # [0.0, 1.0]
   publish_occupancy_grid: true
   publish_unknown_grid: true
+  publish_known_grid: false
   clear_unknown_distance: 5.0  # [m]  #Nan ¿and inf? --> Clear the unkown voxels up to this distance
 
 distance_grid:

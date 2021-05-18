@@ -2,9 +2,10 @@
 
   <!-- name of the quad -->
   <arg name="quad" default="iris"/>
+  <arg name="node_name" default="global_mapper_ros"/>
 
   <arg name="load_params" default="true" />
-  <arg name="param_file" default="global_mapper.yaml" />
+  <arg name="param_file" default="global_mapper_default.yaml" />
   <arg name="output" default="screen" />
 
   <!-- input topics -->
@@ -21,6 +22,7 @@
   <!-- output topics -->
   <arg name="occupancy_grid_topic" default="~occupancy_grid" />
   <arg name="unknown_grid_topic" default="~unknown_grid" />
+  <arg name="known_grid_topic" default="~known_grid" />
   <arg name="frontier_grid_topic" default="~frontier_grid" />
   <arg name="distance_grid_topic" default="~distance_grid" />
   <arg name="cost_grid_topic" default="~cost_grid" />
@@ -29,7 +31,7 @@
   <arg name="sparse_path_topic" default="~sparse_path" />
 
   <!-- node -->
-  <node ns="$(arg quad)" pkg="global_mapper_ros" type="global_mapper_node" name="global_mapper_ros" output="$(arg output)">
+  <node ns="$(arg quad)" pkg="global_mapper_ros" type="global_mapper_node" name="$(arg node_name)" output="$(arg output)">
       <!-- params -->
       <rosparam command="load" if="$(arg load_params)" file="$(find global_mapper_ros)/cfg/$(arg param_file)"/>
 
@@ -42,6 +44,7 @@
       <!-- output remaps -->
       <remap from="~occupancy_grid_topic" to="$(arg occupancy_grid_topic)" />
       <remap from="~unknown_grid_topic" to="$(arg unknown_grid_topic)" />
+      <remap from="~known_grid_topic" to="$(arg known_grid_topic)" />
       <remap from="~frontier_grid_topic" to="$(arg frontier_grid_topic)" />
       <remap from="~distance_grid_topic" to="$(arg distance_grid_topic)" />
       <remap from="~cost_grid_topic" to="$(arg cost_grid_topic)" />
