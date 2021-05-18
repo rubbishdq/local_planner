@@ -1106,6 +1106,11 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
     {
         case NavState::NAV_IN_PATH:
         {
+            if (target_fc_ == nullptr || target_fc_->IsEmpty())
+            {
+                nav_state_ = NavState::REACHED_GOAL;  // stop navigation and replan
+                break;
+            }
             if (faster_nav_status_ > 0 && faster_nav_status_updated_)  // navigation exception in faster
             {
                 if (!is_le_timer_on_)
@@ -1123,56 +1128,56 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
                 }
             }
             ROS_INFO("Current state: NAV_IN_PATH");
-            if (drone_status_ == 3 && drone_status_updated_)  // REACHED_GOAL in faster
+            if ((drone_status_ == 3 && drone_status_updated_)
+                || (!topological_path_.empty() && topological_path_.front()->Visible(current_pos)))
+            // REACHED_GOAL in faster or can navigate to next node directly
             {
-                if (target_fc_ == nullptr || target_fc_->IsEmpty())
+                std::lock_guard<std::mutex> topological_path_lock(topological_path_mutex_);
+                if (topological_path_.empty())
                 {
-                    nav_state_ = NavState::REACHED_GOAL;  // stop navigation and replan
-                }
-                else
-                {
-                    std::lock_guard<std::mutex> topological_path_lock(topological_path_mutex_);
-                    if (topological_path_.empty())
+                    //if (!navigated_to_target_viewpoint_ && target_fc_->is_boarder_) // yaw first
+                    if (false)
                     {
-                        //if (!navigated_to_target_viewpoint_ && target_fc_->is_boarder_) // yaw first
-                        if (false)
-                        {
-                            goal_pos_ = current_pos + 0.01*(target_fc_->GetCenter()-current_pos);
-                            goal_rot_ = DirectionQuatHorizonal(current_pos, target_fc_->GetCenter());
-                            navigated_to_target_viewpoint_ = true;
-                        }
-                        else
-                        {
-                            nav_state_ = NavState::NAV_TO_LOCAL_FRONTIER;
-                            goal_pos_ = target_fc_->GetCenter();
-                            goal_rot_ = DirectionQuatHorizonal(current_pos, goal_pos_);
-                        }
-                        PublishLocalNavGoal(goal_pos_, goal_rot_);
+                        goal_pos_ = current_pos + 0.01*(target_fc_->GetCenter()-current_pos);
+                        goal_rot_ = DirectionQuatHorizonal(current_pos, target_fc_->GetCenter());
+                        navigated_to_target_viewpoint_ = true;
                     }
                     else
                     {
-                        auto next_vptr = topological_path_.front();
-                        topological_path_.pop_front();
-                        goal_pos_ = next_vptr->GetOrigin();
-                        //goal_rot_ = DirectionQuatHorizonal(current_pos, goal_pos_);
-                        if (!topological_path_.empty())
-                        {
-                            auto next_vptr_2 = topological_path_.front();
-                            goal_rot_ = DirectionQuatHorizonal(goal_pos_, next_vptr_2->GetOrigin());
-                        }
-                        else
-                        {
-                            goal_rot_ = DirectionQuatHorizonal(goal_pos_, target_fc_->GetCenter());
-                        }
-                        PublishLocalNavGoal(goal_pos_, goal_rot_);
+                        nav_state_ = NavState::NAV_TO_LOCAL_FRONTIER;
+                        goal_pos_ = target_fc_->GetCenter();
+                        goal_rot_ = DirectionQuatHorizonal(current_pos, goal_pos_);
                     }
-                    drone_status_updated_ = false;
+                    PublishLocalNavGoal(goal_pos_, goal_rot_);
                 }
+                else
+                {
+                    auto next_vptr = topological_path_.front();
+                    topological_path_.pop_front();
+                    goal_pos_ = next_vptr->GetOrigin();
+                    //goal_rot_ = DirectionQuatHorizonal(current_pos, goal_pos_);
+                    if (!topological_path_.empty())
+                    {
+                        auto next_vptr_2 = topological_path_.front();
+                        goal_rot_ = DirectionQuatHorizonal(goal_pos_, next_vptr_2->GetOrigin());
+                    }
+                    else
+                    {
+                        goal_rot_ = DirectionQuatHorizonal(goal_pos_, target_fc_->GetCenter());
+                    }
+                    PublishLocalNavGoal(goal_pos_, goal_rot_);
+                }
+                drone_status_updated_ = false;
             }
             break;
         }
         case NavState::NAV_TO_LOCAL_FRONTIER:
         {
+            if (target_fc_ == nullptr || target_fc_->IsEmpty())
+            {
+                nav_state_ = NavState::REACHED_GOAL;  // stop navigation and replan
+                break;
+            }
             if (faster_nav_status_ > 0 && faster_nav_status_updated_)  // navigation exception in faster
             {
                 if (!is_le_timer_on_)
