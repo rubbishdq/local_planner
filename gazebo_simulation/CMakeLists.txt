@@ -17,7 +17,11 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   visualization_msgs
   snapstack_msgs  # message from FASTER
+  pcl_ros
+  pcl_msgs
+  pcl_conversions
 )
+find_package(PCL 1.7 REQUIRED COMPONENTS common io visualization)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -122,8 +126,9 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+  include
   ${catkin_INCLUDE_DIRS}
+  ${PCL_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -217,3 +222,9 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+add_executable(pcd_saver src/pcd_saver.cpp)
+target_link_libraries(pcd_saver ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+
+add_executable(pcd_viewer src/pcd_viewer.cpp)
+target_link_libraries(pcd_viewer ${catkin_LIBRARIES} ${PCL_LIBRARIES})

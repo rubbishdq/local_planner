@@ -29,7 +29,7 @@ class UAV_tf_node:
         self.mavposePub_ = rospy.Publisher('pose', PoseStamped, queue_size=100)
         self.mavstatePub_ = rospy.Publisher('state', State, queue_size=100)
         self.tfBroadcaster_ = tf.TransformBroadcaster()
-        rate = rospy.Rate(15.0)
+        rate = rospy.Rate(8.0)
         while not rospy.is_shutdown():
             if self.is_pose_init_:
                 self.tfBroadcaster_.sendTransform(self.mavpos_, self.mavrot_, rospy.Time.now(), self.end_frame_, self.start_frame_)
