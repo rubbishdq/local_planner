@@ -117,6 +117,7 @@ void GlobalMapperRos::InitPublishers()
   if (publish_known_grid_)
   {
     known_grid_pub_ = pnh_.advertise<sensor_msgs::PointCloud2>("known_grid_topic", 1);
+    known_volume_pub_ = pnh_.advertise<geometry_msgs::PointStamped>("known_volume_topic", 1);
   }
 
   if (publish_distance_grid_)
@@ -328,6 +329,7 @@ void GlobalMapperRos::PopulateKnownPointCloudMsg(const occupancy_grid::Occupancy
             {
               cloud.push_back(pcl::PointXYZ(xyz[0], xyz[1], xyz[2]));
             }
+            counter++;
           }
         }
       }
@@ -337,6 +339,11 @@ void GlobalMapperRos::PopulateKnownPointCloudMsg(const occupancy_grid::Occupancy
   pcl::toROSMsg(cloud, *pointcloud);
   pointcloud->header.frame_id = "world";
   pointcloud->header.stamp = tstampLastPclFused_;
+
+  geometry_msgs::PointStamped msg;
+  msg.header.stamp = ros::Time::now();
+  msg.point.x = double(counter) * pow(occupancy_grid.GetResolution(), 3);
+  known_volume_pub_.publish(msg);
 }
 
 void GlobalMapperRos::PopulateOccupancyPointCloudMsg(const occupancy_grid::OccupancyGrid& occupancy_grid,

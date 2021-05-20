@@ -16,6 +16,7 @@
 #include <nav_msgs/Path.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/PointStamped.h>
 #include <image_transport/image_transport.h>
 #include <sensor_msgs/Image.h>
 
@@ -86,6 +87,7 @@ private:
   ros::Publisher path_pub_;
   ros::Publisher sparse_path_pub_;
   ros::Publisher planning_grids_pub_;
+  ros::Publisher known_volume_pub_;
 
   // time (in secs) of the last point cloud fused in this map
   ros::Time tstampLastPclFused_;

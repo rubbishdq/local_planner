@@ -26,6 +26,7 @@
         <arg name="param_file" value="real_global_mapper.yaml" />
         <arg name="occupancy_grid_topic" value="~occupancy_grid" />
         <arg name="known_grid_topic" value="~known_grid" />
+        <arg name="known_volume_topic" value="~known_volume" />
     </include>
     
     <group ns = "$(arg robot_name)"> 

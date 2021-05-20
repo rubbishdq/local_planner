@@ -23,6 +23,7 @@
   <arg name="occupancy_grid_topic" default="~occupancy_grid" />
   <arg name="unknown_grid_topic" default="~unknown_grid" />
   <arg name="known_grid_topic" default="~known_grid" />
+  <arg name="known_volume_topic" default="~known_grid" />
   <arg name="frontier_grid_topic" default="~frontier_grid" />
   <arg name="distance_grid_topic" default="~distance_grid" />
   <arg name="cost_grid_topic" default="~cost_grid" />
@@ -45,6 +46,7 @@
       <remap from="~occupancy_grid_topic" to="$(arg occupancy_grid_topic)" />
       <remap from="~unknown_grid_topic" to="$(arg unknown_grid_topic)" />
       <remap from="~known_grid_topic" to="$(arg known_grid_topic)" />
+      <remap from="~known_volume_topic" to="$(arg known_volume_topic)" />
       <remap from="~frontier_grid_topic" to="$(arg frontier_grid_topic)" />
       <remap from="~distance_grid_topic" to="$(arg distance_grid_topic)" />
       <remap from="~cost_grid_topic" to="$(arg cost_grid_topic)" />
