@@ -1,0 +1,45 @@
+<launch>
+
+    <arg name="robot_name" default="iris"/>
+    <arg name="gazebo_output" default="log"/>
+    <arg name="visualization" default="true"/>
+    <arg name="gui" default="true"/>
+    <arg name="world" default="$(find gazebo_simulation)/worlds/complex_room.world"/>
+
+    <include file="$(find gazebo_simulation)/launch/simple_world_uav.launch">
+        <arg name="robot_name" value="$(arg robot_name)" />
+        <arg name="output" value="$(arg gazebo_output)" />
+        <arg name="gui" value="$(arg gui)" />
+        <arg name="world" value="$(arg world)" />
+    </include>
+
+    <include file="$(find global_mapper_ros)/launch/global_mapper_node.launch">
+        <arg name="node_name" value="global_mapper_ros" />
+        <arg name="quad" value="$(arg robot_name)" />
+        <arg name="output" value="log" />
+    </include>
+
+    <include file="$(find global_mapper_ros)/launch/global_mapper_node.launch">
+        <arg name="node_name" value="real_global_mapper" />
+        <arg name="quad" value="$(arg robot_name)" />
+        <arg name="output" value="log" />
+        <arg name="param_file" value="real_global_mapper.yaml" />
+        <arg name="occupancy_grid_topic" value="~occupancy_grid" />
+        <arg name="known_grid_topic" value="~known_grid" />
+    </include>
+    
+    <group ns = "$(arg robot_name)"> 
+        <node name="path_publisher" pkg="gazebo_simulation" type="path_publisher.py"  output="screen" required="true">
+            <remap from="begin_command" to="record_command"/>
+        </node>
+
+        <node name="pcd_saver" pkg="gazebo_simulation" type="pcd_saver"  output="screen" required="true">
+            <remap from="point_cloud" to="real_global_mapper/occupancy_grid"/>
+        </node>
+    </group>
+
+    <group if="$(arg visualization)">
+        <node type="rviz" name="rviz" pkg="rviz" args="-d $(find local_explorer)/launch/complex_room.rviz" />
+    </group>
+  
+  </launch>
