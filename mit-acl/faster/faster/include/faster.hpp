@@ -104,7 +104,7 @@ private:
   // map B if JPS was computed using an older map A
   // If type_return==Intersection, it returns the last point in the JPS path that is at least par_.inflation_jps from
   // map
-  Eigen::Vector3d getFirstCollisionJPS(vec_Vecf<3>& path, bool* thereIsIntersection, int map, int type_return);
+  Eigen::Vector3d getFirstCollisionJPS(vec_Vecf<3>& path, bool* thereIsIntersection, bool* isCollided, int map, int type_return);
 
   bool appendToPlan(int k_end_whole, const std::vector<state>& whole, int k_safe, const std::vector<state>& safe);
 

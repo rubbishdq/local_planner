@@ -325,7 +325,9 @@ ReplanResult LocalExplorer::Replan(Eigen::Vector3f current_pos, Eigen::Vector3f 
     std::lock_guard<std::mutex> topological_path_lock(topological_path_mutex_);
     topological_path_ = GetTopologicalPath(start, end, nullptr);
     navigated_to_target_viewpoint_ = false;
-    result.value = 2;
+    // result.value = 2;
+    result.value = 1;
+    result.common_vptr = end;
     return result;
 }
 
@@ -493,9 +495,11 @@ bool LocalExplorer::GetNextFrontierCluster(Eigen::Vector3f pos, Eigen::Vector3f 
 
     // Strategy 2:depending on UAV's current position, rotation and velocity, as well as some properties of frontier clusters
     float max_score = -FLT_MAX;
+    float max_score_a = -FLT_MAX, max_score_d = -FLT_MAX, max_score_v = -FLT_MAX, max_score_r = -FLT_MAX, max_score_bonus = -FLT_MAX;
     FrontierCluster* next_fc_ptr = nullptr;
     for (auto viewpoint_ptr : viewpoint_list_)
     {
+        bool is_visible = viewpoint_ptr->Visible(pos);
         for (auto &fc : viewpoint_ptr->frontier_cluster_list_)
         {
             if (fc.IsEmpty())
@@ -503,21 +507,35 @@ bool LocalExplorer::GetNextFrontierCluster(Eigen::Vector3f pos, Eigen::Vector3f 
                 continue;
             }
             float score = 0;
-            score += NEXTFC_K_A * std::min(fc.area_, NEXTFC_MAX_AREA);
+            float score_a, score_d, score_v, score_r, score_bonus;
+            score_a = NEXTFC_K_A * std::min(fc.area_, NEXTFC_MAX_AREA);
             Eigen::Vector3f pos_diff = fc.GetCenter()-pos;
-            score += NEXTFC_K_D * std::max(pos_diff.norm(), NEXTFC_MIN_DIST);
+            score_d = NEXTFC_K_D * std::max(pos_diff.norm(), NEXTFC_MIN_DIST);
             Eigen::Vector3f pos_diff_unit = pos_diff / pos_diff.norm();
-            score += NEXTFC_K_V * (pos_diff_unit.dot(vel));
+            score_v = NEXTFC_K_V * (pos_diff_unit.dot(vel));
             Eigen::Vector3d euler_angle_diff = EulerAngleDiff(rot, DirectionQuatHorizonal(pos, fc.GetCenter()));
-            score += NEXTFC_K_R * cos(euler_angle_diff[2]);
+            score_r = NEXTFC_K_R * cos(euler_angle_diff[2]);
+            score_bonus = is_visible ? NEXTFC_VISIBLE_BONUS : 0;
+            score = score_a + score_d + score_v + score_r + score_bonus;
             if (score > max_score)
             {
-                score = max_score;
+                max_score = score;
+                max_score_a = score_a;
+                max_score_d = score_d;
+                max_score_v = score_v;
+                max_score_r = score_r;
+                max_score_bonus = score_bonus;
                 next_fc_ptr = &fc;
                 vptr = viewpoint_ptr;
             }
         }
     }
+    std::cout << "max_score_a: " << max_score_a << std::endl;
+    std::cout << "max_score_d: " << max_score_d << std::endl;
+    std::cout << "max_score_v: " << max_score_v << std::endl;
+    std::cout << "max_score_r: " << max_score_r << std::endl;
+    std::cout << "max_score_bonus: " << max_score_bonus << std::endl;
+    std::cout << "max_score: " << max_score << std::endl;
     fc_ptr = next_fc_ptr;
     return !(next_fc_ptr == nullptr);
 }
@@ -1109,6 +1127,7 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
             if (target_fc_ == nullptr || target_fc_->IsEmpty())
             {
                 nav_state_ = NavState::REACHED_GOAL;  // stop navigation and replan
+                std::cout << "REACHED_GOAL in line 1124\n";
                 break;
             }
             if (faster_nav_status_ > 0 && faster_nav_status_updated_)  // navigation exception in faster
@@ -1123,6 +1142,7 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
                     is_le_timer_on_ = false;
                     RemoveCurrentTarget();
                     nav_state_ = NavState::REACHED_GOAL;  // stop navigation and replan
+                    std::cout << "REACHED_GOAL in line 1139\n";
                     faster_nav_status_updated_ = false;
                     break;
                 }
@@ -1176,6 +1196,7 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
             if (target_fc_ == nullptr || target_fc_->IsEmpty())
             {
                 nav_state_ = NavState::REACHED_GOAL;  // stop navigation and replan
+                std::cout << "REACHED_GOAL in line 1193\n";
                 break;
             }
             if (faster_nav_status_ > 0 && faster_nav_status_updated_)  // navigation exception in faster
@@ -1190,6 +1211,7 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
                     is_le_timer_on_ = false;
                     RemoveCurrentTarget();
                     nav_state_ = NavState::REACHED_GOAL;  // stop navigation and replan
+                    std::cout << "REACHED_GOAL in line 1208\n";
                     faster_nav_status_updated_ = false;
                     break;
                 }
@@ -1198,9 +1220,11 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
             if (drone_status_ == 3 && drone_status_updated_)  // REACHED_GOAL in faster
             {
                 nav_state_ = NavState::REACHED_GOAL;
+                std::cout << "REACHED_GOAL in line 1217\n";
                 drone_status_updated_ = false;
                 RemoveCurrentTarget();
             }
+            break;
         }
         case NavState::REACHED_GOAL:
         {
@@ -1246,6 +1270,7 @@ void LocalExplorer::NavCommandCallback(const ros::TimerEvent& event)
                     break;
                 }
             }
+            break;
         }
     }
 }

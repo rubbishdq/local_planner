@@ -244,6 +244,16 @@ void Viewpoint::GenerateViewpoint(std::vector<LabeledPoint> &cloud, std::vector<
                 }
             }
         }
+
+        // clear flag of vertices that don't satisfy x or y range limit
+        for (auto vertex_ptr : convex_hull_ptr_->vertex_list_)
+        {
+            Eigen::Vector3f p = vertex_ptr->pos_;
+            if (p[0] < X_RANGE[0] || p[0] > X_RANGE[1] || p[1] < Y_RANGE[0] || p[1] > Y_RANGE[1])
+            {
+                vertex_ptr->flag_ = 0;
+            }
+        }
         
         // select frontier facets
         convex_hull_ptr_->ClearFacetFlag();

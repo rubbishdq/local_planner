@@ -191,17 +191,9 @@
     </model>
 
     <model name="cylinder_1">
-      <pose>3.72918415297 -4.9779901693 1.5  0 0 0</pose>
+      <pose>-6.83894748098 -7.89179945277 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -220,17 +212,9 @@
     </model>
 
     <model name="cylinder_2">
-      <pose>1.13108326011 4.96209612333 1.5  0 0 0</pose>
+      <pose>6.0747893158 4.26064558444 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -249,17 +233,9 @@
     </model>
 
     <model name="cylinder_3">
-      <pose>-3.28715938193 5.31364787988 1.5  0 0 0</pose>
+      <pose>8.23827657845 6.10948991316 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -278,17 +254,9 @@
     </model>
 
     <model name="cylinder_4">
-      <pose>-6.61756417815 -6.27567558892 1.5  0 0 0</pose>
+      <pose>7.17508661281 8.1425342453 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -307,17 +275,9 @@
     </model>
 
     <model name="cylinder_5">
-      <pose>0.777800036926 2.42210596621 1.5  0 0 0</pose>
+      <pose>-1.42847098992 -4.137162309 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -336,17 +296,9 @@
     </model>
 
     <model name="cylinder_6">
-      <pose>-6.903375577 -4.07417103785 1.5  0 0 0</pose>
+      <pose>5.32723679013 -1.19250676753 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -365,17 +317,9 @@
     </model>
 
     <model name="cylinder_7">
-      <pose>-2.10534272905 0.0514955530121 1.5  0 0 0</pose>
+      <pose>3.80077108574 -3.07419006515 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -394,17 +338,9 @@
     </model>
 
     <model name="cylinder_8">
-      <pose>3.11497125747 -1.57563023404 1.5  0 0 0</pose>
+      <pose>6.63117736508 -1.75021261637 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -423,17 +359,9 @@
     </model>
 
     <model name="cylinder_9">
-      <pose>-8.43799275194 -2.17921782122 1.5  0 0 0</pose>
+      <pose>5.99369686181 -5.36569812106 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -452,17 +380,9 @@
     </model>
 
     <model name="cylinder_10">
-      <pose>-6.64039648716 -1.79163306787 1.5  0 0 0</pose>
+      <pose>5.17546506576 8.50012367931 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -481,17 +401,9 @@
     </model>
 
     <model name="cylinder_11">
-      <pose>-1.33581396578 -7.98500387018 1.5  0 0 0</pose>
+      <pose>-1.91983912702 -5.33276867622 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -510,17 +422,9 @@
     </model>
 
     <model name="cylinder_12">
-      <pose>8.80224350463 4.4743793832 1.5  0 0 0</pose>
+      <pose>-0.776714415148 -8.96063990169 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -539,17 +443,9 @@
     </model>
 
     <model name="cylinder_13">
-      <pose>5.53261048742 -0.159318778966 1.5  0 0 0</pose>
+      <pose>-3.73869432296 -9.11525455162 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -568,17 +464,9 @@
     </model>
 
     <model name="cylinder_14">
-      <pose>8.63313533657 2.949003287 1.5  0 0 0</pose>
+      <pose>9.38010321959 4.46747617669 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -597,17 +485,9 @@
     </model>
 
     <model name="cylinder_15">
-      <pose>5.52554616901 -3.77677151229 1.5  0 0 0</pose>
+      <pose>2.30240032397 3.9953966405 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -626,17 +506,9 @@
     </model>
 
     <model name="cylinder_16">
-      <pose>8.65921489939 -6.06532367241 1.5  0 0 0</pose>
+      <pose>-8.9361717017 -5.5735496492 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -655,17 +527,9 @@
     </model>
 
     <model name="cylinder_17">
-      <pose>6.25092332061 -8.28193339926 1.5  0 0 0</pose>
+      <pose>5.43188227885 6.01696460797 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -684,17 +548,9 @@
     </model>
 
     <model name="cylinder_18">
-      <pose>8.4999976501 8.67640925936 1.5  0 0 0</pose>
+      <pose>0.938695087365 -1.77399520842 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -713,17 +569,9 @@
     </model>
 
     <model name="cylinder_19">
-      <pose>-8.02648309606 -0.292615588572 1.5  0 0 0</pose>
+      <pose>3.6844380894 -5.44387147518 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -742,17 +590,9 @@
     </model>
 
     <model name="cylinder_20">
-      <pose>4.98470108783 -6.57257026096 1.5  0 0 0</pose>
+      <pose>7.83548392729 2.77357956885 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -771,17 +611,9 @@
     </model>
 
     <model name="cylinder_21">
-      <pose>-3.02214612951 6.8392791638 1.5  0 0 0</pose>
+      <pose>2.35372287733 -9.1000764405 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -800,17 +632,9 @@
     </model>
 
     <model name="cylinder_22">
-      <pose>-8.99821509811 -7.64903362322 1.5  0 0 0</pose>
+      <pose>-6.60460425576 -1.17861944126 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -829,17 +653,9 @@
     </model>
 
     <model name="cylinder_23">
-      <pose>-8.05237163 1.43618002691 1.5  0 0 0</pose>
+      <pose>4.60726219285 4.2350275608 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -858,17 +674,9 @@
     </model>
 
     <model name="cylinder_24">
-      <pose>-5.34533705428 -8.18250054117 1.5  0 0 0</pose>
+      <pose>-3.59675382872 -0.0413702019899 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -887,17 +695,9 @@
     </model>
 
     <model name="cylinder_25">
-      <pose>-8.27828919734 3.721781249 1.5  0 0 0</pose>
+      <pose>-0.678790704769 -1.83730376487 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -916,17 +716,9 @@
     </model>
 
     <model name="cylinder_26">
-      <pose>-4.52289386889 8.5192747841 1.5  0 0 0</pose>
+      <pose>1.80908792303 7.0962400958 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -945,17 +737,9 @@
     </model>
 
     <model name="cylinder_27">
-      <pose>-4.10533608677 -0.262631621487 1.5  0 0 0</pose>
+      <pose>-2.43929644109 7.26619465159 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -974,17 +758,9 @@
     </model>
 
     <model name="cylinder_28">
-      <pose>8.07058571877 -0.994160018946 1.5  0 0 0</pose>
+      <pose>8.92370379245 -5.67339111727 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -1003,17 +779,9 @@
     </model>
 
     <model name="cylinder_29">
-      <pose>-9.35801913191 -5.72706207718 1.5  0 0 0</pose>
+      <pose>-7.8648675487 -2.30299865317 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -1032,17 +800,9 @@
     </model>
 
     <model name="cylinder_30">
-      <pose>-1.77722903609 -5.52108208853 1.5  0 0 0</pose>
+      <pose>1.83465262527 -3.52871260692 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -1061,17 +821,9 @@
     </model>
 
     <model name="cylinder_31">
-      <pose>4.05813307236 7.8669939666 1.5  0 0 0</pose>
+      <pose>-2.25944119451 5.39213758648 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -1090,17 +842,9 @@
     </model>
 
     <model name="cylinder_32">
-      <pose>-2.55574203944 -8.17669851914 1.5  0 0 0</pose>
+      <pose>-7.21993526932 1.16866493939 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -1119,17 +863,9 @@
     </model>
 
     <model name="cylinder_33">
-      <pose>7.29054184223 7.77459642941 1.5  0 0 0</pose>
+      <pose>-6.75324961862 8.77266495476 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -1148,17 +884,9 @@
     </model>
 
     <model name="cylinder_34">
-      <pose>5.98816079589 8.62666272121 1.5  0 0 0</pose>
+      <pose>-5.22768864288 9.41795169767 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -1177,17 +905,9 @@
     </model>
 
     <model name="cylinder_35">
-      <pose>-0.103890694431 -4.83324195824 1.5  0 0 0</pose>
+      <pose>-2.55726822146 -8.15823041649 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -1206,17 +926,9 @@
     </model>
 
     <model name="cylinder_36">
-      <pose>4.36525047664 1.42416359807 1.5  0 0 0</pose>
+      <pose>-3.16845707506 1.28052378266 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -1235,17 +947,9 @@
     </model>
 
     <model name="cylinder_37">
-      <pose>9.24502695549 1.49074290514 1.5  0 0 0</pose>
+      <pose>5.13237299246 -3.32333179191 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -1264,17 +968,9 @@
     </model>
 
     <model name="cylinder_38">
-      <pose>7.99597492722 1.73757744341 1.5  0 0 0</pose>
+      <pose>6.78965286862 0.10246155164 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -1293,17 +989,9 @@
     </model>
 
     <model name="cylinder_39">
-      <pose>4.49594265262 5.05496054527 1.5  0 0 0</pose>
+      <pose>-8.4318119897 -0.752253739126 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -1322,17 +1010,9 @@
     </model>
 
     <model name="cylinder_40">
-      <pose>2.35087033336 -7.3832867046 1.5  0 0 0</pose>
+      <pose>-3.88162696561 -3.13278626556 1.5  0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.4 </radius>
-              <length>3.0 </length>
-            </cylinder>
-          </geometry>
-        </collision>
         <visual name="visual">
           <geometry>
             <cylinder>
@@ -1349,6 +1029,14 @@
         </visual>
       </link>
     </model>
+
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <pose frame=''>-0.004203 -9.47354 34.8733 0 1.31564 1.5682</pose>
+        <view_controller>orbit</view_controller>
+        <projection_type>perspective</projection_type>
+      </camera>
+    </gui>
 
   </world>
 </sdf>

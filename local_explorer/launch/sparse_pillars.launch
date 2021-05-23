@@ -30,17 +30,24 @@
     </include>
     
     <group ns = "$(arg robot_name)"> 
+        <!-- <node name="rviz_interface" pkg="local_explorer" type="rviz_interface"  output="screen" required="true"/> -->
+        <node name="local_explorer" pkg="local_explorer" type="local_explorer"  output="screen" required="true">
+            <remap from="local_explorer/local_nav_goal" to="/move_base_simple/goal"/>
+        </node>
+
         <node name="path_publisher" pkg="gazebo_simulation" type="path_publisher.py"  output="screen" required="true">
             <remap from="begin_command" to="record_command"/>
         </node>
 
+        <!--
         <node name="pcd_saver" pkg="gazebo_simulation" type="pcd_saver"  output="screen" required="true">
             <remap from="point_cloud" to="real_global_mapper/occupancy_grid"/>
         </node>
+        -->
     </group>
 
     <group if="$(arg visualization)">
-        <node type="rviz" name="rviz" pkg="rviz" args="-d $(find local_explorer)/launch/free_navigation.rviz" />
+        <node type="rviz" name="rviz" pkg="rviz" args="-d $(find local_explorer)/launch/complex_room.rviz" />
     </group>
   
   </launch>

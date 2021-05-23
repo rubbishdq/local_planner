@@ -25,8 +25,10 @@ const double MAP_DIMENSION[3] = {15.0, 15.0, 8.0};
 const double BOARDER_DIMENSION[3] = {10.0, 10.0, 6.0};
 const double MAP_RESOLUTION = 0.15;
 const double BOARDER_RESOLUTION = 0.3;
+const double X_RANGE[2] = {-10.0, 10.0};
+const double Y_RANGE[2] = {-10.0, 10.0};
 const double BOARDER_Z_RANGE[2] = {-0.05, 3.05};
-const double HEIGHT_DIFF_THRESHOLD = 1.05;
+const double HEIGHT_DIFF_THRESHOLD = 1.00;
 const double RAND_ERROR = 1e-2;  // avoid computational error of qhull
 
 const double INVERT_PARAM = 1.018;
@@ -34,7 +36,7 @@ const double INVERT_CLOUD_VISUALIZE_PARAM = 8.0;
 const double ALLOWED_BOARDER_ERROR = 1e-5;
 
 const float MIN_FRONTIER_RIDGE_LENGTH = 1.0;
-const float MIN_FRONTIER_CLUSTER_AREA = 0.8;
+const float MIN_FRONTIER_CLUSTER_AREA = 2.0;
 //const float FRONTIER_CLUSTER_SIZE_LIMIT[3] = {3.0, 3.0, 1.5};
 const float FRONTIER_CLUSTER_SIZE_LIMIT[3] = {3.5, 3.5, 6.0};
 
@@ -59,15 +61,16 @@ const double TOPOLOGICAL_PATH_PUB_TIMEVAL = 0.25;
 
 const float EPS_F = 2e-4;
 
-const double LRG_TIMER_MAX_DURATION = 0.5;
+const double LRG_TIMER_MAX_DURATION = 1.0;
 
 // parameters for finding next frontier cluster to navigate to
 const float NEXTFC_MAX_AREA = 5.0;
 const float NEXTFC_MIN_DIST = 2.0;
-const float NEXTFC_K_A = 0.12;
+const float NEXTFC_K_A = 0.2;
 const float NEXTFC_K_D = -0.75;
-const float NEXTFC_K_V = 0.7;
+const float NEXTFC_K_V = 1.0;
 const float NEXTFC_K_R = 1.5;
+const float NEXTFC_VISIBLE_BONUS = 1.5;
 } // namespace local_explorer
 
 #endif

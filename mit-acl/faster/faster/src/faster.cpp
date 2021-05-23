@@ -151,7 +151,8 @@ void Faster::setTerminalGoal(state& term_goal)
   G_.pos = projectPointToBox(temp, G_term_.pos, par_.wdx, par_.wdy, par_.wdz);
   if (drone_status_ == DroneStatus::GOAL_REACHED)
   {
-    changeDroneStatus(DroneStatus::YAWING);  // not done when drone_status==traveling
+    //changeDroneStatus(DroneStatus::YAWING);  // not done when drone_status==traveling
+    changeDroneStatus(DroneStatus::TRAVELING);
   }
   terminal_goal_initialized_ = true;
 
@@ -400,6 +401,10 @@ int Faster::replan(vec_Vecf<3>& JPS_safe_out, vec_Vecf<3>& JPS_whole_out, vec_E<
   state E;
   E.pos = getFirstIntersectionWithSphere(JPSk, ra, JPSk[0], &li1, &noPointsOutsideS, &intersect);
   vec_Vecf<3> JPS_in(JPSk.begin(), JPSk.begin() + li1 + 1);
+  if (!intersect)
+  {
+    return 2;
+  }
   if (noPointsOutsideS == false)
   {
     JPS_in.push_back(E.pos);
@@ -471,10 +476,15 @@ int Faster::replan(vec_Vecf<3>& JPS_safe_out, vec_Vecf<3>& JPS_whole_out, vec_E<
   //////////////////////////////////////////////////////////////////////////
 
   vec_Vecf<3> JPSk_inside_sphere_tmp = JPS_in;
-  bool thereIsIntersection2;
+  bool thereIsIntersection2, isCollided;
   // state M;
-  M_.pos = getFirstCollisionJPS(JPSk_inside_sphere_tmp, &thereIsIntersection2, UNKNOWN_MAP,
+  M_.pos = getFirstCollisionJPS(JPSk_inside_sphere_tmp, &thereIsIntersection2, &isCollided, UNKNOWN_MAP,
                                 RETURN_INTERSECTION);  // results saved in JPSk_inside_sphere_tmp
+  
+  if (isCollided)
+  {
+    return 1;
+  }
 
   bool needToComputeSafePath;
   int indexH = findIndexH(needToComputeSafePath);
@@ -791,7 +801,7 @@ bool Faster::ARisInFreeSpace(int index)
 // Returns the first collision of JPS with the map (i.e. with the known obstacles). Note that JPS will collide with a
 // map B if JPS was computed using an older map A
 // If type_return==Intersection, it returns the last point in the JPS path that is at least par_.inflation_jps from map
-Eigen::Vector3d Faster::getFirstCollisionJPS(vec_Vecf<3>& path, bool* thereIsIntersection, int map, int type_return)
+Eigen::Vector3d Faster::getFirstCollisionJPS(vec_Vecf<3>& path, bool* thereIsIntersection, bool* isCollided, int map, int type_return)
 {
   vec_Vecf<3> original = path;
 
@@ -850,6 +860,13 @@ Eigen::Vector3d Faster::getFirstCollisionJPS(vec_Vecf<3>& path, bool* thereIsInt
         if (iteration == 0)
         {
           std::cout << red << bold << "The first point is in collision --> Hacking" << reset << std::endl;
+          if (isCollided != nullptr)
+            *isCollided = true;
+        }
+        else
+        {
+          if (isCollided != nullptr)
+            *isCollided = false;
         }
         switch (type_return)
         {

@@ -26,7 +26,7 @@ void PCDSaverNode::pointcloudCallback(const sensor_msgs::PointCloud2::ConstPtr& 
         pcl_conversions::toPCL(*msg,pcl_pc2);
         pcl::PointCloud<pcl::PointXYZ> pcl_pc;
         pcl::fromPCLPointCloud2(pcl_pc2, pcl_pc);
-        pcl::io::savePCDFileASCII ("/home/dqs/pcd/complex_room.pcd", pcl_pc);
+        pcl::io::savePCDFileASCII ("/home/dqs/pcd/sparse_pillars.pcd", pcl_pc);
     }
 }
 
