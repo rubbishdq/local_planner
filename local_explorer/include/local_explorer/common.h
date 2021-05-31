@@ -28,7 +28,7 @@ const double BOARDER_RESOLUTION = 0.3;
 const double X_RANGE[2] = {-10.0, 10.0};
 const double Y_RANGE[2] = {-10.0, 10.0};
 const double BOARDER_Z_RANGE[2] = {-0.05, 3.05};
-const double HEIGHT_DIFF_THRESHOLD = 1.00;
+const double HEIGHT_DIFF_THRESHOLD = 1.0;  // 1.0
 const double RAND_ERROR = 1e-2;  // avoid computational error of qhull
 
 const double INVERT_PARAM = 1.018;

@@ -37,7 +37,7 @@ void PCDSaverNode::savecommandCallback(const std_msgs::Bool::ConstPtr& msg)
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "core_controller_node");
+    ros::init(argc, argv, "pcd_saver_node");
 
     PCDSaverNode psn;
 
@@ -45,7 +45,7 @@ int main(int argc, char **argv)
     {
 	    return 0;
     }
-    ROS_INFO("flight controller node set up already.");
+    ROS_INFO("PCD saver node set up already.");
     ros::spin();
 
     return 0;

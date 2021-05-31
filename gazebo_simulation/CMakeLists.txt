@@ -226,5 +226,8 @@ include_directories(
 add_executable(pcd_saver src/pcd_saver.cpp)
 target_link_libraries(pcd_saver ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 
+add_executable(pcd_publisher src/pcd_publisher.cpp)
+target_link_libraries(pcd_publisher ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+
 add_executable(pcd_viewer src/pcd_viewer.cpp)
 target_link_libraries(pcd_viewer ${catkin_LIBRARIES} ${PCL_LIBRARIES})
